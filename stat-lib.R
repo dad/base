@@ -294,6 +294,7 @@ my.wtd.var <- function(x, w, normwt=TRUE, na.rm=TRUE) {
 }
 
 # Based on wtd.mean and wtd.var from Frank Harrell's Hmisc package
+# Simultaneous calculation of mean and var
 mat.wtd.meanvar <- function (x, wts = NULL, normwt = FALSE, na.rm = TRUE) {
 	if (!length(wts)) {
 		return(apply(x,1,var, na.rm=na.rm))
