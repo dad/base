@@ -392,6 +392,7 @@ mean.model <- function(x, meas.names, wts=NULL, na.rm=FALSE, scale=FALSE) {
 	as.data.frame(mean.data)
 }
 
+# Added a comment
 rcov <- function(x, y=NULL, na.rm=FALSE) {
 	res <- list()
 	if (is.null(y)) {
