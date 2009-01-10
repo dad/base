@@ -466,11 +466,12 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	# Compute the means of the data
 	comb <- combine.model(x, meas.names, wts, na.rm=na.rm)
 	mean.data <- comb$means
+	mean.data.xform <- mean.data
 	var.data <- comb$vars
 
 	if (!is.null(trans.fxn)) {
 		x <- apply(x, 2, trans.fxn)
-		mean.data <- as.data.frame(apply(mean.data, 2, trans.fxn))
+		mean.data.xform <- as.data.frame(apply(mean.data, 2, trans.fxn))
 	}
 	trans.fxn <- noop
 
@@ -504,7 +505,6 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
           meas.x <- x[,m[[1]]]
           meas.y <- x[,m[[2]]]
           rc <- rcov(trans.fxn(meas.x), trans.fxn(meas.y))
-          print(paste(m,rc$r,rc$n))
           # Weights
           w <- wts[[m[[1]]]]*wts[[m[[2]]]]
           c(rc$r, rc$n, w) #, m[[1]], m[[2]])
@@ -523,9 +523,9 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	for (i in 1:ncol(ps)) {
 		row <- ps[1,i]
 		col <- ps[2,i]
-		x.mean <- mean.data[,ps.names[1,i]]
-		y.mean <- mean.data[,ps.names[2,i]]
-        rc <- rcov(trans.fxn(x.mean), trans.fxn(y.mean))
+		x.mean <- mean.data.xform[,ps.names[1,i]]
+		y.mean <- mean.data.xform[,ps.names[2,i]]
+        rc <- rcov(x.mean, y.mean)
  		cov.Z$r[row,col] <- rc$r
         cov.Z$n[row,col] <- rc$n
 	}
