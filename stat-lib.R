@@ -197,7 +197,7 @@ summary.pcr <- function( g, print.out=TRUE ){
   }
   if (print.out) {
     cat( "\nPercentage contributions to components:\n" )
-    print( round( p[ord,], 3 ) )
+    print( round( p[ord,]*sign(g$projection), 3 ) )
   }
 
 	## Print total variance contributions
@@ -504,6 +504,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
           meas.x <- x[,m[[1]]]
           meas.y <- x[,m[[2]]]
           rc <- rcov(trans.fxn(meas.x), trans.fxn(meas.y))
+          print(paste(m,rc$r,rc$n))
           # Weights
           w <- wts[[m[[1]]]]*wts[[m[[2]]]]
           c(rc$r, rc$n, w) #, m[[1]], m[[2]])
