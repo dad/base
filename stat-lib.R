@@ -18,11 +18,6 @@ pcor.covmat <- function(covmat) {
 	cormat <- cov2cor(covmat)
 	R.inv <- solve(cormat)
 	-cov2cor(R.inv)
-	#D.r.inv <- diag(1/sqrt(diag(R.inv)))
-	#partial.cormat <- - D.r.inv %*% R.inv %*% D.r.inv
-	#diag(partial.cormat) <- 1
-	#dimnames(partial.cormat) <- dimnames(covmat)
-	#partial.cormat
 }
 
 pcor.pc <- function(x, y, z.mat, z.indices=NULL, method='s', ...) {
