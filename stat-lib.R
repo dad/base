@@ -538,8 +538,9 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	# Now we're done computing the raw covariance matrix.
 	# We may wish to ensure that it's positive semi-definite.
 	if (regularize) {
+		cov.Z.unc <- cov.Z$r
 		# DAD: more principled way to choose eps.ev?
-		cov.Z$r <- posdefify(cov.Z$r, eps.ev=0.01)
+		cov.Z$r <- posdefify(cov.Z$r, eps.ev=1e-2)
 	}
 
     ns <- diag(cov.Z$n)
@@ -550,7 +551,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	dimnames(cov.Z$n) <- list(all.f, all.f)
     class(cov.Z) <- "rcov"
 
-    res <- list(covmat=cov.Z, means=mean.data, vars=var.data)
+    res <- list(covmat=cov.Z, means=mean.data, vars=var.data, covmat.uncorr=cov.Z.unc)
 	res
 }
 
@@ -627,7 +628,7 @@ cov.estimate.reps <- function(data.reps, scale=TRUE, na.rm=TRUE, boot.covars=FAL
 }
 
 
-pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, ...) {
+pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize=FALSE, ...) {
   ## Principal component regression from a pre-computed covariance matrix
   ## form = a formula describing the regression equation.  Presently only understands a single response and purely additive predictors, e.g. y~x1+x2+x3
   ## covmat = a covariance matrix describing the data
@@ -693,9 +694,21 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, ...) {
   ## Covariance: C(ZP) = P^T C(Z) P
   ## Should always have  cor(ZP)[2:n,2:n] = I after rotation
   cov.ZP <- t(P) %*% cov.Z %*% P
-  ## Add a small epsilon to the variances to reduce numerical errors due to near-zero variances
+  # Must be true that cov(X,Y) <= max{ cov(X,X), cov(Y,Y) }
+  # Enforce maximum if it is exceeded.
+  vars <- diag(cov.ZP)
+  max.cov.ZP <- sqrt(vars %*% t(vars))
+  #cat("max.cov\n")
+  #print(round(max.cov.ZP,4))
+  #cat("cur.cov\n")
+  #print(round(cov.ZP,4))
+  if (regularize) {
+  	#over <- pmax(cov.ZP, max.cov.ZP) > max.cov.ZP
+  	#cov.ZP[over] <- max.cov.ZP[over]
+  	#cat("new.cov\n")
+  	#print(round(cov.ZP,4))
+  }
   cor.ZP <- cov2cor(cov.ZP)
-
 
   dimnames(cor.ZP) <- list(c(resp.f, compnames),c(resp.f, compnames))
 
@@ -717,6 +730,7 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, ...) {
 
   ##
   r.squared <- cor.ZP[resp.f, compnames]^2
+
   names(r.squared) <- compnames
 
   ## Scores
