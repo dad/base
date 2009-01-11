@@ -538,7 +538,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	# Now we're done computing the raw covariance matrix.
 	# We may wish to ensure that it's positive semi-definite.
 	if (regularize) {
-		# DAD: more principled way to choose eps.ev?
+		# DAD: more principled way to choose eps.ev? Test.
 		cov.Z$r <- posdefify(cov.Z$r, eps.ev=0.01)
 	}
 
