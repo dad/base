@@ -477,8 +477,8 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 
 	# Compute the covariance matrix
 	# s_ij = {
-	# 	i!=j : S_{\bar{X_i}\bar{X_j}} with \bar{X_i} = \sum_k \alpha_k X_{ik} and \sum_k \alpha_k = 1
-	# 	i==j : \sum_{k<l} \beta_{kl} S_{X_{ik}, X_{il}} with \sum_{k<l} \beta_{kl} = 1
+	# 	i!=j : S_{\bar{X_i},\bar{X_j}} with \bar{X_i} = \sum_k \alpha_k X_{ik} and \sum_k \alpha_k = 1
+	# 	i==j : \sum_{m<n} \beta_{mn} S_{X_{im}, X_{in}} with \sum_{m<n} \beta_{mn} = 1
 	# }
 	#
 	# Use \alpha_k = 1/n and \beta_{kl} = 2/(n(n-1)), unless we know the variances of the estimators
@@ -540,7 +540,15 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	if (regularize) {
 		cov.Z.unc <- cov.Z$r
 		# DAD: more principled way to choose eps.ev?
-		cov.Z$r <- posdefify(cov.Z$r, eps.ev=1e-2)
+		#cov.Z$r <- posdefify(cov.Z$r, eps.ev=1e-2)
+		# Bock & Petersen Biometrika 1975
+		orig.vars <- apply(mean.data.xform, 2, var, na.rm=T)
+		St <- cov.Z$r
+		Sy <- St
+		diag(Sy) <- orig.vars
+		Se <- Sy - St
+		S.corr <- posdef.bock(Sy, Se)
+		cov.Z$r <- S.corr
 	}
 
     ns <- diag(cov.Z$n)
@@ -693,7 +701,9 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize
 
   ## Covariance: C(ZP) = P^T C(Z) P
   ## Should always have  cor(ZP)[2:n,2:n] = I after rotation
-  cov.ZP <- t(P) %*% cov.Z %*% P
+  eps <- 1e-4
+  eps.m <- matrix(eps, nrow=nrow(cov.Z), ncol=ncol(cov.Z))
+  cov.ZP <- t(P) %*% (cov.Z+eps.m) %*% P - t(P) %*% eps.m %*% P
   # Must be true that cov(X,Y) <= max{ cov(X,X), cov(Y,Y) }
   # Enforce maximum if it is exceeded.
   vars <- diag(cov.ZP)
@@ -837,6 +847,52 @@ posdefify <- function (m, method = c("someEVadd", "allEVadd"), symmetric, eps.ev
         m[] <- D * m * rep(D, each = n)
     }
     m
+}
+
+posdef.bock <- function(Sy, Se) {
+	# Create positive-definite covariance matrix according to the method
+	# of Bock and Petersen, Biometrika 62(3):673-678 (1975).
+	# 
+	# Assume that St = Sy - Se is an unbiased estimate for the covariance
+	# matrix S, but is not necessarily positive-definite.  Goal is to
+	# compute a corrected St.corr such that it is the maximum-likelihood
+	# estimate under the restriction to positive-definite matrices and
+	# assumed multivariate normality of the covariates.
+	# 
+	# Solve generalized eigenvalue problem (Sy - lambda_i Se) x_i = 0
+	# Approach:  Factorize Se = t(U) %*% U
+	# Then with x = U^-1 z, we have
+	# (U^-T Sy U^-1) z_i = lambda_i z_i or C Z = Z L
+	# so by finding the eigendecomposition of C =(U^-T Sy U^-1) = Z, L we
+	# can identify L as the eigenvalues and X = U^-1 Z as the eigenvectors
+	# of the original problem.
+	# 
+	# Then create L.star such that L.star_i = max(L_i, 1), and with B = X^-1,
+	# return corrected matrix S = t(B) %*% (L.star - I) %*% B.
+	
+	# First, decompose Se into t(U) %*% U
+	eSe <- eigen(Se)
+	U <- diag(sqrt(eSe$values)) %*% t(eSe$vectors)
+	if (sum(abs(Se-t(U)%*%U))>sqrt(.Machine$double.eps)) {
+		print(sum(abs(Se-t(U)%*%U)))
+		stop("Se not symmetric.")
+	}
+	
+	# Now compute C
+	U.inv <- solve(U)
+	C = t(U.inv) %*% Sy %*% U.inv
+	# Solve eigenvalue problem
+	eC = eigen(C)
+	L = diag(eC$values)
+	X = U.inv %*% eC$vectors
+	
+	# Now perform Bock and Petersen correction
+	B = solve(X)
+	L.star = diag(pmax(eC$values,1))
+	I = diag(rep(1,ncol(L.star)))
+	St.corr = t(B) %*% (L.star - I) %*% B
+	#S.unc = t(B) %*% (L - I) %*% B  # the uncorrected result
+	St.corr
 }
 
 # Returns the probability of a vector having a dot-product
