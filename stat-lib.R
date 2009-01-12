@@ -545,7 +545,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 		Sy <- St
 		diag(Sy) <- orig.vars
 		Se <- Sy - St
-		S.corr <- posdef.bock(Sy, Se, large.small.ev.ratio=200)
+		S.corr <- posdef.bock(Sy, Se, large.small.ev.ratio=1000)
 		cov.Z$r <- S.corr
 	}
 
@@ -894,7 +894,7 @@ posdef.bock <- function(Sy, Se, large.small.ev.ratio=NULL) {
       min.ev <- 1
     }
     else{
-      min.ev <- eC$values[1]/large.small.ev.ratio
+      min.ev <- 1+eC$values[1]/large.small.ev.ratio
     }
 	L.star = diag(pmax(eC$values,min.ev))
 	I = diag(rep(1,ncol(L.star)))
