@@ -545,7 +545,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 		Sy <- St
 		diag(Sy) <- orig.vars
 		Se <- Sy - St
-		S.corr <- posdef.bock(Sy, Se)
+		S.corr <- posdef.bock(Sy, Se, large.small.ev.ratio=1000)
 		cov.Z$r <- S.corr
 	}
 
@@ -840,7 +840,7 @@ posdefify <- function (m, method = c("someEVadd", "allEVadd"), symmetric, eps.ev
     m
 }
 
-posdef.bock <- function(Sy, Se) {
+posdef.bock <- function(Sy, Se, large.small.ev.ratio=NULL) {
 	# Create positive-definite covariance matrix according to the method
 	# of Bock and Petersen, Biometrika 62(3):673-678 (1975).
 	# 
@@ -879,7 +879,13 @@ posdef.bock <- function(Sy, Se) {
 	
 	# Now perform Bock and Petersen correction
 	B = solve(X)
-	L.star = diag(pmax(eC$values,1))
+    if (is.null(large.small.ev.ratio)){
+      min.ev <- 1
+    }
+    else{
+      min.ev <- 1+eC$values[1]/large.small.ev.ratio
+    }
+	L.star = diag(pmax(eC$values,min.ev))
 	I = diag(rep(1,ncol(L.star)))
 	St.corr = t(B) %*% (L.star - I) %*% B
 	#S.unc = t(B) %*% (L - I) %*% B  # the uncorrected result
