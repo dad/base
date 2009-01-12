@@ -461,7 +461,6 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	}
 
 	# Compute the means of the data
-	# Compute the means of the data
 	comb <- combine.model(x, meas.names, wts, na.rm=na.rm)
 	mean.data <- comb$means
 	mean.data.xform <- mean.data
@@ -479,7 +478,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	# 	i==j : \sum_{m<n} \beta_{mn} S_{X_{im}, X_{in}} with \sum_{m<n} \beta_{mn} = 1
 	# }
 	#
-	# Use \alpha_k = 1/n and \beta_{kl} = 2/(n(n-1)), unless we know the variances of the estimators
+	# Use \alpha_k = 1/n and \beta_{kl} = 2/(n(n-1)), unless weights are provided
 	n.vars <- length(all.f)
     cov.Z <- list()
 	# Upper triangle first
@@ -728,7 +727,7 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize
   if (regularize) {
   	# For eigenvalues more than eig.thresh times less than
   	# the largest eigenvalue, set R^2 to NA.
-  	eig.thresh = 1e-3
+  	eig.thresh = 1e-6
   	r.squared[eig$values/eig$values[1]<eig.thresh] <- NA
   }
 
@@ -883,7 +882,7 @@ posdef.bock <- function(Sy, Se, large.small.ev.ratio=NULL) {
       min.ev <- 1
     }
     else{
-      min.ev <- 1+eC$values[1]/large.small.ev.ratio
+      min.ev <- 1 + eC$values[1]/large.small.ev.ratio
     }
 	L.star = diag(pmax(eC$values,min.ev))
 	I = diag(rep(1,ncol(L.star)))
