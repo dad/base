@@ -704,16 +704,6 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize
   # Enforce maximum if it is exceeded.
   vars <- diag(cov.ZP)
   max.cov.ZP <- sqrt(vars %*% t(vars))
-  #cat("max.cov\n")
-  #print(round(max.cov.ZP,4))
-  #cat("cur.cov\n")
-  #print(round(cov.ZP,4))
-  if (regularize) {
-  	#over <- pmax(cov.ZP, max.cov.ZP) > max.cov.ZP
-  	#cov.ZP[over] <- max.cov.ZP[over]
-  	#cat("new.cov\n")
-  	#print(round(cov.ZP,4))
-  }
   cor.ZP <- cov2cor(cov.ZP)
 
   dimnames(cor.ZP) <- list(c(resp.f, compnames),c(resp.f, compnames))
@@ -734,7 +724,6 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize
   ##beta.hat <- evec %*% alpha.hat
   ##dimnames(beta.hat) <- list(pred.f, resp.f)
 
-  ##
   r.squared <- cor.ZP[resp.f, compnames]^2
   if (regularize) {
   	# For eigenvalues more than eig.thresh times less than
