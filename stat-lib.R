@@ -159,12 +159,12 @@ summary.pcr <- function( g, print.out=TRUE ){
     cat("\n**** Error: total X variance =", sum(xve), "> 100% ****\n")
   }
   if (g$method == 'eigen.pc') {
-    yve <- cumsum(100 * g$r.squared)
+    cum.yve <- cumsum(100 * g$r.squared)
   }
   else {
-    yve <- 100 * drop(R2(g, estimate = "train", intercept = FALSE)$val)
+    cum.yve <- 100 * drop(R2(g, estimate = "train", intercept = FALSE)$val)
   }
-  h <- rbind(cumsum(xve), yve)
+  h <- rbind(cumsum(xve), cum.yve)
   dimnames(h) <- list(c("X", respname), compnames)
 
   ## number of predictors
@@ -173,6 +173,7 @@ summary.pcr <- function( g, print.out=TRUE ){
   h.offset <- h[,c(1,1:(g$ncomp-1))]
   h.offset[,1] <- 0
   h.diffs <- h - h.offset
+  yve <- h.diffs[2,]
 
   ## print summary with cumulative R^2
   if (print.out) {
@@ -188,54 +189,51 @@ summary.pcr <- function( g, print.out=TRUE ){
 
   ## Print the normalized projection
   ## Order according to the contributions to the first component
-  p <- g$projection^2
-  ord <- order(p[,1], decreasing=T)
-  if (abs(sum(p)/g$ncomp - 1) > 10*.Machine$double.eps) {
+  p2 <- g$projection^2
+  ord <- order(p2[,1], decreasing=T)
+  if (abs(sum(p2)/g$ncomp - 1) > 10*.Machine$double.eps) {
     ## DAD: warning() here instead?
-    if (print.out) cat( "\nError: non-normalized projection matrix (diff = ", abs(sum(p)/g$ncomp-1),")",sep='' )
-    p <- p/(sum(p)/g$ncomp)
+    if (print.out) cat( "\nError: non-normalized projection matrix (diff = ", abs(sum(p2)/g$ncomp-1),")",sep='' )
+    p2 <- p2/(sum(p2)/g$ncomp)
   }
   if (print.out) {
     cat( "\nPercentage contributions to components:\n" )
-    print( round( p[ord,]*sign(g$projection), 3 ) )
+    print( round( p2[ord,]*sign(g$projection), 3 ) )
   }
 
 	## Print total variance contributions
 	if (g$method == 'eigen.pc') {
 		## = r^2 for each variable...
+		covmat <- g$covmat
 		cm <- cov2cor(g$covmat)
 		r.squared = drop(cm[respname, prednames])^2
 	}
 	else {
 		all.comps <- dim(g$fitted.values)[3]
+		# Recreate the predictors and the response
 		d <- data.frame(y=g$fitted.values[,,all.comps]+g$residuals[,,all.comps], g$scores %*% t(g$projection))
 		colnames(d) <- c(respname,prednames)
 		r.squared <- as.vector(corr.list(d, respname, prednames)^2)
 	}
-	pred.ve <- matrix(0, nrow=g$ncomp+1, ncol=npred)
-	pred.ve[1,1:g$ncomp] <- r.squared*100
-	#arr[1,g$ncomp+1] <- sum(r.squared*100)
-	## ...partitioned according to each variable's contribution to the component r^2
-	## if r.i = r(comp.i, resp)^2
-	##    l.i = loading(pred.i, comp.i)^2
-	##    p.i = r(pred.i, resp)^2
-	## then
-	x <- 100 * diag(r.squared) %*% diag(h.diffs[2,]/sum(h.diffs[2,])) %*% t(p)
-	pred.ve[1+1:g$ncomp,1:g$ncomp] <- x
-	#pred.ve[,g$ncomp+1] <- rowSums(pred.ve)
-	dimnames(pred.ve) <- list(c("Total", compnames), prednames)
-	pred.bars <- pred.ve[1+1:g$ncomp,1:npred]
+	p2 <- g$projection^2
+	comp.r2 <- rep(yve, each=ncol(p2))
+	dim(comp.r2) <- dim(p2)
+	dimnames(comp.r2) <- dimnames(p2)
+	pred.ve <- comp.r2 * p2
+	pred.bars <- t(pred.ve)
+	bars <- pred.ve
 	if (print.out) {
-		cat( "\nTotal variance explained by each variable:\n")
+		cat( "\nPercentage variance explained by each predictor:\n")
+		print( round(colSums(pred.ve),3) )
 		print( round(pred.ve, 3) )
 	}
 
-  ## Construct bars from principal components, suitable for barplot(bars)
-  bars <- p %*% diag(h.diffs[2,])
-  ##bars <- bars[order(bars[,1]),]
-  dimnames(bars) <- list(rownames(bars), compnames)
-  res <- list(bars=bars, bars.pc=bars, bars.pred=pred.bars, proj=g$projection, Yvar=h.diffs[2,], Xvar=h.diffs[1,], n=nobj)
-  invisible(res)
+	## Construct bars from principal components, suitable for barplot(bars)
+	#bars <- p2 %*% diag(h.diffs[2,])
+	##bars <- bars[order(bars[,1]),]
+	#dimnames(bars) <- list(rownames(bars), compnames)
+	res <- list(bars=bars, bars.pc=bars, bars.pred=pred.bars, proj=g$projection, Yvar=h.diffs[2,], Xvar=h.diffs[1,], n=nobj)
+	invisible(res)
 }
 
 pcr.summary <- summary.pcr
@@ -701,9 +699,7 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize
 
   ## Covariance: C(ZP) = P^T C(Z) P
   ## Should always have  cor(ZP)[2:n,2:n] = I after rotation
-  eps <- 1e-4
-  eps.m <- matrix(eps, nrow=nrow(cov.Z), ncol=ncol(cov.Z))
-  cov.ZP <- t(P) %*% (cov.Z+eps.m) %*% P - t(P) %*% eps.m %*% P
+  cov.ZP <- t(P) %*% cov.Z %*% P
   # Must be true that cov(X,Y) <= max{ cov(X,X), cov(Y,Y) }
   # Enforce maximum if it is exceeded.
   vars <- diag(cov.ZP)
@@ -740,6 +736,12 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize
 
   ##
   r.squared <- cor.ZP[resp.f, compnames]^2
+  if (regularize) {
+  	# For eigenvalues more than eig.thresh times less than
+  	# the largest eigenvalue, set R^2 to NA.
+  	eig.thresh = 1e-3
+  	r.squared[eig$values/eig$values[1]<eig.thresh] <- NA
+  }
 
   names(r.squared) <- compnames
 
