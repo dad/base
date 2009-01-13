@@ -536,14 +536,17 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	# We may wish to ensure that it's positive semi-definite.
 	cov.Z.unc <- cov.Z$r
 	if (regularize) {
-		# DAD: more principled way to choose eps.ev?
 		#cov.Z$r <- posdefify(cov.Z$r, eps.ev=1e-2)
 		# Bock & Petersen Biometrika 1975
 		orig.vars <- apply(mean.data.xform, 2, var, na.rm=T)
+		# St is the unbiased estimate of the covariance matrix
 		St <- cov.Z$r
+		# Sy is the biased (uncorrected) estimate
 		Sy <- St
 		diag(Sy) <- orig.vars
+		# Se is the error estimate, such that St = Sy - Se
 		Se <- Sy - St
+		# DAD: more principled way to choose large.small.ev.ratio?
 		S.corr <- posdef.bock(Sy, Se, large.small.ev.ratio=1000)
 		cov.Z$r <- S.corr
 	}
