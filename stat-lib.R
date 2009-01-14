@@ -295,7 +295,7 @@ my.wtd.var <- function(x, w, normwt=TRUE, na.rm=TRUE) {
 # Simultaneous calculation of mean and var
 mat.wtd.meanvar <- function (x, wts = NULL, normwt = FALSE, na.rm = TRUE) {
 	if (!length(wts)) {
-		return(apply(x,1,var, na.rm=na.rm))
+		return(list(mean=apply(x,1,mean, na.rm=na.rm), var=apply(x,1,var, na.rm=na.rm)))
 	}
 	weight.matrix <- rep(wts, each=nrow(x))
 	dim(weight.matrix) <- dim(x)
