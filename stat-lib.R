@@ -373,7 +373,8 @@ mean.model <- function(x, meas.names, wts=NULL, na.rm=FALSE, scale=FALSE) {
 	as.data.frame(mean.data)
 }
 
-# Added a comment
+# DAD: currently does not properly handle rcov(x,y) with x and y matrices.
+# DAD: fix
 rcov <- function(x, y=NULL, na.rm=FALSE) {
 	res <- list()
 	if (is.null(y)) {
@@ -398,7 +399,9 @@ rcov <- function(x, y=NULL, na.rm=FALSE) {
 		dimnames(res$n) <- dimnames(res$r)
 	}
 	else {
-		d <- data.frame(x,y)
+      ## Loop over the pairs
+      ## If x and y are vectors, return a scalar r and n.
+		d <- data.frame(x=x,y=y)
 		#colnames(d) <- c(deparse(substitute(x)), deparse(substitute(y)))
 		#if (na.rm) {
 			d <- na.omit(d)
@@ -794,6 +797,40 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize
   z$alpha.hat <- alpha.hat
   z$eig <- eig
   z
+}
+
+test.pcr.covmat <- function(method=c("pearson","spearman")) {
+  ## Test the pcr.covmat function
+  ## Ensure that it produces identical values to pcr()
+  n <- 10000
+  f <- function(n, method) {
+    y <- rnorm(n)
+    x <- sapply(1:5, function(m){y+rnorm(y,sd=m)})
+    d <- data.frame(y,x);
+    pred.f <- colnames(d)[2:6]
+    colnames(x) <- pred.f
+    resp.f <- "y"
+    form <- as.formula(paste(resp.f,"~", paste(pred.f,collapse="+")))
+
+    method <- match.arg(method, c("pearson","spearman"))
+    xform <- switch(method, pearson=scalecols, spearman=rankcols)
+    g.svd <- pcr(form, data=xform(d))
+    rc <- rcormat(d, meth=method)
+    g.cov <- pcr.covmat(form, covmat=rc$r, n=rc$n, data=d)
+    cor.X <- rc$r[pred.f,pred.f]
+    cor.Xy <- rc$r[pred.f,resp.f]
+    e <- eigen(cor.X)
+    u <- e$vectors
+    b.svd <- coef(g.svd) #t(u) %*% solve(cor.X) %*% cor.Xy
+    b.cov <- coef(g.cov)
+    list(svd=b.svd, cov=b.cov)
+  }
+  sq.diff <- function(n, method) {
+    x <- f(n, method)
+    (x$svd-x$cov)^2
+  }
+  diffs <- replicate(10, sq.diff(1000, method))
+  cat("Cumulative RMS deviation between SVD and Cov methods =", sqrt(mean(diffs)), "\n")
 }
 
 print.mvr <- function (x, ...) {
