@@ -861,6 +861,67 @@ print.mvr <- function (x, ...) {
     invisible(x)
 }
 
+pcr.covmat2 <- function(form, covmat, n=NA) {
+	cormat <- cov2cor(covmat)
+	flds <- rownames(attr(terms(form),"factors"))
+	resp.f <- flds[attr(terms(form),"response")]
+	inds <- 1:length(flds)
+	## Predictors are all the terms except the response
+	pred.f <- flds[inds[flds!=resp.f]]
+	all.f <- c(resp.f, pred.f)
+
+	## Dimensions of the data
+	ncomp <- length(pred.f)
+	nresp <- length(resp.f)
+	npred <- length(pred.f)
+	nobj <- n
+
+	compnames <- paste("Comp.", 1:ncomp,sep='')
+	cum.compnames <- paste(1:ncomp, "comps")
+
+	cor.X <- cormat[pred.f, pred.f]
+	cor.Xy <- cormat[pred.f, resp.f]
+	cor.X.inv <- solve(cor.X)
+	eig <- eigen(cor.X)
+	U <- eig$vectors
+	dimnames(U) <- list(pred.f, compnames)
+
+	## Variance explained in the predictors
+	Xvar <- eig$values
+	names(Xvar) <- compnames
+
+	## Loadings
+	loadings <- U
+	dimnames(loadings) <- list(pred.f, compnames)
+	class(loadings) <- "loadings"
+	alpha.hat <- t(U) %*% cor.X.inv %*% cor.Xy
+	Yloadings <- t(alpha.hat)
+	dimnames(Yloadings) <- list(resp.f, compnames)
+	class(Yloadings) <- "loadings"
+
+	## Coefficients
+	coefs <- array(0, dim = c(npred, nresp, ncomp))
+	for (i in 1:ncomp) {
+		coefs[,,i] <- U[,1:i,drop=F] %*% alpha.hat[1:i,,drop=F]
+	}
+	dimnames(coefs) <- list(pred.f, resp.f, cum.compnames)
+
+	## R^2
+	## With cor.X^-1 = S^T S, R^2 = cor.Xy^T S^T S cor.Xy
+	## and the component R^2 are given by (S cor.Xy)^2
+	S = chol(cor.X.inv)
+	#r.squared <- as.vector((S %*% cor.Xy)^2)
+	r.squared <- sapply(1:ncol(U), function(i) { (t(U[,i]) %*% cor.Xy)^2/eig$values[i] })
+	total.r.squared <- sum(r.squared)
+	names(r.squared) <- compnames
+
+	z <- list(call=match.call(), method='eigen.pc', coefficients=coefs, loadings=loadings, Yloadings=Yloadings, projection=U,
+			Xvar=Xvar, Xtotvar=sum(unlist(Xvar)), ncomp=ncomp, terms=terms(form), r.squared=r.squared, n=n, covmat=covmat, eig=eig)
+	class(z) <- "mvr"
+	z
+}
+
+
 # From the package sfsmisc
 posdefify <- function (m, method = c("someEVadd", "allEVadd"), symmetric, eps.ev = 1e-07) {
     stopifnot(is.numeric(m) && is.matrix(m))
@@ -882,13 +943,13 @@ posdefify <- function (m, method = c("someEVadd", "allEVadd"), symmetric, eps.ev
 posdef.bock <- function(Sy, Se, large.small.ev.ratio=NULL) {
 	# Create positive-definite covariance matrix according to the method
 	# of Bock and Petersen, Biometrika 62(3):673-678 (1975).
-	# 
+	#
 	# Assume that St = Sy - Se is an unbiased estimate for the covariance
 	# matrix S, but is not necessarily positive-definite.  Goal is to
 	# compute a corrected St.corr such that it is the maximum-likelihood
 	# estimate under the restriction to positive-definite matrices and
 	# assumed multivariate normality of the covariates.
-	# 
+	#
 	# Solve generalized eigenvalue problem (Sy - lambda_i Se) x_i = 0
 	# Approach:  Factorize Se = t(U) %*% U
 	# Then with x = U^-1 z, we have
@@ -896,10 +957,10 @@ posdef.bock <- function(Sy, Se, large.small.ev.ratio=NULL) {
 	# so by finding the eigendecomposition of C =(U^-T Sy U^-1) = Z, L we
 	# can identify L as the eigenvalues and X = U^-1 Z as the eigenvectors
 	# of the original problem.
-	# 
+	#
 	# Then create L.star such that L.star_i = max(L_i, 1), and with B = X^-1,
 	# return corrected matrix S = t(B) %*% (L.star - I) %*% B.
-	
+
 	# First, decompose Se into t(U) %*% U
 	eSe <- eigen(Se)
 	U <- diag(sqrt(eSe$values)) %*% t(eSe$vectors)
@@ -907,7 +968,7 @@ posdef.bock <- function(Sy, Se, large.small.ev.ratio=NULL) {
 		print(sum(abs(Se-t(U)%*%U)))
 		stop("Se not symmetric.")
 	}
-	
+
 	# Now compute C
 	U.inv <- solve(U)
 	C = t(U.inv) %*% Sy %*% U.inv
@@ -915,7 +976,7 @@ posdef.bock <- function(Sy, Se, large.small.ev.ratio=NULL) {
 	eC = eigen(C)
 	L = diag(eC$values)
 	X = U.inv %*% eC$vectors
-	
+
 	# Now perform Bock and Petersen correction
 	B = solve(X)
     if (is.null(large.small.ev.ratio)){
