@@ -550,7 +550,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 		# Se is the error estimate, such that St = Sy - Se
 		Se <- Sy - St
 		# DAD: more principled way to choose large.small.ev.ratio?
-		S.corr <- posdef.bock(Sy, Se, large.small.ev.ratio=1000)
+		S.corr <- posdef.bock(Sy, Se, large.small.ev.ratio=1e4)
 		cov.Z$r <- S.corr
 	}
 
@@ -639,7 +639,7 @@ cov.estimate.reps <- function(data.reps, scale=TRUE, na.rm=TRUE, boot.covars=FAL
 }
 
 
-pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize=FALSE, ...) {
+pcr.covmat.full <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize=FALSE, ...) {
   ## Principal component regression from a pre-computed covariance matrix
   ## form = a formula describing the regression equation.  Presently only understands a single response and purely additive predictors, e.g. y~x1+x2+x3
   ## covmat = a covariance matrix describing the data
@@ -736,7 +736,6 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize
   	eig.thresh = 1e-6
   	r.squared[eig$values/eig$values[1]<eig.thresh] <- NA
   }
-
   names(r.squared) <- compnames
 
   ## Scores
@@ -799,6 +798,75 @@ pcr.covmat <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regularize
   z
 }
 
+pcr.covmat <- function(form, covmat, n=NA) {
+	## Principal component regression from a pre-computed covariance matrix
+	## form = a formula describing the regression equation.  Presently only understands a single response and purely additive predictors, e.g. y~x1+x2+x3
+	## covmat = a covariance matrix describing the data
+	## n = an integer or matrix describing the number of observations used to generate each of the covariances in covmat
+	cormat <- cov2cor(covmat)
+	flds <- rownames(attr(terms(form),"factors"))
+	resp.f <- flds[attr(terms(form),"response")]
+	inds <- 1:length(flds)
+	## Predictors are all the terms except the response
+	pred.f <- flds[inds[flds!=resp.f]]
+	all.f <- c(resp.f, pred.f)
+
+	## Dimensions of the data
+	ncomp <- length(pred.f)
+	nresp <- length(resp.f)
+	npred <- length(pred.f)
+	nobj <- n
+
+	compnames <- paste("Comp.", 1:ncomp,sep='')
+	cum.compnames <- paste(1:ncomp, "comps")
+
+	## Extraction of correlations between predictors and response
+	cor.X <- cormat[pred.f, pred.f]
+	cor.Xy <- cormat[pred.f, resp.f]
+	cor.X.inv <- solve(cor.X)
+	## Eigen decomposition of the predictor correlation matrix
+	eig <- eigen(cor.X)
+	U <- eig$vectors
+	dimnames(U) <- list(pred.f, compnames)
+
+	## Variance explained in the predictors
+	Xvar <- eig$values
+	names(Xvar) <- compnames
+
+	## Loadings
+	loadings <- U
+	dimnames(loadings) <- list(pred.f, compnames)
+	class(loadings) <- "loadings"
+	## Regression equation is y = X U alpha + e
+	alpha.hat <- t(U) %*% cor.X.inv %*% cor.Xy
+	Yloadings <- t(alpha.hat)
+	dimnames(Yloadings) <- list(resp.f, compnames)
+	class(Yloadings) <- "loadings"
+
+	## Coefficients
+	## These are the beta in y = X beta + e
+	## which, with the projected regression y = X U alpha + e,
+	## gives beta = U alpha.  Following the pls/mvr convention, we
+	## generate cumulative betas, including components up to i.
+	coefs <- array(0, dim = c(npred, nresp, ncomp))
+	for (i in 1:ncomp) {
+		coefs[,,i] <- U[,1:i,drop=F] %*% alpha.hat[1:i,,drop=F]
+	}
+	dimnames(coefs) <- list(pred.f, resp.f, cum.compnames)
+
+	## R^2
+	## Each component (XU)i, represented by the ith eigenvector U[,i], has variance
+	## equal to its corresponding ith eigenvalue.
+	## and the component R^2 are given by cor(X U_i, y)^2 = cov(X U_i, y)^2/ eigenvalue_i = (t(U_i) * cov(X,y))^2/eigenvalue_i
+	r.squared <- sapply(1:ncol(U), function(i) { (t(U[,i]) %*% cor.Xy)^2/eig$values[i] })
+	names(r.squared) <- compnames
+
+	z <- list(call=match.call(), method='eigen.pc', coefficients=coefs, loadings=loadings, Yloadings=Yloadings, projection=U,
+			Xvar=Xvar, Xtotvar=sum(unlist(Xvar)), ncomp=ncomp, terms=terms(form), r.squared=r.squared, n=n, covmat=covmat, eig=eig)
+	class(z) <- "mvr"
+	z
+}
+
 test.pcr.covmat <- function(method=c("pearson","spearman")) {
   ## Test the pcr.covmat function
   ## Ensure that it produces identical values to pcr()
@@ -812,11 +880,10 @@ test.pcr.covmat <- function(method=c("pearson","spearman")) {
     resp.f <- "y"
     form <- as.formula(paste(resp.f,"~", paste(pred.f,collapse="+")))
 
-    method <- match.arg(method, c("pearson","spearman"))
     xform <- switch(method, pearson=scalecols, spearman=rankcols)
     g.svd <- pcr(form, data=xform(d))
     rc <- rcormat(d, meth=method)
-    g.cov <- pcr.covmat(form, covmat=rc$r, n=rc$n, data=d)
+    g.cov <- pcr.covmat(form, covmat=rc$r, n=rc$n)
     cor.X <- rc$r[pred.f,pred.f]
     cor.Xy <- rc$r[pred.f,resp.f]
     e <- eigen(cor.X)
@@ -829,8 +896,9 @@ test.pcr.covmat <- function(method=c("pearson","spearman")) {
     x <- f(n, method)
     (x$svd-x$cov)^2
   }
+  method <- match.arg(method, c("pearson","spearman"))
   diffs <- replicate(10, sq.diff(1000, method))
-  cat("Cumulative RMS deviation between SVD and Cov methods =", sqrt(mean(diffs)), "\n")
+  cat("Cumulative RMS deviation between SVD and Cov methods (", method, ") = ", sqrt(mean(diffs)), "\n", sep='')
 }
 
 print.mvr <- function (x, ...) {
@@ -859,66 +927,6 @@ print.mvr <- function (x, ...) {
             attr(x$validation$segments, "type"), "segments.")
     cat("\nCall:\n", deparse(x$call), "\n", sep = "")
     invisible(x)
-}
-
-pcr.covmat2 <- function(form, covmat, n=NA) {
-	cormat <- cov2cor(covmat)
-	flds <- rownames(attr(terms(form),"factors"))
-	resp.f <- flds[attr(terms(form),"response")]
-	inds <- 1:length(flds)
-	## Predictors are all the terms except the response
-	pred.f <- flds[inds[flds!=resp.f]]
-	all.f <- c(resp.f, pred.f)
-
-	## Dimensions of the data
-	ncomp <- length(pred.f)
-	nresp <- length(resp.f)
-	npred <- length(pred.f)
-	nobj <- n
-
-	compnames <- paste("Comp.", 1:ncomp,sep='')
-	cum.compnames <- paste(1:ncomp, "comps")
-
-	cor.X <- cormat[pred.f, pred.f]
-	cor.Xy <- cormat[pred.f, resp.f]
-	cor.X.inv <- solve(cor.X)
-	eig <- eigen(cor.X)
-	U <- eig$vectors
-	dimnames(U) <- list(pred.f, compnames)
-
-	## Variance explained in the predictors
-	Xvar <- eig$values
-	names(Xvar) <- compnames
-
-	## Loadings
-	loadings <- U
-	dimnames(loadings) <- list(pred.f, compnames)
-	class(loadings) <- "loadings"
-	alpha.hat <- t(U) %*% cor.X.inv %*% cor.Xy
-	Yloadings <- t(alpha.hat)
-	dimnames(Yloadings) <- list(resp.f, compnames)
-	class(Yloadings) <- "loadings"
-
-	## Coefficients
-	coefs <- array(0, dim = c(npred, nresp, ncomp))
-	for (i in 1:ncomp) {
-		coefs[,,i] <- U[,1:i,drop=F] %*% alpha.hat[1:i,,drop=F]
-	}
-	dimnames(coefs) <- list(pred.f, resp.f, cum.compnames)
-
-	## R^2
-	## With cor.X^-1 = S^T S, R^2 = cor.Xy^T S^T S cor.Xy
-	## and the component R^2 are given by (S cor.Xy)^2
-	S = chol(cor.X.inv)
-	#r.squared <- as.vector((S %*% cor.Xy)^2)
-	r.squared <- sapply(1:ncol(U), function(i) { (t(U[,i]) %*% cor.Xy)^2/eig$values[i] })
-	total.r.squared <- sum(r.squared)
-	names(r.squared) <- compnames
-
-	z <- list(call=match.call(), method='eigen.pc', coefficients=coefs, loadings=loadings, Yloadings=Yloadings, projection=U,
-			Xvar=Xvar, Xtotvar=sum(unlist(Xvar)), ncomp=ncomp, terms=terms(form), r.squared=r.squared, n=n, covmat=covmat, eig=eig)
-	class(z) <- "mvr"
-	z
 }
 
 
@@ -980,7 +988,7 @@ posdef.bock <- function(Sy, Se, large.small.ev.ratio=NULL) {
 	# Now perform Bock and Petersen correction
 	B = solve(X)
     if (is.null(large.small.ev.ratio)){
-      min.ev <- 1
+      min.ev <- 1 #+ .Machine$double.eps
     }
     else{
       min.ev <- 1 + eC$values[1]/large.small.ev.ratio
