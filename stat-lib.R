@@ -799,10 +799,10 @@ pcr.covmat.full <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regul
 }
 
 pcr.covmat <- function(form, covmat, n=NA) {
-	## Principal component regression from a pre-computed covariance matrix
-	## form = a formula describing the regression equation.  Presently only understands a single response and purely additive predictors, e.g. y~x1+x2+x3
-	## covmat = a covariance matrix describing the data
-	## n = an integer or matrix describing the number of observations used to generate each of the covariances in covmat
+	## Principal component regression from a pre-computed covariance matrix.
+	## form = a formula describing the regression equation.  Presently only understands a single response and purely additive predictors, e.g. y~x1+x2+x3.
+	## covmat = a covariance matrix describing the data.
+	## n = an integer or matrix describing the number of observations used to generate each of the covariances in covmat; n is not used but is passed into the results.
 	cormat <- cov2cor(covmat)
 	flds <- rownames(attr(terms(form),"factors"))
 	resp.f <- flds[attr(terms(form),"response")]
