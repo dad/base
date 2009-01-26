@@ -446,13 +446,24 @@ cov.estimate2 <- function(x, meas.names, wts=NULL, na.rm=TRUE) {
 	comb
 }
 
-cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, regularize=TRUE) {
+cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.complete.obs", trans.fxn=NULL, regularize=TRUE) {
 	# Create
 	# meas.names is a list of measurement sets, each named as in: list(abund=c("abund.1","abund.2"), expr=c("expr.2","expr.4"),...)
 	# data is a data.frame with columns corresponding to the names in meas.names
 	# wts [optional] is a list containing the error variances for each measurement named in meas.names
 	x <- as.matrix(x)
 	all.f <- names(meas.names)
+	
+	use <- match.arg(use, c("everything","all.obs","complete.obs","pairwise.complete.obs"))
+	if (use == 'complete.obs') {
+		# Eliminate cases where all variables do not have at least two valid measurements
+		meas.na <- function(y) {
+			s <- sapply(meas.names, function(m) {sum(!is.na(y[m])) >= 2})
+			all(s)
+		}
+		at.least.two <- apply(x,1,meas.na)
+		x <- x[at.least.two,]
+	}
 
 	if (is.null(wts)) {
 		# Weight each measurement equally
@@ -469,11 +480,11 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	mean.data.xform <- mean.data
 	var.data <- comb$vars
 
+	# Transform data after means have been computed
 	if (!is.null(trans.fxn)) {
 		x <- apply(x, 2, trans.fxn)
 		mean.data.xform <- as.data.frame(apply(mean.data, 2, trans.fxn))
 	}
-	trans.fxn <- noop
 
 	# Compute the covariance matrix
 	# s_ij = {
@@ -494,20 +505,20 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
         # Handles case of singleton measurements -- note that these will not be unbiased estimates!
         meas.x <- x[,vars]
         if (length(vars) < 2) {
-          rc <- rcov(trans.fxn(meas.x), trans.fxn(meas.x))
-          cov.Z$r[var.i, var.i] <- rc$r
-          cov.Z$n[var.i, var.i] <- rc$n
-          next
+			rc <- rcov(meas.x, meas.x)
+			cov.Z$r[var.i, var.i] <- rc$r
+			cov.Z$n[var.i, var.i] <- rc$n
+			next
         }
 		ps.names <- combn(meas.names[[meas]],2)
 		n.combs <- ncol(ps.names)
 		all.covs <- apply(ps.names, 2, function(m) {
-          meas.x <- x[,m[[1]]]
-          meas.y <- x[,m[[2]]]
-          rc <- rcov(trans.fxn(meas.x), trans.fxn(meas.y))
-          # Weights
-          w <- wts[[m[[1]]]]*wts[[m[[2]]]]
-          c(rc$r, rc$n, w) #, m[[1]], m[[2]])
+			meas.x <- x[,m[[1]]]
+			meas.y <- x[,m[[2]]]
+			rc <- rcov(meas.x, meas.y)
+			# Weights
+			w <- wts[[m[[1]]]]*wts[[m[[2]]]]
+			c(rc$r, rc$n, w) #, m[[1]], m[[2]])
         })
         dimnames(all.covs) <- list(c("r","n","w"), NULL) #,"c1","c2"), NULL)
         all.covs <- as.data.frame(t(all.covs))
@@ -539,19 +550,25 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, trans.fxn=NULL, re
 	# We may wish to ensure that it's positive semi-definite.
 	cov.Z.unc <- cov.Z$r
 	if (regularize) {
-		#cov.Z$r <- posdefify(cov.Z$r, eps.ev=1e-2)
-		# Bock & Petersen Biometrika 1975
-		orig.vars <- apply(mean.data.xform, 2, var, na.rm=T)
-		# St is the unbiased estimate of the covariance matrix
-		St <- cov.Z$r
-		# Sy is the biased (uncorrected) estimate
-		Sy <- St
-		diag(Sy) <- orig.vars
-		# Se is the error estimate, such that St = Sy - Se
-		Se <- Sy - St
-		# DAD: more principled way to choose large.small.ev.ratio?
-		S.corr <- posdef.bock(Sy, Se, large.small.ev.ratio=1e4)
-		cov.Z$r <- S.corr
+		regularize.bock <- T
+		min.eig.ratio <- 1e4
+		if (regularize.bock) {
+			# Bock & Petersen Biometrika 1975
+			orig.vars <- apply(mean.data.xform, 2, var, na.rm=T)
+			# St is the unbiased estimate of the covariance matrix
+			St <- cov.Z$r
+			d.Se <- pmax(orig.vars - diag(cov.Z$r),0) #max(orig.vars)/min.eig.ratio)
+			# Se is the error estimate, such that St = Sy - Se
+			Se <- diag(d.Se)
+			Sy = St + Se
+			# DAD: more principled way to choose large.small.ev.ratio?
+			S.corr <- posdef.bock(Sy, Se, large.small.ev.ratio=min.eig.ratio)
+			cov.Z$r <- S.corr
+		}
+		else {
+			cov.Z$r <- posdefify(cov.Z$r, eps.ev=1/min.eig.ratio)
+
+		}
 	}
 
     ns <- diag(cov.Z$n)
@@ -817,6 +834,7 @@ pcr.covmat <- function(form, covmat, n=NA) {
 	npred <- length(pred.f)
 	nobj <- n
 
+	## Names
 	compnames <- paste("Comp.", 1:ncomp,sep='')
 	cum.compnames <- paste(1:ncomp, "comps")
 
@@ -854,10 +872,10 @@ pcr.covmat <- function(form, covmat, n=NA) {
 	}
 	dimnames(coefs) <- list(pred.f, resp.f, cum.compnames)
 
-	## R^2
+	## Coefficients of determination, R^2
 	## Each component (XU)i, represented by the ith eigenvector U[,i], has variance
-	## equal to its corresponding ith eigenvalue.
-	## and the component R^2 are given by cor(X U_i, y)^2 = cov(X U_i, y)^2/ eigenvalue_i = (t(U_i) * cov(X,y))^2/eigenvalue_i
+	## equal to the corresponding ith eigenvalue.
+	## The component R^2 are given by cor(X U_i, y)^2 = cov(X U_i, y)^2/ eigenvalue_i = (t(U_i) * cov(X,y))^2/eigenvalue_i
 	r.squared <- sapply(1:ncol(U), function(i) { (t(U[,i]) %*% cor.Xy)^2/eig$values[i] })
 	names(r.squared) <- compnames
 
@@ -972,6 +990,8 @@ posdef.bock <- function(Sy, Se, large.small.ev.ratio=NULL) {
 	# First, decompose Se into t(U) %*% U
 	eSe <- eigen(Se)
 	U <- diag(sqrt(eSe$values)) %*% t(eSe$vectors)
+	#print(Se)
+	#print(eSe)
 	if (sum(abs(Se-t(U)%*%U))>sqrt(.Machine$double.eps)) {
 		print(sum(abs(Se-t(U)%*%U)))
 		stop("Se not symmetric.")
