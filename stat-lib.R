@@ -453,7 +453,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.comp
 	# wts [optional] is a list containing the error variances for each measurement named in meas.names
 	x <- as.matrix(x)
 	all.f <- names(meas.names)
-	
+
 	use <- match.arg(use, c("everything","all.obs","complete.obs","pairwise.complete.obs"))
 	if (use == 'complete.obs') {
 		# Eliminate cases where all variables do not have at least two valid measurements
@@ -1425,6 +1425,9 @@ noop <- function(x) {
 
 # Takes a list of variables
 multidens <- function(x, log=F, kernel="r", col=rainbow(7), xaxt="s", axp3=3, legend.at=NULL, ...) {
+	if (is.data.frame(x) || is.matrix(x)) {
+		x <- lapply(1:ncol(x),function(m){x[,m]})
+	}
 	if (!is.list(x)) {
 		x <- list(x)
 	}
