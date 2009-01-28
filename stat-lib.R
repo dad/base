@@ -216,10 +216,11 @@ summary.pcr <- function( g, print.out=TRUE ){
 		r.squared <- as.vector(corr.list(d, respname, prednames)^2)
 	}
 	p2 <- g$projection^2
-	comp.r2 <- rep(yve, each=ncol(p2))
+	comp.r2 <- rep(yve, each=nrow(p2))
 	dim(comp.r2) <- dim(p2)
 	dimnames(comp.r2) <- dimnames(p2)
 	pred.ve <- comp.r2 * p2
+	## Construct bars from principal components, suitable for barplot(bars)
 	pred.bars <- t(pred.ve)
 	bars <- pred.ve
 	if (print.out) {
@@ -228,11 +229,7 @@ summary.pcr <- function( g, print.out=TRUE ){
 		print( round(pred.ve, 3) )
 	}
 
-	## Construct bars from principal components, suitable for barplot(bars)
-	#bars <- p2 %*% diag(h.diffs[2,])
-	##bars <- bars[order(bars[,1]),]
-	#dimnames(bars) <- list(rownames(bars), compnames)
-	res <- list(bars=bars, bars.pc=bars, bars.pred=pred.bars, proj=g$projection, Yvar=h.diffs[2,], Xvar=h.diffs[1,], n=nobj)
+	res <- list(bars=bars, bars.pc=bars, bars.pred=pred.bars, proj=g$projection, Yvar=h.diffs[2,], Xvar=h.diffs[1,], n=nobj, ncomp=g$ncomp)
 	invisible(res)
 }
 
@@ -815,7 +812,7 @@ pcr.covmat.full <- function(form, covmat, n=NA, data=NULL, stripped=FALSE, regul
   z
 }
 
-pcr.covmat <- function(form, covmat, n=NA) {
+pcr.covmat <- function(form, covmat, n=NA, ncomp=NULL) {
 	## Principal component regression from a pre-computed covariance matrix.
 	## form = a formula describing the regression equation.  Presently only understands a single response and purely additive predictors, e.g. y~x1+x2+x3.
 	## covmat = a covariance matrix describing the data.
@@ -827,9 +824,12 @@ pcr.covmat <- function(form, covmat, n=NA) {
 	## Predictors are all the terms except the response
 	pred.f <- flds[inds[flds!=resp.f]]
 	all.f <- c(resp.f, pred.f)
+	if (is.null(ncomp)) {
+		ncomp <- length(pred.f)
+	}
 
 	## Dimensions of the data
-	ncomp <- length(pred.f)
+	#ncomp <- length(pred.f)
 	nresp <- length(resp.f)
 	npred <- length(pred.f)
 	nobj <- n
@@ -842,21 +842,24 @@ pcr.covmat <- function(form, covmat, n=NA) {
 	cor.X <- cormat[pred.f, pred.f]
 	cor.Xy <- cormat[pred.f, resp.f]
 	cor.X.inv <- solve(cor.X)
+
 	## Eigen decomposition of the predictor correlation matrix
 	eig <- eigen(cor.X)
-	U <- eig$vectors
+	U <- eig$vectors[,1:ncomp]
 	dimnames(U) <- list(pred.f, compnames)
 
 	## Variance explained in the predictors
-	Xvar <- eig$values
+	Xvar <- eig$values[1:ncomp]
 	names(Xvar) <- compnames
 
 	## Loadings
-	loadings <- U
+	loadings <- U[, 1:ncomp]
 	dimnames(loadings) <- list(pred.f, compnames)
 	class(loadings) <- "loadings"
 	## Regression equation is y = X U alpha + e
-	alpha.hat <- t(U) %*% cor.X.inv %*% cor.Xy
+	## Regression equation is y = X beta + e
+	beta.hat <- cor.X.inv %*% cor.Xy
+	alpha.hat <-  t(U) %*% beta.hat
 	Yloadings <- t(alpha.hat)
 	dimnames(Yloadings) <- list(resp.f, compnames)
 	class(Yloadings) <- "loadings"
@@ -876,7 +879,7 @@ pcr.covmat <- function(form, covmat, n=NA) {
 	## Each component (XU)i, represented by the ith eigenvector U[,i], has variance
 	## equal to the corresponding ith eigenvalue.
 	## The component R^2 are given by cor(X U_i, y)^2 = cov(X U_i, y)^2/ eigenvalue_i = (t(U_i) * cov(X,y))^2/eigenvalue_i
-	r.squared <- sapply(1:ncol(U), function(i) { (t(U[,i]) %*% cor.Xy)^2/eig$values[i] })
+	r.squared <- sapply(1:ncomp, function(i) { (t(U[,i]) %*% cor.Xy)^2/eig$values[i] })
 	names(r.squared) <- compnames
 
 	z <- list(call=match.call(), method='eigen.pc', coefficients=coefs, loadings=loadings, Yloadings=Yloadings, projection=U,
@@ -1477,7 +1480,7 @@ multi.lm <- function(response, predictors, data, rank=F, na.last=T){
 	if (rank) {
 		data <- rankcols(data[append(response,predictors)], na.last=na.last)
 	}
-	adds <- paste(predictors,"+",collapse="",sep="")
-	f = paste(response,"~",substring(adds,1,nchar(adds)-1))
+	adds <- paste(predictors,collapse="+",sep="")
+	f = paste(response,"~",adds,sep="")
 	lm(formula(f),data=data)
 }
