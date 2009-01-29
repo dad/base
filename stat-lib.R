@@ -423,26 +423,6 @@ print.rcov <- function(x) {
   print(x$n)
 }
 
-cov.estimate2 <- function(x, meas.names, wts=NULL, na.rm=TRUE) {
-	x <- as.matrix(x)
-	all.f <- names(meas.names)
-
-	if (is.null(wts)) {
-		# Weight each measurement equally
-		for (nm in all.f) {
-			for (m in meas.names[[nm]]) {
-				wts[[m]] <- 1/length(meas.names[[nm]])
-			}
-		}
-	}
-
-	# Compute the means of the data
-	comb <- combine.model(x, meas.names, wts, na.rm=na.rm)
-	#mean.data <- comb$means
-	#vars <- comb$vars
-	comb
-}
-
 cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.complete.obs", trans.fxn=NULL, regularize=TRUE) {
 	# Create
 	# meas.names is a list of measurement sets, each named as in: list(abund=c("abund.1","abund.2"), expr=c("expr.2","expr.4"),...)
@@ -576,7 +556,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.comp
 	dimnames(cov.Z$n) <- list(all.f, all.f)
     class(cov.Z) <- "rcov"
 
-    res <- list(covmat=cov.Z, means=mean.data, vars=var.data, covmat.uncorr=cov.Z.unc)
+    res <- list(covmat=cov.Z, means=mean.data, vars=var.data, means.xform=mean.data.xform, covmat.uncorr=cov.Z.unc)
 	res
 }
 
@@ -829,7 +809,6 @@ pcr.covmat <- function(form, covmat, n=NA, ncomp=NULL) {
 	}
 
 	## Dimensions of the data
-	#ncomp <- length(pred.f)
 	nresp <- length(resp.f)
 	npred <- length(pred.f)
 	nobj <- n
