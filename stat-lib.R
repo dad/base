@@ -479,28 +479,30 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.comp
 	for (var.i in 1:length(all.f)) {
 		meas = all.f[var.i]
         vars <- meas.names[[meas]]
-        # Handles case of singleton measurements -- note that these will not be unbiased estimates!
         meas.x <- x[,vars]
         if (length(vars) < 2) {
+			## Handles case of singleton measurements -- note that these will not be unbiased estimates!
 			rc <- rcov(meas.x, meas.x)
 			cov.Z$r[var.i, var.i] <- rc$r
 			cov.Z$n[var.i, var.i] <- rc$n
-			next
         }
-		ps.names <- combn(meas.names[[meas]],2)
-		n.combs <- ncol(ps.names)
-		all.covs <- apply(ps.names, 2, function(m) {
-			meas.x <- x[,m[[1]]]
-			meas.y <- x[,m[[2]]]
-			rc <- rcov(meas.x, meas.y)
-			# Weights
-			w <- wts[[m[[1]]]]*wts[[m[[2]]]]
-			c(rc$r, rc$n, w) #, m[[1]], m[[2]])
-        })
-        dimnames(all.covs) <- list(c("r","n","w"), NULL) #,"c1","c2"), NULL)
-        all.covs <- as.data.frame(t(all.covs))
-		cov.Z$r[var.i, var.i] <- wtd.mean(all.covs$r, weights=all.covs$w)
-        cov.Z$n[var.i, var.i] <- wtd.mean(all.covs$n, weights=all.covs$w)
+        else {
+        	## More than one measurement.
+			ps.names <- combn(meas.names[[meas]],2)
+			n.combs <- ncol(ps.names)
+			all.covs <- apply(ps.names, 2, function(m) {
+				meas.x <- x[,m[[1]]]
+				meas.y <- x[,m[[2]]]
+				rc <- rcov(meas.x, meas.y)
+				# Weights
+				w <- wts[[m[[1]]]]*wts[[m[[2]]]]
+				c(rc$r, rc$n, w) #, m[[1]], m[[2]])
+			})
+			dimnames(all.covs) <- list(c("r","n","w"), NULL) #,"c1","c2"), NULL)
+			all.covs <- as.data.frame(t(all.covs))
+			cov.Z$r[var.i, var.i] <- wtd.mean(all.covs$r, weights=all.covs$w)
+			cov.Z$n[var.i, var.i] <- wtd.mean(all.covs$n, weights=all.covs$w)
+		}
 	}
 	# Off-diagonal, i<j
     # Here, the covariance between two noisy variables is an unbiased estimate of the true covariance, assuming additive noise
