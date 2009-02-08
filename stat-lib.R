@@ -423,7 +423,20 @@ print.rcov <- function(x) {
   print(x$n)
 }
 
-cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.complete.obs", trans.fxn=NULL, regularize=TRUE) {
+rcor <- function(x, y=NULL, ...) {
+	if (is.null(y)) {
+		res <- rcormat(x, ...)
+	}
+	else {
+		rc <- rcorr(x,y,...)
+		res <- NULL
+		res$r <- rc$r['x','y']
+		res$n <- rc$n['x','y']
+	}
+	return(res)
+}
+
+cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.complete.obs", cov.fxn=rcov, trans.fxn=NULL, regularize=TRUE) {
 	# Create
 	# meas.names is a list of measurement sets, each named as in: list(abund=c("abund.1","abund.2"), expr=c("expr.2","expr.4"),...)
 	# data is a data.frame with columns corresponding to the names in meas.names
@@ -482,7 +495,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.comp
         # Handles case of singleton measurements -- note that these will not be unbiased estimates!
         meas.x <- x[,vars]
         if (length(vars) < 2) {
-			rc <- rcov(meas.x, meas.x)
+			rc <- cov.fxn(meas.x, meas.x)
 			cov.Z$r[var.i, var.i] <- rc$r
 			cov.Z$n[var.i, var.i] <- rc$n
 			next
@@ -492,7 +505,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.comp
 		all.covs <- apply(ps.names, 2, function(m) {
 			meas.x <- x[,m[[1]]]
 			meas.y <- x[,m[[2]]]
-			rc <- rcov(meas.x, meas.y)
+			rc <- cov.fxn(meas.x, meas.y)
 			# Weights
 			w <- wts[[m[[1]]]]*wts[[m[[2]]]]
 			c(rc$r, rc$n, w) #, m[[1]], m[[2]])
@@ -513,7 +526,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.comp
 		col <- ps[2,i]
 		x.mean <- mean.data.xform[,ps.names[1,i]]
 		y.mean <- mean.data.xform[,ps.names[2,i]]
-        rc <- rcov(x.mean, y.mean)
+        rc <- cov.fxn(x.mean, y.mean)
  		cov.Z$r[row,col] <- rc$r
         cov.Z$n[row,col] <- rc$n
 	}
