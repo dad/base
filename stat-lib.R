@@ -328,6 +328,18 @@ mat.wtd.mean <- function(x, w, na.rm=TRUE) {
 	x.mean
 }
 
+get.weights <- function(x) {
+	## Find weights that minimize the standard error
+	w <- rep(1/ncol(x),ncol(x))
+	se <- function(x, w) {
+		mv <- mat.wtd.meanvar(x, wts=w)
+		res = sqrt(mean(mv$var))
+		print(w))
+	}
+	g <- nlm(se, p=w, x=x)
+	g$estimate
+}
+
 mean.measurement <- function(x, wts=NULL, na.rm=FALSE) {
 	if (is.null(wts)) {
 		wts <- seq(1,1,length.out=ncol(x))/ncol(x)
@@ -435,6 +447,8 @@ rcor <- function(x, y=NULL, ...) {
 	}
 	return(res)
 }
+
+
 
 cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.complete.obs", cov.fxn=rcov, trans.fxn=NULL, regularize=TRUE) {
 	# Create
