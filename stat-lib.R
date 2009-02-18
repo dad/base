@@ -328,16 +328,18 @@ mat.wtd.mean <- function(x, w, na.rm=TRUE) {
 	x.mean
 }
 
+se <- function(x, w) {
+	mv <- mat.wtd.meanvar(x, wts=w)
+	print(w)
+	res = sqrt(sum(mv$var, na.rm=TRUE))
+	res
+}
+
 get.weights <- function(x) {
 	## Find weights that minimize the standard error
 	w <- rep(1/ncol(x),ncol(x))
-	se <- function(x, w) {
-		mv <- mat.wtd.meanvar(x, wts=w)
-		res = sqrt(mean(mv$var))
-		print(w))
-	}
-	g <- nlm(se, p=w, x=x)
-	g$estimate
+	g <- optim(par=w, fn=se, x=x, method="L-BFGS-B", lower=c(0,0,0,0))
+	g$par
 }
 
 mean.measurement <- function(x, wts=NULL, na.rm=FALSE) {
