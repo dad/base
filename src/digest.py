@@ -49,9 +49,9 @@ if __name__ == '__main__':
 	(headers, seqs) = biofile.readFASTA(os.path.expanduser(fname))
 	for seq in seqs:
 		frags = digest(seq, patterns, complete)
-		print "\n%s\n---" % seq
+		#print "\n%s\n---" % seq
 		for f in frags:
-			print f
+			print len(f), f
 	if complete:
 		assert ''.join(frags) == seq
 	
