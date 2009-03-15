@@ -7,14 +7,13 @@ def split(seq, pat):
 	prev_pos = -1
 	pos = s.find(pat, prev_pos+1)
 	while pos > -1:
-		print pat, prev_pos, pos
 		frags.append(s[prev_pos+1:pos+1])
 		prev_pos = pos
 		pos = s.find(pat, prev_pos+1)
-	if prev_pos > 0:
+	if prev_pos > -1:
 		frags.append(s[prev_pos+1:])
 	if prev_pos == -1 and pos == -1:
-		# No matches at all
+		# No matches at all -- add whole sequence
 		frags.append(seq)
 	return frags
 		
@@ -26,23 +25,34 @@ def digest(seq, patterns, complete=True):
 		for pat in patterns:
 			new_digest = []
 			for frag in digest:
-				frags = split(frag, pat) #["%s%s" % (p,pat) for p in frag.split(pat)]
-				# if seq.startswith(pat):
-				#	frags[0] = "%s%s" % (frags[0], pat)
-				if frag.endswith(pat):
-					frags = frags[:-1]
+				frags = split(frag, pat)
 				new_digest += frags
 			digest = new_digest
 	return digest
 
+def test001():
+	seq = "MPIMLEDYQKNFLELAIECQALRFGSFKLKSGRESPYFFNLGLFNTGKLLSNLATAYAIAIIQSDLKFDVIFGPAYKGIPLAAIVCVKLAEIGGSKFQNIQYAFNRKEAKDHGEGGIIVGSALENKRILIIDDVMTAGTAINEAFEIISNAKGQVVGSIIALDRQEVVSTDDKEGLSATQTVSKKYGIPVLSIVSLIHIITYLEGRITAEEKSKIEQYLQTYGASA"
+	pat = "K/R"
+	frags = digest(seq, pat, True)
+	assert ''.join(frags) == seq
+	print "\ttest001 passed"
+
 if __name__ == '__main__':
 	fname = sys.argv[1]
+	if fname == "__test__":
+		print "Running tests..."
+		test001()
+		print "All tests passed"
+		sys.exit()
 	patterns = sys.argv[2].split("/")
+	complete = True
 	(headers, seqs) = biofile.readFASTA(os.path.expanduser(fname))
 	for seq in seqs:
-		frags = digest(seq, patterns, True)
-		print "\n%s\n---" % seq
+		frags = digest(seq, patterns, complete)
+		#print "\n%s\n---" % seq
 		for f in frags:
-			print f
+			print len(f), f
+	if complete:
+		assert ''.join(frags) == seq
 	
 
