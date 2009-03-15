@@ -151,7 +151,7 @@ def writeFASTADict(seq_dict, filename):
 
 
 #--------------------------------------------------------------------------------
-def Translate(seq):
+def translate(seq):
 	"""Translates a gene sequence to a protein sequence.
 
 	'seq' is the gene sequence to be translated. It can begin with any codon
@@ -164,24 +164,26 @@ def Translate(seq):
 	if len(seq) % 3 != 0:
 		return # gene length not a multiple of three
 	prot_length = len(seq) / 3
-	prot = []
+	prot = ""
 	for i in range(prot_length - 1):
 		codon = seq[3 * i : 3 * (i + 1)]
 		try:
-			aa = Codon_to_AA(codon)
+			aa = codonToAA(codon)
 		except BioUtilsError: # unrecognized codon
 			return
 		if aa == '*': # premature stop codon
 			return # return 'None'
-		prot.append(aa)
+		prot += aa
 	# last codon, might be stop codon
 	codon = seq[3 * (prot_length - 1) : 3 * prot_length]
-	aa = Codon_to_AA(codon)
+	aa = codonToAA(codon)
 	if aa != '*':
-		prot.append(aa)
-	protseq = ''.join(prot)
-	assert len(protseq) in [prot_length, prot_length - 1]
-	return protseq
+		prot += aa
+	assert len(prot) in [prot_length, prot_length - 1]
+	return prot
+
+def Translate(seq):
+	return translate(seq)
 
 def translateRaw(seq, bad_aa = 'X'):
 	"""Translates a nucleotide sequence to a protein sequence.
@@ -199,7 +201,7 @@ def translateRaw(seq, bad_aa = 'X'):
 	for i in range(max_aas):
 		codon = seq[3 * i : 3 * (i + 1)]
 		try:
-			aa = Codon_to_AA(codon)
+			aa = codonToAA(codon)
 		except BioUtilsError: # unrecognized codon
 			aa = bad_aa
 		prot.append(aa)
@@ -209,7 +211,7 @@ def translateRaw(seq, bad_aa = 'X'):
 def TranslateRaw(seq, bad_aa = 'X'):
 	return translateRaw(seq, bad_aa)
 
-def ReverseTranslate(prot, bad_codon ='xxx'):
+def reverseTranslate(prot, bad_codon ='xxx'):
 	gene = ""
 	rev_code = dict([(aa,codon) for (codon,aa) in _genetic_code.items() if not 'U' in codon])
 	for aa in prot:
@@ -230,8 +232,8 @@ def __test_reverseTranslate():
 	aas = 'ACDEFGHIKLMNPQRSTVWY'
 	for i in range(N):
 		prot = ''.join([random.choice(aas) for xi in range(100)])
-		gene = ReverseTranslate(prot)
-		newprot = Translate(gene)
+		gene = reverseTranslate(prot)
+		newprot = translate(gene)
 		assert(prot == newprot)
 
 def randomReverseTranslate(prot, rna=False):
@@ -297,16 +299,20 @@ _aa_dna_codons = [x for x in _dna_codons if not _genetic_code[x] == '*']
 _aa_rna_codons = [x for x in _rna_codons if not _genetic_code[x] == '*']
 
 #---------------------------------------------------------------------------
-def Codon_to_AA(codon):
+def codonToAA(codon):
 	"""Returns one-letter amino acid for codon.
 
 	Argument is three-letter string 'codon'.
 	'codon' should be upper case.
-	Returns 'STOP' if stop codon, raises error if invalid codon.."""
+	Raises error if invalid codon.."""
 	try:
 		return _genetic_code[codon]
 	except KeyError:
 		raise BioUtilsError, "Invalid codon '%s'." % codon
+
+def Codon_to_AA(codon):
+	return codonToAA(codon)
+
 #---------------------------------------------------------------------------------
 def sequenceIdentity(aligned_seq1, aligned_seq2):
 	num_identical = 0

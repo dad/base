@@ -89,14 +89,14 @@ def readExons(coord_filename, header_dict):
 			continue
 		try:
 			xrec = CodingExonRecord()
-			xrec.gene_ID = flds[gene_id_ind]
-			xrec.peptide_ID = flds[peptide_id_ind]
-			xrec.transcript_ID = flds[transcript_id_ind]
-			xrec.exon_ID = flds[exon_id_ind]
-			xrec.chromosome = flds[chromosome_ind]
+			xrec.gene_ID = flds[gene_id_ind].strip()
+			xrec.peptide_ID = flds[peptide_id_ind].strip()
+			xrec.transcript_ID = flds[transcript_id_ind].strip()
+			xrec.exon_ID = flds[exon_id_ind].strip()
+			xrec.chromosome = flds[chromosome_ind].strip()
 			xrec.exon_start = int(flds[exon_start_ind])
 			xrec.exon_end = int(flds[exon_end_ind])
-			xrec.strand = flds[strand_ind]
+			xrec.strand = flds[strand_ind].strip()
 			try:
 				xrec.coding_start = int(flds[coding_start_ind])
 				xrec.coding_end = int(flds[coding_end_ind])
@@ -117,33 +117,83 @@ def readExons(coord_filename, header_dict):
 
 def buildCodingSequence(recs, chrseq, exclude_nt_from_boundary):
 	seq = ''
-	first_exon = True
+	# for some genomes, such as D. rerio, coding_start indicates the position in the exon rather than the chromosomal position
+	# in this case, r.coding_start == 1 for first exon
+	chr_frags = []
+	if recs[0].coding_start < recs[0].exon_start:
+		if recs[0].coding_start != 1:
+			print recs[0]
+		# coding start indicates position within exon
+		for r in recs:
+			if recs[0].peptide_ID == 'ENSDARP00000079005':
+				print recs[0].exon_ID, r.exon_start, r.exon_end, r.coding_start, r.coding_end, r.exon_end - r.exon_start + 1, r.coding_end - r.coding_start + 1
+			chr_frags.append((r.exon_start-1+exclude_nt_from_boundary, r.exon_end-exclude_nt_from_boundary))
+		if recs[0].strand == '1':
+			## fix first exon
+			chr_frags[0] = (recs[0].exon_start-1 + recs[0].coding_start-1 +exclude_nt_from_boundary, recs[0].exon_end-exclude_nt_from_boundary)
+			## fix last exon
+			chr_frags[-1] = (recs[-1].exon_start-1 +exclude_nt_from_boundary, recs[-1].exon_start-1 + (recs[-1].coding_end-recs[-1].coding_start+1) +1 -exclude_nt_from_boundary)
+		elif recs[0].strand == '-1':
+			## fix first exon, which is actually the last segment of the protein
+			##
+			chr_frags[0] = (r.exon_start-1 + r.coding_start-1 +exclude_nt_from_boundary, r.exon_end-exclude_nt_from_boundary)
+			## fix last exon
+			chr_frags[-1] = (r.exon_start-1 +exclude_nt_from_boundary, r.exon_start-1 + (r.coding_end-r.coding_start+1) +1 -exclude_nt_from_boundary)
+		if recs[0].peptide_ID == 'ENSDARP00000079005':
+			# Does the length add up?
+			if (recs[-1].coding_end - recs[0].coding_start + 1)%3 != 0:
+				print "bad coding length!"
+			l = 0
+			for (cstart, cend) in chr_frags:
+				print cstart,cend, cend-cstart+1
+				l += cend - cstart + 1
+			if l % 3 != 0:
+				print "bad exon length!"
+	else:
+		# coding start indicates chromosomal position
+		for r in recs:
+			chr_frags.append((r.coding_start-1+exclude_nt_from_boundary, r.coding_end-exclude_nt_from_boundary))
 
+	for (cstart, cend) in chr_frags:
+		seq += chrseq[cstart:cend]
+	return seq, recs[0]
+'''
+	exon_start = recs[0].exon_start - 1
+	# but for others, exon_start = 0: check whether coding_start is relative to exon_start or not.
+	#exon_start = 0
+	print "\t%s %d %d" % (r.peptide_ID, exon_start + r.coding_start - 1 + exclude_nt_from_boundary, exon_start + r.coding_end-exclude_nt_from_boundary)
+	if r.exon_ID in ['ENSDARE00000637672','ENSDARE00000593488']:
+		print "****"
+		print r.exon_ID, r.coding_start, r.coding_end, exon_start, exon_start + r.coding_end - r.coding_start
+		print translate.reverseComplement(chrseq[(exon_start + r.coding_start - 1):(exon_start + r.coding_end - exclude_nt_from_boundary)])
+		print translate.reverseComplement(chrseq[(exon_start):(exon_start + (r.coding_end-r.coding_start) - exclude_nt_from_boundary + 1)])
 	for i in range(len(recs)):
 		r = recs[i]
+
 		if i == 0:
 			# Handle first exon
 			if r.coding_end - r.coding_start >= exclude_nt_from_boundary:
-				seq += chrseq[(r.coding_start-1):(r.coding_end-exclude_nt_from_boundary)] + \
+				seq += chrseq[(exon_start + r.coding_start - 1):(exon_start + r.coding_end - exclude_nt_from_boundary)] + \
 					   '-'*exclude_nt_from_boundary
 			else:
-				seq += '-'*(r.coding_end - r.coding_start+1)
+				seq += '-'*(r.coding_end - r.coding_start + 1)
 		elif i == len(recs)-1:
 			# Handle last exon
 			if r.coding_end - r.coding_start >= exclude_nt_from_boundary:
 				seq += '-'*exclude_nt_from_boundary + \
-					   chrseq[(r.coding_start-1+exclude_nt_from_boundary):(r.coding_end)]
+					   chrseq[(exon_start + r.coding_start - 1 + exclude_nt_from_boundary):(exon_start + r.coding_end)]
 			else:
-				seq += '-'*(r.coding_end - r.coding_start+1)
+				seq += '-'*(r.coding_end - r.coding_start + 1)
 
 		else:
 			if r.coding_end - r.coding_start >= 2*exclude_nt_from_boundary:
 				seq += '-'*exclude_nt_from_boundary + \
-					   chrseq[(r.coding_start-1+exclude_nt_from_boundary):(r.coding_end-exclude_nt_from_boundary)] + \
+					   chrseq[(exon_start + r.coding_start - 1 + exclude_nt_from_boundary):(exon_start + r.coding_end - exclude_nt_from_boundary)] + \
 					   '-'*exclude_nt_from_boundary
 			else:
-				seq += '-'*(r.coding_end - r.coding_start+1)
+				seq += '-'*(r.coding_end - r.coding_start + 1)
 	return seq, recs[0]
+'''
 
 def buildIntronSequence(recs, chrseq):
 	seq = ''
@@ -336,11 +386,13 @@ def writeGenes(chromosomes, exon_records, chromosome_load_fxn, id_fxn, exclude_n
 		for (pepid, recdict) in exon_records.items():
 			recs = recdict.values()
 			if recs[0].chromosome == chr:
+				strand_sign = int(recs[0].strand)
 				recs.sort( key = lambda e: e.exon_start)
 				(seq, sentinel_rec) = buildCodingSequence(recs, chrseq, exclude_nt_from_boundary)
+				rseq = seq
 				# Reverse-complement the sequence if it's on the negative strand
 				if recs[0].strand == '-1':
-					# print "reversing strand"
+					#print "reversing strand"
 					seq = translate.reverseComplement(seq)
 				n_genes += 1
 				if len(seq) % 3 != 0:
@@ -348,11 +400,19 @@ def writeGenes(chromosomes, exon_records, chromosome_load_fxn, id_fxn, exclude_n
 					n_wrong_length += 1
 					continue
 				if exclude_nt_from_boundary == 0:
+					#if sentinel_rec.peptide_ID == 'ENSDARP00000076309':
+					#	print seq
+					#	print rseq
+					#	print translate.translateRaw(seq)
+					#	print translate.translateRaw(rseq)
+					#	sys.exit()
 					try:
-						prot = translate.Translate(seq)
+						prot = translate.translate(seq)
 						if not prot:
+							#print "****"
 							#print id_fxn(sentinel_rec)
 							#print seq
+							#print rseq
 							#for rec in recs:
 							#	print rec
 							#print "^%s^\t%s" % (recs[0].strand, seq[0:])
