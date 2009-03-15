@@ -15,7 +15,7 @@ Endelman, J. et al., "Site-directed protein recombination as a shortest-path pro
 """
 
 import sys, string, os
-import pdb, schema
+import pdbmod, schema
 
 ARG_PDB_FILE = 'pdb'
 ARG_OUTPUT_FILE = 'o'
@@ -105,10 +105,10 @@ def main(args):
 		output_file = sys.stdout
 	
 	# Read in the PDB file to create a list of residues.
-	residues = pdb.File().read(file(pdb_file, 'r'))
+	residues = pdbmod.File().read(file(pdb_file, 'r'))
 	
 	# Filter residues not in selected chains
-	residue_seq = pdb.sequence(residues, chain_identifiers)
+	residue_seq = pdbmod.sequence(residues, chain_identifiers)
 	if residue_seq == '':
 		print "No residues found for chain(s) %s.  Aborting..." % chain_identifiers
 		return

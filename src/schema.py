@@ -17,7 +17,7 @@ Endelman, J. et al., "Site-directed protein recombination as a shortest-path pro
 """
 
 import sys, string, random
-import pdb, translate
+import pdbmod, translate
 
 DIGITS_LETTERS = string.digits + string.letters
 
@@ -63,16 +63,16 @@ def alignPDBResidues(residues, aligned_parent_protein, aligned_pdb_protein, libr
 				j += 1
 				k += 1
 			elif parj == pdbj == li: # All have gaps
-				new_residues.append(pdb.Residue(None))
+				new_residues.append(pdbmod.Residue(None))
 				j += 1
 		else: # parent does not contain a gap at i
 			# While the aligned parent doesn't match the library parent,
 			# advance the indices.  This brings the sequences back into
 			# register.
-			pdbres = pdb.three_to_one_map[residues[k].residue]
+			pdbres = pdbmod.three_to_one_map[residues[k].residue]
 			#print li, aligned_parent_protein[j], aligned_pdb_protein[j], pdbres
 			while aligned_parent_protein[j] != li:
-				pdbres = pdb.three_to_one_map[residues[k].residue]
+				pdbres = pdbmod.three_to_one_map[residues[k].residue]
 				if aligned_pdb_protein[j] != '-':
 					k += 1
 				j += 1
@@ -81,16 +81,16 @@ def alignPDBResidues(residues, aligned_parent_protein, aligned_pdb_protein, libr
 			# Now, if the aligned PDB has a gap, insert a gap
 			# into the residues list, otherwise insert the residue.
 			if aligned_pdb_protein[j] == '-':
-				new_residues.append(pdb.Residue(None))
+				new_residues.append(pdbmod.Residue(None))
 			else:
-				pdbres = pdb.three_to_one_map[residues[k].residue]
+				pdbres = pdbmod.three_to_one_map[residues[k].residue]
 				#print i, j, k
 				#print li, aligned_parent_protein[j], aligned_pdb_protein[j], pdbres
 				#print library_parent_protein[:i+1]
 				#print aligned_parent_protein[:j+1]
 				#print aligned_pdb_protein[:j+1]
-				#print pdb.sequence(new_residues)
-				#print pdb.sequence(residues)[:k+1]
+				#print pdbmod.sequence(new_residues)
+				#print pdbmod.sequence(residues)[:k+1]
 				# Check to make sure we're adding the expected residue
 				if aligned_pdb_protein[j] != pdbres:
 					err_string = "Expected residue %s at aligned position %d based on alignment, but PDB had %s at corresponding residue %d.  Aborting..."
