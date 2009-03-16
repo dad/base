@@ -141,12 +141,12 @@ def buildCodingSequence(recs, chrseq, exclude_nt_from_boundary):
 	exon_frags[0] = (e - first_fragment_length,e)
 	(s,e) = exon_frags[-1]
 	exon_frags[-1] = (s, s + last_fragment_length)
-	
+
 	coding_seq = ""
 	for (s,e) in exon_frags:
 		coding_seq += chrseq[s:e]
-	return coding_seq, recs[0]	
-	
+	return coding_seq, recs[0]
+
 '''
 	if recs[0].peptide_ID == 'ENSDARP00000010075':
 		print "*** checking ***"
@@ -159,87 +159,6 @@ def buildCodingSequence(recs, chrseq, exclude_nt_from_boundary):
 			else:
 				print chrseq[s:e]
 		print translate.translate(coding_seq)
-				
-	# Now pull out the coding sequence.
-	
-	
-	
-	if recs[0].strand == '-1':
-		# process in 
-		recs.sort(key = lambda e: -e.exon_start)
-		
-	if recs[0].coding_start < recs[0].exon_start:
-		if recs[0].coding_start != 1:
-			print recs[0]
-		# coding start indicates position within exon
-		for r in recs:
-			if recs[0].peptide_ID == 'ENSDARP00000079005':
-				print recs[0].exon_ID, r.exon_start, r.exon_end, r.coding_start, r.coding_end, r.exon_end - r.exon_start + 1, r.coding_end - r.coding_start + 1
-			chr_frags.append((r.exon_start-1+exclude_nt_from_boundary, r.exon_end-exclude_nt_from_boundary))
-		if recs[0].strand == '1':
-			## fix first exon
-			chr_frags[0] = (recs[0].exon_start-1 + recs[0].coding_start-1 +exclude_nt_from_boundary, recs[0].exon_end-exclude_nt_from_boundary)
-			## fix last exon
-			chr_frags[-1] = (recs[-1].exon_start-1 +exclude_nt_from_boundary, recs[-1].exon_start-1 + (recs[-1].coding_end-recs[-1].coding_start+1) +1 -exclude_nt_from_boundary)
-		elif recs[0].strand == '-1':
-			## fix first exon, which is actually the last segment of the protein
-			##
-			chr_frags[0] = (r.exon_start-1 + r.coding_start-1 +exclude_nt_from_boundary, r.exon_end-exclude_nt_from_boundary)
-			## fix last exon
-			chr_frags[-1] = (r.exon_start-1 +exclude_nt_from_boundary, r.exon_start-1 + (r.coding_end-r.coding_start+1) +1 -exclude_nt_from_boundary)
-		if recs[0].peptide_ID == 'ENSDARP00000079005':
-			# Does the length add up?
-			if (recs[-1].coding_end - recs[0].coding_start + 1)%3 != 0:
-				print "bad coding length!"
-			l = 0
-			for (cstart, cend) in chr_frags:
-				print cstart,cend, cend-cstart+1
-				l += cend - cstart + 1
-			if l % 3 != 0:
-				print "bad exon length!"
-	else:
-		# coding start indicates chromosomal position
-		for r in recs:
-			chr_frags.append((r.coding_start-1+exclude_nt_from_boundary, r.coding_end-exclude_nt_from_boundary))
-
-	for (cstart, cend) in chr_frags:
-		seq += chrseq[cstart:cend]
-	return seq, recs[0]
-	exon_start = recs[0].exon_start - 1
-	# but for others, exon_start = 0: check whether coding_start is relative to exon_start or not.
-	#exon_start = 0
-	print "\t%s %d %d" % (r.peptide_ID, exon_start + r.coding_start - 1 + exclude_nt_from_boundary, exon_start + r.coding_end-exclude_nt_from_boundary)
-	if r.exon_ID in ['ENSDARE00000637672','ENSDARE00000593488']:
-		print "****"
-		print r.exon_ID, r.coding_start, r.coding_end, exon_start, exon_start + r.coding_end - r.coding_start
-		print translate.reverseComplement(chrseq[(exon_start + r.coding_start - 1):(exon_start + r.coding_end - exclude_nt_from_boundary)])
-		print translate.reverseComplement(chrseq[(exon_start):(exon_start + (r.coding_end-r.coding_start) - exclude_nt_from_boundary + 1)])
-	for i in range(len(recs)):
-		r = recs[i]
-
-		if i == 0:
-			# Handle first exon
-			if r.coding_end - r.coding_start >= exclude_nt_from_boundary:
-				seq += chrseq[(exon_start + r.coding_start - 1):(exon_start + r.coding_end - exclude_nt_from_boundary)] + \
-					   '-'*exclude_nt_from_boundary
-			else:
-				seq += '-'*(r.coding_end - r.coding_start + 1)
-		elif i == len(recs)-1:
-			# Handle last exon
-			if r.coding_end - r.coding_start >= exclude_nt_from_boundary:
-				seq += '-'*exclude_nt_from_boundary + \
-					   chrseq[(exon_start + r.coding_start - 1 + exclude_nt_from_boundary):(exon_start + r.coding_end)]
-			else:
-				seq += '-'*(r.coding_end - r.coding_start + 1)
-
-		else:
-			if r.coding_end - r.coding_start >= 2*exclude_nt_from_boundary:
-				seq += '-'*exclude_nt_from_boundary + \
-					   chrseq[(exon_start + r.coding_start - 1 + exclude_nt_from_boundary):(exon_start + r.coding_end - exclude_nt_from_boundary)] + \
-					   '-'*exclude_nt_from_boundary
-			else:
-				seq += '-'*(r.coding_end - r.coding_start + 1)
-	return seq, recs[0]
 '''
 
 def buildIntronSequence(recs, chrseq):
@@ -261,8 +180,8 @@ def codingOutsideBoundary(recs, nt_bound):
 	coding_total = 0
 	coding_outside = 0
 	for r in recs:
-		assert r.exon_end >= r.coding_end
-		assert r.exon_start <= r.coding_start
+		#assert r.exon_end >= r.coding_end
+		#assert r.exon_start <= r.coding_start
 		exon_coding = r.coding_end - r.coding_start + 1
 		exon_total = r.exon_end - r.exon_start + 1
 		if exon_total <= 2*nt_bound:

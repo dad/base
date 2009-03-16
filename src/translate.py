@@ -185,7 +185,7 @@ def translate(seq):
 def Translate(seq):
 	return translate(seq)
 
-def translateRaw(seq, bad_aa = 'X'):
+def translateRaw(seq, bad_aa = 'x'):
 	"""Translates a nucleotide sequence to a protein sequence.
 
 	'seq' is the gene sequence to be translated. It can begin with any codon
@@ -195,7 +195,7 @@ def translateRaw(seq, bad_aa = 'X'):
 
 	If the translation is successful, returns a string corresponding to the
 	protein sequence plus stop codons and ."""
-	prot = []
+	prot = ""
 	max_aas = int(math.floor(len(seq)/3))
 	codon = seq[0:3]
 	for i in range(max_aas):
@@ -204,11 +204,10 @@ def translateRaw(seq, bad_aa = 'X'):
 			aa = codonToAA(codon)
 		except BioUtilsError: # unrecognized codon
 			aa = bad_aa
-		prot.append(aa)
-	protseq = ''.join(prot)
-	return protseq
+		prot += aa
+	return prot
 
-def TranslateRaw(seq, bad_aa = 'X'):
+def TranslateRaw(seq, bad_aa = 'x'):
 	return translateRaw(seq, bad_aa)
 
 def reverseTranslate(prot, bad_codon ='xxx'):
