@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! python
 
 """
 A Python replacement for java.util.Properties class
