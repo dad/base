@@ -3,6 +3,17 @@ library(pls)
 source("~/research/lib/pcor.R")
 
 
+barplot.ci <- function(x, param.name, ylim=NULL, ...) {
+  params <- sapply(x, function(m) {coef(m)[[param.name]]})
+  lower.cis <- sapply(1:length(x), function(m) {confint(x[[m]], param.name)[[1]]})
+  upper.cis <- sapply(1:length(x), function(m) {confint(x[[m]], param.name)[[2]]})
+  if (is.null(ylim)) {
+    ylim=c(min(0,min(lower.cis)), max(upper.cis))
+  }
+  pts <- barplot(params, ylim=ylim, ...)
+  segments(pts, upper.cis, pts, lower.cis)
+}
+
 barplot.err <- function(x, x.err, ...) {
 	f.args <- list(...)
 	if (is.null(f.args$ylim)) {
@@ -12,6 +23,21 @@ barplot.err <- function(x, x.err, ...) {
 	bp <- barplot(x, ylim=f.args$ylim, ...)
 	segments(bp, x-x.err, bp, x+x.err)
 }
+
+my.axis <- function(side, at, log=F, expand.range=0.1, ...) {
+  if (log) {
+    lat <- as.integer(log10(at))
+    latseq <- min(lat,na.rm=T):max(lat,na.rm=T)
+    labs <- lapply(latseq, function(m){substitute(10^i ,list(i=m))})
+    ##labs <- as.vector(lapply(lat, function(m){substitute(10^i ,list(i=m))}))  
+    axis(side, at=10^(latseq), labels=as.expression(labs), ...)
+  }
+  else {
+    axis(side, at, ...)
+  }
+}
+
+
 
 lt <- function(x) {x[lower.tri(x)]}
 tr <- function(x) {sum(diag(x),na.rm=T)}
