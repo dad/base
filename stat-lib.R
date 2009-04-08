@@ -2,6 +2,17 @@ library(Hmisc)
 library(pls)
 source("~/research/lib/pcor.R")
 
+
+barplot.err <- function(x, x.err, ...) {
+	f.args <- list(...)
+	if (is.null(f.args$ylim)) {
+		f.args$ylim <- c(min(x-x.err,na.rm=T),max(x+x.err,na.rm=T))
+		##print(f.args$ylim)
+	}
+	bp <- barplot(x, ylim=f.args$ylim, ...)
+	segments(bp, x-x.err, bp, x+x.err)
+}
+
 lt <- function(x) {x[lower.tri(x)]}
 tr <- function(x) {sum(diag(x),na.rm=T)}
 
