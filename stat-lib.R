@@ -358,9 +358,9 @@ mean.measurement <- function(x, wts=NULL, na.rm=FALSE) {
 		wts <- seq(1,1,length.out=ncol(x))/ncol(x)
 	}
 	# For missing values, if na.rm=T, reweight
-	mv <- mat.wtd.meanvar(x, wts, normwt=TRUE, na.rm=na.rm)
-	x.mean <- mv$mean #mat.wtd.mean(x, wts, na.rm=na.rm) #apply(x, 1, wtd.mean, weights=wts, na.rm=na.rm)
-	x.var <- mv$var
+	#mv <- mat.wtd.meanvar(x, wts, normwt=TRUE, na.rm=na.rm)
+	x.mean <- apply(x, 1, mean, na.rm=na.rm) #mv$mean #mat.wtd.mean(x, wts, na.rm=na.rm) #apply(x, 1, wtd.mean, weights=wts, na.rm=na.rm)
+	x.var <- apply(x, 1, var, na.rm=na.rm)  #mv$var
 	# Make all rows which contain only NA's equal NA, not 0
 	if (na.rm) {
 		x.mean[apply(x, 1, function(m) {all(is.na(m))})] <- NA

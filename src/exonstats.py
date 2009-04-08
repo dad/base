@@ -1,6 +1,4 @@
-
 import sys, os, math, string, random, pickle
-sys.path = [os.path.expanduser('~/research/lib/')] + sys.path
 import stats, translate, muscle, cai
 
 # Goal: compute statistics about gene structure from chromosomal data
@@ -89,14 +87,14 @@ def readExons(coord_filename, header_dict):
 			continue
 		try:
 			xrec = CodingExonRecord()
-			xrec.gene_ID = flds[gene_id_ind]
-			xrec.peptide_ID = flds[peptide_id_ind]
-			xrec.transcript_ID = flds[transcript_id_ind]
-			xrec.exon_ID = flds[exon_id_ind]
-			xrec.chromosome = flds[chromosome_ind]
+			xrec.gene_ID = flds[gene_id_ind].strip()
+			xrec.peptide_ID = flds[peptide_id_ind].strip()
+			xrec.transcript_ID = flds[transcript_id_ind].strip()
+			xrec.exon_ID = flds[exon_id_ind].strip()
+			xrec.chromosome = flds[chromosome_ind].strip()
 			xrec.exon_start = int(flds[exon_start_ind])
 			xrec.exon_end = int(flds[exon_end_ind])
-			xrec.strand = flds[strand_ind]
+			xrec.strand = flds[strand_ind].strip()
 			try:
 				xrec.coding_start = int(flds[coding_start_ind])
 				xrec.coding_end = int(flds[coding_end_ind])
@@ -117,33 +115,51 @@ def readExons(coord_filename, header_dict):
 
 def buildCodingSequence(recs, chrseq, exclude_nt_from_boundary):
 	seq = ''
-	first_exon = True
+	# Coding_start indicates the position in the exon rather than the chromosomal position
+	# in this case, r.coding_start == 1 for first exon
+	exon_frags = []
+	exon_seq = ""
+	for r in recs:
+		if r.coding_start: # if this is a coding exon
+			# frags are in 0-based indexes.
+			exon_frags.append((r.exon_start-1, r.exon_end))
+			exon_seq += chrseq[r.exon_start-1:r.exon_end]
+	# If more than one exon...
+	'''
+	Example (strand = -1):
+	exon               e.start  e.end	 c.s c.e e.l c.l
+	ENSDARE00000615257 40356040 40356181 505 576 142  72
+	ENSDARE00000615257 40356470 40356704 270 504 235 235
+	ENSDARE00000615257 40357179 40357350  98 269 172 172
+	ENSDARE00000615257 40361610 40361840   1  97 231  97
+	'''
+	#if len(exon_frags) > 1:
+	# take only the 3' end of the first exon and only the 5' end of the last exon
+	first_fragment_length = recs[0].coding_end - recs[0].coding_start + 1
+	last_fragment_length = recs[-1].coding_end - recs[-1].coding_start + 1
+	(s,e) = exon_frags[0]
+	exon_frags[0] = (e - first_fragment_length,e)
+	(s,e) = exon_frags[-1]
+	exon_frags[-1] = (s, s + last_fragment_length)
 
-	for i in range(len(recs)):
-		r = recs[i]
-		if i == 0:
-			# Handle first exon
-			if r.coding_end - r.coding_start >= exclude_nt_from_boundary:
-				seq += chrseq[(r.coding_start-1):(r.coding_end-exclude_nt_from_boundary)] + \
-					   '-'*exclude_nt_from_boundary
-			else:
-				seq += '-'*(r.coding_end - r.coding_start+1)
-		elif i == len(recs)-1:
-			# Handle last exon
-			if r.coding_end - r.coding_start >= exclude_nt_from_boundary:
-				seq += '-'*exclude_nt_from_boundary + \
-					   chrseq[(r.coding_start-1+exclude_nt_from_boundary):(r.coding_end)]
-			else:
-				seq += '-'*(r.coding_end - r.coding_start+1)
+	coding_seq = ""
+	for (s,e) in exon_frags:
+		coding_seq += chrseq[s:e]
+	return coding_seq, recs[0]
 
-		else:
-			if r.coding_end - r.coding_start >= 2*exclude_nt_from_boundary:
-				seq += '-'*exclude_nt_from_boundary + \
-					   chrseq[(r.coding_start-1+exclude_nt_from_boundary):(r.coding_end-exclude_nt_from_boundary)] + \
-					   '-'*exclude_nt_from_boundary
+'''
+	if recs[0].peptide_ID == 'ENSDARP00000010075':
+		print "*** checking ***"
+		for i in range(len(recs)):
+			r = recs[i]
+			(s,e) = exon_frags[i]
+			print r.exon_ID, s, e, r.exon_start, r.exon_end, r.coding_start, r.coding_end, r.exon_end - r.exon_start + 1, r.coding_end - r.coding_start + 1, e-s
+			if r.strand == '-1':
+				print translate.reverseComplement(chrseq[s:e])
 			else:
-				seq += '-'*(r.coding_end - r.coding_start+1)
-	return seq, recs[0]
+				print chrseq[s:e]
+		print translate.translate(coding_seq)
+'''
 
 def buildIntronSequence(recs, chrseq):
 	seq = ''
@@ -164,8 +180,8 @@ def codingOutsideBoundary(recs, nt_bound):
 	coding_total = 0
 	coding_outside = 0
 	for r in recs:
-		assert r.exon_end >= r.coding_end
-		assert r.exon_start <= r.coding_start
+		#assert r.exon_end >= r.coding_end
+		#assert r.exon_start <= r.coding_start
 		exon_coding = r.coding_end - r.coding_start + 1
 		exon_total = r.exon_end - r.exon_start + 1
 		if exon_total <= 2*nt_bound:
@@ -336,11 +352,13 @@ def writeGenes(chromosomes, exon_records, chromosome_load_fxn, id_fxn, exclude_n
 		for (pepid, recdict) in exon_records.items():
 			recs = recdict.values()
 			if recs[0].chromosome == chr:
+				strand_sign = int(recs[0].strand)
 				recs.sort( key = lambda e: e.exon_start)
 				(seq, sentinel_rec) = buildCodingSequence(recs, chrseq, exclude_nt_from_boundary)
+				rseq = seq
 				# Reverse-complement the sequence if it's on the negative strand
 				if recs[0].strand == '-1':
-					# print "reversing strand"
+					#print "reversing strand"
 					seq = translate.reverseComplement(seq)
 				n_genes += 1
 				if len(seq) % 3 != 0:
@@ -348,13 +366,21 @@ def writeGenes(chromosomes, exon_records, chromosome_load_fxn, id_fxn, exclude_n
 					n_wrong_length += 1
 					continue
 				if exclude_nt_from_boundary == 0:
+					#if sentinel_rec.peptide_ID == 'ENSDARP00000076309':
+					#	print seq
+					#	print rseq
+					#	print translate.translateRaw(seq)
+					#	print translate.translateRaw(rseq)
+					#	sys.exit()
 					try:
-						prot = translate.Translate(seq)
-						if not prot:
-							#print id_fxn(sentinel_rec)
-							#print seq
-							#for rec in recs:
-							#	print rec
+						prot = translate.translate(seq)
+						if False: #not prot:
+							print "****"
+							print id_fxn(sentinel_rec)
+							print seq
+							print rseq
+							for rec in recs:
+								print rec
 							#print "^%s^\t%s" % (recs[0].strand, seq[0:])
 							n_errors += 1
 							n_bad_translation += 1

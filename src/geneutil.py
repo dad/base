@@ -26,11 +26,13 @@ def makeAlignments(ortho_dict, cdna_dicts, filter_fxn=default_filter_fxn, filter
 				genome = cdna_dicts[spec]
 				seq = genome[sorf]
 				# Translate and so on
-				prot = translate.Translate(seq)
+				prot = translate.translate(seq)
 				if prot:
 					seqs[spec] = (sorf, prot)
 				else:
 					print "# protein", sorf, "did not translate"
+					#print seq
+					#print translate.translateRaw(seq)
 			except KeyError, ke:
 				print "#", ke, spec, sorf, orf
 				pass

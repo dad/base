@@ -46,7 +46,10 @@ if __name__ == '__main__':
 		sys.exit()
 	patterns = sys.argv[2].split("/")
 	complete = True
-	(headers, seqs) = biofile.readFASTA(os.path.expanduser(fname))
+	if os.path.isfile(os.path.expanduser(fname)):
+		(headers, seqs) = biofile.readFASTA(os.path.expanduser(fname))
+	else:
+		seqs = [fname]
 	for seq in seqs:
 		frags = digest(seq, patterns, complete)
 		#print "\n%s\n---" % seq
