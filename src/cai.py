@@ -407,9 +407,10 @@ _s_cerevisiae_optimal_codons_sharp = \
 ['TTC','TTG','ATT','ATC','GTT','GTC','TAC','CAC','CAA','AAC','AAG','GAC','GAA','TCT','TCC','CCA','ACT','ACC','GCT','TGT','AGA','GGT']
 _s_cerevisiae_optimal_codons_drummond = \
 ['AAC','AAG','ACA','ATC','ATT','CAA','CAT','CCA','CGT','GAA','GAT','GCT','GGT','GTG','TAC','TCC','TCT','TGT','TTA','TTC']
-#['AAC','AAG','ACA','ACG','AGA','ATC','ATT','CAA','CAT','CCA','GAA','GAT','GCT','GGG','GTG','GTT','TAC','TCC','TCT','TGT','TTC','TTG'] # lo
-#['AAC','AAG','ACA','ACG','AGA','ATC','ATT','CAA','CAT','CCA','GAA','GAT','GCC','GGT','GTC','GTG','TAC','TCA','TCT','TGT','TTC','TTG'] # all
-_s_cerevisiae_optimal_codons = _s_cerevisiae_optimal_codons_sharp #drummond
+# From Kliman et al. "Selection conflicts, gene expression, and codon usage trends in yeast," J Mol Evol 57:98-109 (2003) Table 1, "pref" designation
+_s_cerevisiae_optimal_codons_kliman = \
+['GCT','GCC','AGA','AAC','CGT','GAC','TGT','GAA','CAA','GGT','CAC','ATC','ATT','TTG','AAG','TTC','CCA','TCC','TCT','ACC','ACT','TAC','GTC','GTT']
+_s_cerevisiae_optimal_codons = _s_cerevisiae_optimal_codons_kliman
 
 # Derived by taking the tRNA gene count for each anticodon.
 #_a_thaliana_optimal_codons = ['GCT', 'TGC', 'GAC', 'GAG','TTC','GGC',
@@ -433,7 +434,7 @@ _d_melanogaster_optimal_codons_drummond = \
 ['CGC','CGT','CTC','CTG','TCC','TCG','ACG','CCC','GCC','GGA','GTC','GTG','AAG','AAC','CAG','CAC','GAG','GAC','TAC','TGC','TTC','ATC']
 _d_melanogaster_optimal_codons = _d_melanogaster_optimal_codons_duret99 #drummond
 
-# From Drummond et al. unpub. 2006
+# From Drummond and Wilke Cell 2008
 _sim_optimal_codons = _s_cerevisiae_optimal_codons #['AAC','AAG','ACC','ACT','AGA','ATC','ATT','CAA','CAC','CCA','GAA','GAC','GCT','GGT','GTC','GTT','TAC','TCC','TCT','TGT','TTC','TTG']
 
 # From Comeron Genetics 2004
