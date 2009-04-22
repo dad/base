@@ -754,9 +754,9 @@ def getSummaryMHStats(tables):
 	for table in tables:
 		(a1,b1,c1,d1) = table
 		ni = float(sum(table))
-		# Eliminate tables with ni < 2, as these can
+		# Eliminate tables with ni < 1.0, as these can
 		# give undefined variances.
-		if ni < 2.0:
+		if ni <= 1.0:
 			continue
 		(a,v,ea) = __getAVEA(a1,b1,c1,d1)
 		sum_a += a
@@ -810,7 +810,6 @@ def MantelHaenszelSummaryZ(tables):
 	   is instead returned, along with a probability of this Z-score assuming normality.
 	"""
 	(sum_a, sum_v, sum_ea, sum_odds_num, sum_odds_den) = getSummaryMHStats(tables)
-	#sum_a -= 0.5 # continuity correction
 	if sum_v == 0.0:
 		raise StatsError, "Variance of summary M-H tables is zero; can't compute Z or P."
 	z = __ZStat(sum_a,sum_v,sum_ea)

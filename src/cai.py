@@ -646,6 +646,25 @@ _c_elegans_rscu = {
 _c_elegans_relative_adaptiveness = getRelativeAdaptivenessFromRSCUs(_c_elegans_rscu)
 _ln_c_elegans_relative_adaptiveness = logRelativeAdaptiveness(_c_elegans_relative_adaptiveness)
 
+
+## From Drummond 2009 unpublished.
+_d_melanogaster_relative_adaptiveness = {
+	'AAA':0.2928, 'AAC':1.0000, 'AAG':1.0000, 'AAT':0.6137,
+	'ACA':0.3839, 'ACC':1.0000, 'ACG':0.5351, 'ACT':0.3788,
+	'AGA':0.1685, 'AGC':0.9209, 'AGG':0.2363, 'AGT':0.4493,
+	'ATA':0.2676, 'ATC':1.0000, 'ATT':0.6287, 'CAA':0.3617,
+	'CAC':1.0000, 'CAG':1.0000, 'CAT':0.5830, 'CCA':0.6041,
+	'CCC':1.0000, 'CCG':0.7232, 'CCT':0.3252, 'CGA':0.3128,
+	'CGC':1.0000, 'CGG':0.3028, 'CGT':0.5296, 'CTA':0.1664,
+	'CTC':0.3227, 'CTG':1.0000, 'CTT':0.1987, 'GAA':0.3980,
+	'GAC':0.9859, 'GAG':1.0000, 'GAT':1.0000, 'GCA':0.2841,
+	'GCC':1.0000, 'GCG':0.3246, 'GCT':0.4138, 'GGA':0.5904,
+	'GGC':1.0000, 'GGG':0.1233, 'GGT':0.5163, 'GTA':0.1895,
+	'GTC':0.5314, 'GTG':1.0000, 'GTT':0.3633, 'TAC':1.0000,
+	'TAT':0.4524, 'TCA':0.3279, 'TCC':1.0000, 'TCG':0.8279,
+	'TCT':0.3471, 'TGC':1.0000, 'TGT':0.3337, 'TTA':0.0832,
+	'TTC':1.0000, 'TTG':0.3648, 'TTT':0.4520}
+
 #---------------------------------------------------------------------------------
 # From Shields, D.C. and Sharp, P.M., NAR 15(19):8023-8040 (1987)
 _b_subtilis_relative_adaptiveness_shields = {

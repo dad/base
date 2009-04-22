@@ -51,6 +51,65 @@ def makeAlignments(ortho_dict, cdna_dicts, filter_fxn=default_filter_fxn, filter
 
 	return alignment_dict
 
+def fracAligned(seqid, numid, numal, length):
+	return numal/float(length)
+
+def alignStats(seqs, queryfxn, statsfxn):
+	vals = []
+	for i in range(len(seqs)-1):
+		for j in range(i+1,len(seqs)):
+			(seqid, numid, numal) = translate.sequenceIdentity(seqs[i], seqs[j])
+			vals.append(queryfxn(seqid, numid, numal, len(seqs[i])))
+	return statsfxn(vals)
+
+def getAlignments(alignment_dict, tree, alignment_threshold, outstream, print_out):
+	# Assemble set of acceptable alignments
+	species_orf_dict = {}
+	alignment_map = {}
+	tree_species = [n.name for n in tree.leaves]
+	tree_species_set = set(tree_species)
+	for spec in tree_species:
+		species_orf_dict[spec] = []
+	bad_aligns = 0
+	missing_species = 0
+	num_usable = 0
+
+	line = "# Species = (%s)\n# Found %d total ORFs with alignments\n" % (', '.join(tree_species), len(alignment_dict.keys()))
+	if not outstream is None:
+		outstream.write(line)
+	if print_out:
+		print line,
+	for orf in alignment_dict.keys():
+		(al_len, spec_orf_pairs, aligned_prots) = alignment_dict[orf]
+		#print al_len, spec_orf_pairs
+		spec_list = [xspec for (xspec,xorf) in spec_orf_pairs]
+		specs = set(spec_list)
+		# Check to make sure all species in tree exist
+		if tree_species_set.intersection(specs) != tree_species_set:
+			missing_species += 1
+			continue
+		# Now get the corresponding proteins
+		aldict = dict(zip(spec_list, aligned_prots))
+		tree_aligned_prots = [aldict[s] for s in tree_species]
+		mfal = alignStats(tree_aligned_prots, fracAligned, min)
+		if mfal < alignment_threshold:
+			bad_aligns += 1
+			continue
+		spec_dict = dict(spec_orf_pairs)
+		num_usable += 1
+		for spec in tree_species:
+			species_orf_dict[spec].append(spec_dict[spec])
+			alignment_map[spec_dict[spec]] = orf
+
+	line = "# Rejected %d ORFs with missing aligned species\n# Rejected %d ORFs with insufficient fraction aligned\n# Found %d usable alignments\n" % \
+		   (missing_species, bad_aligns, num_usable)
+	if not outstream is None:
+		outstream.write(line)
+	if print_out:
+		print line,
+	return species_orf_dict, alignment_map
+
+
 # Compute distances between pairs of genes.
 # Doesn't include calculation of kappa
 def compute_pairwise_stats_nokappa(pair_dict, alignment_dict, gene_dicts, dist_fxn, begin_index, end_index, paml_options=[]):
@@ -105,7 +164,7 @@ def compute_pairwise_stats_nokappa(pair_dict, alignment_dict, gene_dicts, dist_f
 	return distance_cache
 
 # Compute distances between pairs of genes.
-def computePairwiseStats(pair_dict, alignment_dict, gene_dicts, distFxn, begin_index, end_index, paml_options=[]):
+def computePairwiseStats(pair_dict, alignment_dict, gene_dicts, distFxn, begin_index, end_index, paml_options):
 	distance_cache = {}
 	i = 0
 	genes = pair_dict.keys()
@@ -129,7 +188,7 @@ def computePairwiseStats(pair_dict, alignment_dict, gene_dicts, distFxn, begin_i
 			continue
 		assert(len(query_gene)==3*len(query_prot) or len(query_gene)==3*(len(query_prot)+1) )
 		try:
-			(dNML, dSML, numNonsynonymousSites, numSynonymousSites, ts_tv_kappa) = distFxn(genes, options=paml_options)
+			(dNML, dSML, numNonsynonymousSites, numSynonymousSites, ts_tv_kappa) = distFxn(base_gene, query_gene, options=paml_options)
 		except paml.PAMLError, mpe:
 			print "# PAMLError %s" % mpe
 			#print "#", base_gene
