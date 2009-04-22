@@ -116,13 +116,17 @@ def computePairwiseStats(pair_dict, alignment_dict, gene_dicts, distFxn, begin_i
 		[(mspec, morf), (relspec,relorf)] = pair_dict[gene_id]
 		(num_aligned, hdrs, protal) = alignment_dict[gene_id]
 		aldict = dict(zip([xspec for (xspec,xorf) in hdrs], protal))
-		base_prot = aldict[mspec]
-		base_gene = gene_dicts[mspec][morf]
-		base_gene = muscle.align_gene_from_protein(base_gene, base_prot)
-		query_prot = aldict[relspec]
-		query_gene = gene_dicts[relspec][relorf]
-		query_gene = muscle.alignGeneFromProtein(query_gene, query_prot)
-		genes = [base_gene, query_gene]
+		try:
+			base_prot = aldict[mspec]
+			base_gene = gene_dicts[mspec][morf]
+			base_gene = muscle.align_gene_from_protein(base_gene, base_prot)
+			query_prot = aldict[relspec]
+			query_gene = gene_dicts[relspec][relorf]
+			query_gene = muscle.alignGeneFromProtein(query_gene, query_prot)
+			genes = [base_gene, query_gene]
+		except KeyError, ke:
+			print "# Gene or species not found: %s" % ke
+			continue
 		assert(len(query_gene)==3*len(query_prot) or len(query_gene)==3*(len(query_prot)+1) )
 		try:
 			(dNML, dSML, numNonsynonymousSites, numSynonymousSites, ts_tv_kappa) = distFxn(genes, options=paml_options)

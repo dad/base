@@ -363,7 +363,7 @@ def getTreeDistancePhysicalKappa(seqs, seq_labels=None, tree_string=None, option
  		("runmode","0"),      # user tree
 		("RateAncestor","0"), # don't reconstruct the ancestral states
 		("noisy","9"),        # maximize output
-		("CodonFreq","7"),    # FMutSel model
+		("CodonFreq","7"),    # 7=FMutSel model; 2=F3x4 model
 		("estFreq","0"),      # -F model (no ML estimation of codon frequencies; compute them from data)
 		("fix_kappa","0"),    # don't fix kappa, estimate it
 		("seqtype","1")       # codons

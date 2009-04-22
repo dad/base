@@ -277,6 +277,8 @@ class Properties(object):
 		""" Write the properties list to the stream 'out' along
 		with the optional 'header' """
 
+		## why don't you support storing changed properties? In the store() method always the _origProps are stored. In this case it does not behave like java Properties.
+
 		if out.mode[0] != 'w':
 			raise ValueError,'Stream should be opened in write mode!'
 
