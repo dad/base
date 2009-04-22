@@ -21,10 +21,21 @@ def getPairwiseRates(seq1, seq2, options={} ):
 	cm = CodeML('codon', options)
 	cm.loadSequences([seq1, seq2])
 	cm.run()
-	(dn_ml, ds_ml) = cm.getPairwiseDistances()
+	(dn_ml, ds_ml) = cm.getPairwiseRates()
 	(nn, ns) = cm.getSites()
 	kappa = cm.getKappa()
 	return (dn_ml, ds_ml, nn, ns, kappa)
+
+def getPairwisePhysicalRates(seq1, seq2, options={} ):
+	"""Computes the evolutionary distance(s) between aligned sequences.
+	Returns (dn, ds, nn, nsyn, kappa)
+	"""
+	cm = CodeML('codon', options)
+	cm.loadSequences([seq1, seq2])
+	cm.run()
+	(dn, ds, nn, ns) = cm.getPairwisePhysicalRates()
+	kappa = cm.getKappa()
+	return (dn, ds, nn, ns, kappa)
 
 def getTreeDistancePhysicalKappa(seqs, seq_labels=None, tree_string=None, options={} ):
 	"""Computes the evolutionary distance(s) between aligned sequences with
@@ -276,7 +287,7 @@ class CodeML:
 				ns = float(ns)
 		return syn, ns
 	#-----------------------------------------------------------------------
-	def getPairwiseDistances(self):
+	def getPairwiseRates(self):
 		"""Returns the distance(s) between two sequences after a run of CodeML.
 
 		If the run was with type 'protein', returns a number representing
@@ -325,7 +336,7 @@ class CodeML:
 			return (dn, ds)
 			
 	#---------------------------------------------------------------------
-	def getMultipleDistances(self):
+	def getMultipleRates(self):
 		"""Returns the distance(s) between two sequences after a run of CodeML.
 
 		If the run was with type 'protein', returns a single scalar representing
@@ -365,9 +376,12 @@ class CodeML:
 			return dd_sum, ds_sum, dn_sum
 		else:
 			raise PAMLError, "Type of %s is invalid." % self.seq_type
+	#---------------------------------------------------------------------
+	def getPairwisePhysicalRates(self):
+		return self.getMultiplePhysicalRates()
 
 	#---------------------------------------------------------------------
-	def getMultipleDistancesPhysical(self):
+	def getMultiplePhysicalRates(self):
 		"""Returns the physical distance(s) between two sequences after a run of CodeML.
 
 		Returns a 4-tuple, with the entries:
