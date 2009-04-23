@@ -9,146 +9,6 @@ import re, os, sys, string, math, random
 #-----------------------------------------------------------------------------------
 class BioUtilsError(Exception):
     """Error using one of the bio utils."""
-#-----------------------------------------------------------------------------------
-def Read_FASTA(infile_name):
-	"""Reads the sequences and headers from a FASTA file.
-
-	'infile' is a FASTA file.  Reads a list of all of the headers in the FASTA file
-	and all of the sequences in the FASTA file and returns them as the tuple
-	(headers, sequences) where headers[i] is the header corresponding to
-	sequences[i].
-	Removes the '>' from the headers.
-	Returns None if there is a problem processing the file."""
-	if isinstance(infile_name, file):
-		infile = infile_name
-	else:
-		infile_name = os.path.expanduser(infile_name)
-		if not os.path.isfile(infile_name):
-			raise BioUtilsError, "Cannot find the FASTA file %s." % infile_name
-		infile = file(infile_name, 'r')
-	seq = []
-	headers = []
-	sequences = []
-	lines = infile.readlines()
-	if len(lines)>0:
-		for line in lines:  # read the lines from the file
-			if line[0] == '#':
-				# Skip comment
-				continue
-			if line[0] == '>':  # a new header
-				if seq:
-					frag = ''.join(seq)
-					sequences.append(frag.upper())
-					seq = []
-				headers.append(line[1 :].rstrip())
-			else:
-				frag = line.rstrip().upper()
-				seq.append(frag)
-		frag = ''.join(seq)
-		sequences.append(frag.upper())
-	infile.close()
-	assert len(headers) == len(sequences), "Error, headers and sequences have different lengths."
-	return (headers, sequences)
-#--------------------------------------------------------------------------------
-def readFASTA(infile_name):
-	return Read_FASTA(infile_name)
-
-def firstField(x):
-	return x.split()[0].strip()
-
-def get_ensembl_peptide_id(header):
-	try:
-		h = header.split("pep:")[1].split()[0].strip()
-	except:
-		h = firstField(header)
-	return h
-
-def get_ensembl_gene_id(header):
-	try:
-		h = header.split("gene:")[1].split()[0].strip()
-	except:
-		h = firstField(header)
-	return h
-
-def getPeptideID(header):
-	try:
-		h = header.split("pep:")[1].split()[0].strip()
-	except:
-		h = firstField(header)
-	return h
-
-def getGeneID(header):
-	try:
-		h = header.split("gene:")[1].split()[0].strip()
-	except:
-		h = firstField(header)
-	return h
-
-def getTranscriptID(header):
-	try:
-		h = header.split("trans:")[1].split()[0].strip()
-	except:
-		h = firstField(header)
-	return h
-
-def getIDFunction(s):
-	if s == 'pep' or s == 'peptide':
-		return getPeptideID
-	elif s == 'trans' or s == 'transcript':
-		return getTranscriptID
-	elif s == 'gene':
-		return getGeneID
-	return firstField
-
-def readFASTADict(infile_name, fxn = firstField):
-	(headers, sequences) = readFASTA(infile_name)
-	return dict(zip(headers,sequences))
-
-def _____Bkp():
-	infile_name = os.path.expanduser(infile_name)
-	fdict = {}
-	if not os.path.isfile(infile_name):
-		raise BioUtilsError, "Cannot find the FASTA file %s." % infile_name
-	f = file(infile_name, 'r')
-	seq = []
-	currHeader = ''
-	for line in f:  # read the lines from the file
-		if line[0] == '#':
-			# Skip comment
-			continue
-		if line[0] == '>':  # a new header
-			if seq:
-				frag = ''.join(seq)
-				fdict[currHeader] = frag.upper()
-				seq = []
-			try:
-				s = line[1:].strip()
-				currHeader = fxn(s)
-			except Exception, e:
-				#print line[1:].rstrip()
-				continue
-		else:
-			frag = line.rstrip()
-			seq.append(frag.upper())
-			frag = ''.join(seq)
-	fdict[currHeader] = frag.upper()
-	f.close()
-	return fdict
-
-def Read_FASTA_Dict(infile_name, fxn = firstField):
-	return readFASTADict(infile_name, fxn)
-
-
-def writeFASTADict(seq_dict, filename):
-	if isinstance(filename, file):
-		outf = filename
-	else:
-		outf = file(filename, 'w')
-	for (key,seq) in seq_dict.items():
-		line = ">%s\n%s\n" % (key, seq)
-		outf.write(line)
-	outf.close()
-
 
 #--------------------------------------------------------------------------------
 def translate(seq):
@@ -296,6 +156,9 @@ _rna_codons = [x for x in _genetic_code.keys() if not 'T' in x]
 _dna_codons = [x for x in _genetic_code.keys() if not 'U' in x]
 _aa_dna_codons = [x for x in _dna_codons if not _genetic_code[x] == '*']
 _aa_rna_codons = [x for x in _rna_codons if not _genetic_code[x] == '*']
+
+def geneticCode():
+	return _genetic_code
 
 #---------------------------------------------------------------------------
 def codonToAA(codon):

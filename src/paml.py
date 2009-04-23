@@ -14,6 +14,11 @@ import codon, newick
 class PAMLError(Exception):
 	"""Error running or processing PAML."""
 
+## Options
+FMutSel_F_options = {'CodonFreq':'7', 'estFreq':'0', 'model':'0', 'runmode':'0', 'NSsites':'0'}
+FMutSel_options = {'CodonFreq':'7', 'estFreq':'1', 'model':'0', 'runmode':'0', 'NSsites':'0'}
+
+
 def getPairwiseRates(seq1, seq2, options={} ):
 	"""Computes the evolutionary distance(s) between aligned sequences.
 	Returns (dn, ds, nn, nsyn, kappa)
@@ -530,15 +535,18 @@ class CodeML:
 		# Find first line of codon table results
 		for i in range(len(lines)):
 			if (''.join(lines[i].strip().split())).startswith('IJij2'):
+				start_line = i+2
 				break
 		
 		# Headers
 		# I       J       ij      2Ns_IJ  pMut_IJ pSub_IJ 2Ns_JI  pMut_JI pSub_JI
 		codon_selection_dict = {}
-		for line in lines[i:]:
+		for line in lines[start_line:]:
+			if line.strip() == '':
+				break
 			#example line:
 			#TTC     TTT     CT      -1.91356        0.22056 0.07306 1.91356 0.03255 0.07306 0.07306 0.07306
-			flds = line.strip().split('\t')
+			flds = line.strip().split()
 			res = CodonSelectionResult()
 			res.codon_I = flds[0]
 			res.codon_J = flds[1]
