@@ -134,6 +134,15 @@ class CodonSelectionResult:
 
 	def __init__(self):
 		return
+
+	def __str__(self):
+		if self.codon_I < self.codon_J:
+			line = "%s\t%s\t%1.4f\t%1.4f\t%1.4f\t%1.4f\t%1.4f\t%1.4f" % \
+				   (self.codon_I, self.codon_J, self.FI_FJ, self.pMut_IJ, self.pSub_IJ, self.FJ_FI, self.pMut_JI, self.pSub_JI)
+		else:
+			line = "%s\t%s\t%1.4f\t%1.4f\t%1.4f\t%1.4f\t%1.4f\t%1.4f" % \
+				   (self.codon_J, self.codon_I, self.FJ_FI, self.pMut_JI, self.pSub_JI, self.FI_FJ, self.pMut_IJ, self.pSub_IJ)
+		return line
 	
 #----------------------------------------------------------------------------------
 class CodeML:
