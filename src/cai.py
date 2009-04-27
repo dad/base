@@ -404,12 +404,12 @@ _c_elegans_optimal_codons = _c_elegans_optimal_codons_sharp
 # From Sharp, P.M. and Cowe "Synonymous codon usage in Saccharomyces
 # cerevisiae," Yeast 7:657-678 (1991)
 _s_cerevisiae_optimal_codons_sharp = \
-['TTC','TTG','ATT','ATC','GTT','GTC','TAC','CAC','CAA','AAC','AAG','GAC','GAA','TCT','TCC','CCA','ACT','ACC','GCT','TGT','AGA','GGT']
+['AAC','AAG','ACC','ACT','AGA','ATC','ATT','CAA','CAC','CCA','GAA','GAC','GCT','GGT','GTC','GTT','TAC','TCC','TCT','TGT','TTC','TTG']
 _s_cerevisiae_optimal_codons_drummond = \
 ['AAC','AAG','ACA','ATC','ATT','CAA','CAT','CCA','CGT','GAA','GAT','GCT','GGT','GTG','TAC','TCC','TCT','TGT','TTA','TTC']
 # From Kliman et al. "Selection conflicts, gene expression, and codon usage trends in yeast," J Mol Evol 57:98-109 (2003) Table 1, "pref" designation
 _s_cerevisiae_optimal_codons_kliman = \
-['GCT','GCC','AGA','AAC','CGT','GAC','TGT','GAA','CAA','GGT','CAC','ATC','ATT','TTG','AAG','TTC','CCA','TCC','TCT','ACC','ACT','TAC','GTC','GTT']
+['AAC','AAG','ACC','ACT','AGA','ATC','ATT','CAA','CAC','CCA','CGT','GAA','GAC','GCC','GCT','GGT','GTC','GTT','TAC','TCC','TCT','TGT','TTC','TTG']
 _s_cerevisiae_optimal_codons = _s_cerevisiae_optimal_codons_kliman
 
 # Derived by taking the tRNA gene count for each anticodon.
