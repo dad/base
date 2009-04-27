@@ -601,10 +601,9 @@ _yeast_rscu = {
 
 #_yeast_relative_adaptiveness = getRelativeAdaptivenessFromRSCUs(_yeast_rscu)
 
-# Used by Yeast_CAI
 # From Sharp and Cowe, Yeast 1991
 # Table 4, for high-bias genes, relative adaptiveness
-_yeast_relative_adaptiveness = {
+_yeast_relative_adaptiveness_sharp_cowe = {
 	'AAA':0.111, 'AAC':1.000, 'AAG':1.000, 'AAT':0.064,
 	'ACA':0.015, 'ACC':1.000, 'ACG':0.000, 'ACT':0.932,
 	'AGA':1.000, 'AGC':0.041, 'AGG':0.002, 'AGT':0.029,
@@ -621,6 +620,10 @@ _yeast_relative_adaptiveness = {
 	'TCA':0.023, 'TCC':0.666, 'TCG':0.000, 'TCT':1.000,
 				 'TGC':0.075, 'TGG':1.000, 'TGT':1.000,
 	'TTA':0.125, 'TTC':1.000, 'TTG':1.000, 'TTT':0.124}
+
+## From Drummond unpublished 2009
+## Top 1% of genes by expression according to Holstege et al. Mol Cell 1998
+_yeast_relative_adaptiveness = {'AAA':0.1427, 'AAC':1.0000, 'AAG':1.0000, 'AAT':0.0871, 'ACA':0.0398, 'ACC':0.9480, 'ACG':0.0061, 'ACT':1.0000, 'AGA':1.0000, 'AGC':0.0557, 'AGG':0.0018, 'AGT':0.0186, 'ATA':0.0082, 'ATC':1.0000, 'ATT':0.7766, 'CAA':1.0000, 'CAC':1.0000, 'CAG':0.0027, 'CAT':0.2646, 'CCA':1.0000, 'CCC':0.0116, 'CCG':0.0000, 'CCT':0.0882, 'CGA':0.0000, 'CGC':0.0018, 'CGG':0.0000, 'CGT':0.1774, 'CTA':0.0654, 'CTC':0.0014, 'CTG':0.0028, 'CTT':0.0057, 'GAA':1.0000, 'GAC':1.0000, 'GAG':0.0145, 'GAT':0.6601, 'GCA':0.0130, 'GCC':0.3136, 'GCG':0.0024, 'GCT':1.0000, 'GGA':0.0065, 'GGC':0.0239, 'GGG':0.0065, 'GGT':1.0000, 'GTA':0.0000, 'GTC':0.8040, 'GTG':0.0108, 'GTT':1.0000, 'TAC':1.0000, 'TAT':0.0660, 'TCA':0.0557, 'TCC':0.6288, 'TCG':0.0000, 'TCT':1.0000, 'TGC':0.2621, 'TGT':1.0000, 'TTA':0.1892, 'TTC':1.0000, 'TTG':1.0000, 'TTT':0.1624, 'ATG':1.0000, 'TGG':1.0000}
 
 # compute natural logs of relative adaptivenesses
 _ln_yeast_relative_adaptiveness = logRelativeAdaptiveness(_yeast_relative_adaptiveness)
