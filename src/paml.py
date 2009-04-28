@@ -14,10 +14,6 @@ import codon, newick
 class PAMLError(Exception):
 	"""Error running or processing PAML."""
 
-## Options
-FMutSel_F_options = {'CodonFreq':'7', 'estFreq':'0', 'model':'0', 'runmode':'0', 'NSsites':'0'}
-FMutSel_options = {'CodonFreq':'7', 'estFreq':'1', 'model':'0', 'runmode':'0', 'NSsites':'0'}
-
 
 def getPairwiseRates(seq1, seq2, options={} ):
 	"""Computes the evolutionary distance(s) between aligned sequences.
@@ -84,7 +80,7 @@ def getPairwiseDistancePhysicalKappa(seqs, seq_labels=None, tree_string=None, op
 	options_dict['kappa'] = '3'
 	# Pairwise comparison
 	options_dict['runmode'] = '-2'
-	
+
 	cm = CodeML('codon', options_dict)
 	print cm.options
 	print options_dict
@@ -143,17 +139,57 @@ class CodonSelectionResult:
 			line = "%s\t%s\t%1.4f\t%1.4f\t%1.4f\t%1.4f\t%1.4f\t%1.4f" % \
 				   (self.codon_J, self.codon_I, self.FJ_FI, self.pMut_JI, self.pSub_JI, self.FI_FJ, self.pMut_IJ, self.pSub_IJ)
 		return line
-	
+
 #----------------------------------------------------------------------------------
 class CodeML:
 	"Class for running the PAML program codeml."
+
+	## Options
+	# All of these options are used by the PAML control file.
+	# Do not store non-control-file options here!
+	default_options = {
+		'runmode':'0',     # 0=user tree, 1=semi-automatic, 2=automatic, 3=StepwiseAddition, (4,5)=PerturbationNNI, -2=pairwise
+		'noisy':'9',       # 9=maximum output
+		'verbose':'0',     # 0=minimize screen output
+		'seqtype':'1',     # 1=codons; 2=aas; 3=codons-->aas
+		'CodonFreq':'7',   # 0=1/61 each, 1=F1X4, 2=F3X4 (9 free params), 3=codon table (61 free params), 7=FMutSel
+		'estFreq':'0',     # 0=estimate codon freq. from data; 1=ML estimate of codon freqs
+		'model':'0',       # 0=one omega for all branches
+		'NSsites':'0',     # 0=one omega for all sites, 1=neutral, 2=selection, 3=discrete, 4=freqs, 5=gamma, 6=2gamma, 7=beta, 8=beta&w, 9=beta&gamma, 10=beta&gamma+1, 11=beta&normal>1, 12=0&2normal>1, 13=3normal>0
+		'fix_alpha':'1',   # 0=estimate alpha; 1=use fixed value
+		'alpha':'0',       # fixed or initial value for alpha; 0=infinity (constant rate)
+		'fix_kappa':'0',   # 0=estimate kappa; 1=use fixed value
+		'kappa':'3',       # fixed or initial value for alpha
+		'fix_rho':'1',     # 0=estimate rho; 1=use fixed value
+		'rho':'0.',        # fixed or initial value for rho=correlation parameter of the
+							# auto-discrete-gamma model (site-to-site correlation); use fix_rho=1 and rho=0. to implement independent and constant site rates
+		'icode':'0',       # 0=standard genetic code
+		'fix_omega':'0',   # 0=estimate omega; 1=use fixed value
+		'omega':'0.1',     # fixed or initial value for omega=dN/dS
+		'RateAncestor':'0',# 0=don't estimate ancestral states; 1=estimate ancestral states
+		'Small_Diff':'1e-6', #  a small value used in the difference approximation of derivatives, typically 1e-6
+		'cleandata':'1',   # 1=remove ambiguous characters, gaps, etc. from sequences; 0=don't touch sequences
+		'method':'0',      # 0=old method of simultaneously updating all parameters; 1=new method of iteratively updating branches
+		'clock':'0',       # 0=no clock, rates free to vary from branch to branch
+		'getSE':'0',	   # 0=don't get standard errors on estimates, 1=get standard errors
+		# PAML file options
+		'seqfile':  'codeml-seqfile-tmp.txt',
+		'treefile': 'codeml-treefile-tmp.txt',
+		'outfile':  'codeml-outfile-tmp.txt'
+	}
+	FMutSel_F_options = {'CodonFreq':'7', 'estFreq':'0', 'model':'0', 'runmode':'0', 'NSsites':'0'}
+	FMutSel_options = {'CodonFreq':'7', 'estFreq':'1', 'model':'0', 'runmode':'0', 'NSsites':'0'}
+	F3x4_options = {'CodonFreq':'2', 'model':'0', 'runmode':'0', 'NSsites':'0'}
+
+
+	model_table = {"FMutSel-F":FMutSel_F_options, "FMutSel":FMutSel_options, "F3x4":F3x4_options}
+
 	#-----------------------------------------------------------------------
-	def __init__(self, seq_type, options_dict={}, prog = 'codeml'):
+	def __init__(self, seq_type='codon', options_dict={}, prog = 'codeml'):
 	  	"""Setup to run the PAML program CodeML for amino acids or nucleotides.
 
 		'type' specifies if we are looking at amino acids (type = 'protein') or
 		nucleotide codon distances (type = 'codon').
-		'dir' is the directory where the program and control files are located.
 		'prog' is the name of the program in 'dir'.
 		"""
 		if seq_type == 'protein':
@@ -166,41 +202,13 @@ class CodeML:
 		#if !os.path.isfile(self.prog):
 		#	raise PAMLError, "Cannot find PAML program %s" % (self.prog,)
 
-		# All of these options are used by the PAML control file.
-		# Do not store non-control-file options here!
-		self.options = {
-			'runmode':'0',     # 0=user tree; -2=pairwise
-			'noisy':'9',       # 9=maximum output
-			'verbose':'0',     # 0=minimize screen output
-			'CodonFreq':'7',   # 7=FMutSel
-			'estFreq':'0',     # 0=estimate codon freq. from data; 1=ML estimate of codon freqs
-			'model':'0',       # 0=one omega for all branches
-			'NSsites':'0',     # 0=one omega for all sites
-			'fix_alpha':'1',   # 0=estimate alpha; 1=use fixed value
-			'alpha':'0',       # fixed or initial value for alpha; 0=infinity (constant rate)
-			'fix_kappa':'0',   # 0=estimate kappa; 1=use fixed value
-			'kappa':'3',       # fixed or initial value for alpha
-			'seqtype':'1',     # 1=codons; 2=aas; 3=codons-->aas
-			'RateAncestor':'0',# 0=don't estimate ancestral states; 1=estimate ancestral states
-			'Small_Diff':'1e-6', #  a small value used in the difference approximation of derivatives, typically 1e-6
-			'cleandata':'1',   # 1=remove ambiguous characters, gaps, etc. from sequences; 0=don't touch sequences
-			'method':'0',      # 0=old method of simultaneously updating all parameters; 1=new method of iteratively updating branches
-			'clock':'0',       # 0=no clock, rates free to vary from branch to branch
-			'fix_rho':'1',     # 0=estimate rho; 1=use fixed value
-			'rho':'0.',        # fixed or initial value for rho=correlation parameter of the
-			# auto-discrete-gamma model (site-to-site correlation); use fix_rho=1 and rho=0. to implement independent and constant site rates
-			'icode':'0',       # 0=standard genetic code
-			'fix_omega':'0',   # 0=estimate omega; 1=use fixed value
-			'omega':'0.1',     # fixed or initial value for omega=dN/dS
-			# PAML file options
-			'seqfile':  'codeml-seqfile-tmp.txt',
-			'treefile': 'codeml-treefile-tmp.txt',
-			'outfile':  'codeml-outfile-tmp.txt'
-		}
+		self.options = self.default_options
 
 		# Pass sequence type through to options
 		if self.seq_type == 'protein':
-			self.options['seqtype'] = '0'
+			self.options['seqtype'] = '2'
+		elif self.seq_type == 'codon':
+			self.options['seqtype'] = '1'
 
 		# Replace default options with user options
 		for (k,v) in options_dict.items():
@@ -210,12 +218,22 @@ class CodeML:
 		self.controlfile = 'codeml-controlfile-tmp.txt'
 		self.tmpfile = 'codeml-tmpfile-tmp.txt'
 		self.treefile = self.options['treefile']
-		self.outfile = self.options['outfile']		
+		self.outfile = self.options['outfile']
 		self.seqfile = self.options['seqfile']
 
 		# Sequence information
 		self.num_sequences = -1
 		self.sequence_length = -1
+
+	def getModelOptions(self, model_key):
+		opts = self.default_options
+		try:
+			new_opts = self.model_table[model_key]
+			for (k,v) in new_opts.items():
+				opts[k] = v
+		except KeyError:
+			raise PAMLError, "Can't find model options for '%s'" % model_key
+		return opts
 
 	#-----------------------------------------------------------------------
 
@@ -348,7 +366,7 @@ class CodeML:
 			dn = float(flds[-2])
 			ds = float(flds[-1])
 			return (dn, ds)
-			
+
 	#---------------------------------------------------------------------
 	def getMultipleRates(self):
 		"""Returns the distance(s) between two sequences after a run of CodeML.
@@ -531,7 +549,7 @@ class CodeML:
 					#assert len(omegas) == n_classes
 					assert len(probs) == n_classes
 		return probs
-	
+
 	def getCodonSelectionCoefficients(self):
 		"""Retrieves codon substitution selection coefficients
 		"""
@@ -546,7 +564,7 @@ class CodeML:
 			if (''.join(lines[i].strip().split())).startswith('IJij2'):
 				start_line = i+2
 				break
-		
+
 		# Headers
 		# I       J       ij      2Ns_IJ  pMut_IJ pSub_IJ 2Ns_JI  pMut_JI pSub_JI
 		codon_selection_dict = {}
@@ -561,14 +579,14 @@ class CodeML:
 			res.codon_J = flds[1]
 			res.FI_FJ = float(flds[3])
 			res.pMut_IJ = float(flds[4])
-			res.pSub_IJ = float(flds[5])			
+			res.pSub_IJ = float(flds[5])
 			res.FJ_FI = float(flds[6])
 			res.pMut_JI = float(flds[7])
 			res.pSub_JI = float(flds[8])
 			key = "%s-%s" % (res.codon_I, res.codon_J)
 			codon_selection_dict[key] = res
 		return codon_selection_dict
-			
+
 
 def writeMultiplePhylip(filename, seqs):
 	"""Writes the sequences 'seqs' to the file 'filename'.
