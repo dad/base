@@ -1473,54 +1473,67 @@ noop <- function(x) {
 	x
 }
 
-# Takes a list of variables
-multidens <- function(x, log=F, kernel="r", col=rainbow(7), xaxt="s", axp3=3, legend.at=NULL, ...) {
-	if (is.data.frame(x) || is.matrix(x)) {
-		x <- lapply(1:ncol(x),function(m){x[,m]})
-	}
-	if (!is.list(x)) {
-		x <- list(x)
-	}
-	v <- na.omit(x[[1]])
-	if (log) { trans <- log10 } else { trans <- noop }
-	if (log) {
-		# Need to transform xlim if it's provided!
-		plot(density(trans(v[v>0]), na.rm=T, kernel=kernel), col=col[1], xaxt='n', ...)
-	}
-	else {
-		plot(density(trans(v), na.rm=T, kernel=kernel), col=col[1], xaxt=xaxt, ...)
-	}
-	if (length(x)>1) {
-		for (i in 2:length(x)) {
-			lines(density(trans(x[[i]]), na.rm=T, kern=kernel), col=col[i], ...)
-		}
-	}
-	# X axis
-	if (xaxt != 'n') {
-		if (log) {
-			cei <- ceiling(max(log10(x[[1]]), na.rm=T))
-			m <- min(v[v>0], na.rm=T)
-			flo <- log10(m)
-			r <- range(v[v>0], na.rm=T)
-			xt <- axTicks(1, axp=c(r,axp3), usr=c(flo,cei), log=T)
-			axis(1, xt, at=log10(xt), ...)
-		}
-		else {
-			axis(1, ...)
-		}
-	}
-	# Legend
-	if (!is.null(legend.at)) {
-		legend.names = names(x)
-		if (is.null(legend.names)) {
-			legend.names = as.character(1:4)
-		}
-		if (log) {
-			legend.at <- c(log10(legend.at[1]), legend.at[2])
-		}
-		legend(legend.at[1], legend.at[2], col=col[1:length(x)], legend=legend.names, lty=1)
-	}
-
+## Takes a list of variables, plots kernel densities
+multidens <- function(x, log=F, kernel="r", col=rainbow(7), xaxt="s", axp3=3, legend.at=NULL, xlim=NULL, ...) {
+  if (is.data.frame(x) || is.matrix(x)) {
+    x <- lapply(1:ncol(x),function(m){x[,m]})
+  }
+  if (!is.list(x)) {
+    x <- list(x)
+  }
+  v <- na.omit(x[[1]])
+  if (log) { trans <- log10 } else { trans <- noop }
+  if (log) {
+    ## Need to transform xlim if it's provided!
+    if (!is.null(xlim)) {
+      log.xlim <- trans(xlim)
+    }
+    else {
+      log.xlim <- NULL
+    }
+    plot(density(trans(v[v>0]), na.rm=T, kernel=kernel), col=col[1], xaxt='n', xlim=log.xlim, ...)
+  }
+  else {
+    plot(density(trans(v), na.rm=T, kernel=kernel), col=col[1], xaxt=xaxt, xlim=xlim, ...)
+  }
+  if (length(x)>1) {
+    for (i in 2:length(x)) {
+      lines(density(trans(x[[i]]), na.rm=T, kern=kernel), col=col[i], ...)
+    }
+  }
+  ## X axis
+  ## DAD: fix this!
+  if (xaxt != 'n') {
+    if (log) {
+      if (!is.null(xlim)) {
+        flo=log10(xlim[1])
+        cei = log10(xlim[2])
+      }
+      else {
+        cei <- ceiling(max(log10(x[[1]]), na.rm=T))
+        m <- min(v[v>0], na.rm=T)
+        flo <- log10(m)
+      }
+      r <- range(v[v>0], na.rm=T)
+      ## xt <- axTicks(1, axp=c(r,axp3), usr=c(flo,cei), log=T)
+      xt <- axTicks(1, axp=c(10^c(flo,cei),axp3), usr=c(flo,cei), log=T)          
+      axis(1, xt, at=log10(xt), ...)
+    }
+    else {
+      axis(1, ...)
+    }
+  }
+  ## Legend
+  if (!is.null(legend.at)) {
+    legend.names = names(x)
+    if (is.null(legend.names)) {
+      legend.names = as.character(1:4)
+    }
+    if (log) {
+      legend.at <- c(log10(legend.at[1]), legend.at[2])
+    }
+    legend(legend.at[1], legend.at[2], col=col[1:length(x)], legend=legend.names, lty=1)
+  }
 }
 
 multi.lm <- function(response, predictors, data, rank=F, na.last=T){
