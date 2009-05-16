@@ -62,7 +62,7 @@ def alignStats(seqs, queryfxn, statsfxn):
 			vals.append(queryfxn(seqid, numid, numal, len(seqs[i])))
 	return statsfxn(vals)
 
-def getAlignments(alignment_dict, tree, alignment_threshold, outstream, print_out):
+def getAlignments(alignment_dict, tree, alignment_threshold, outstreams):
 	# Assemble set of acceptable alignments
 	species_orf_dict = {}
 	alignment_map = {}
@@ -75,10 +75,8 @@ def getAlignments(alignment_dict, tree, alignment_threshold, outstream, print_ou
 	num_usable = 0
 
 	line = "# Species = (%s)\n# Found %d total ORFs with alignments\n" % (', '.join(tree_species), len(alignment_dict.keys()))
-	if not outstream is None:
+	for outstream in outstreams:
 		outstream.write(line)
-	if print_out:
-		print line,
 	for orf in alignment_dict.keys():
 		(al_len, spec_orf_pairs, aligned_prots) = alignment_dict[orf]
 		#print al_len, spec_orf_pairs
@@ -103,10 +101,8 @@ def getAlignments(alignment_dict, tree, alignment_threshold, outstream, print_ou
 
 	line = "# Rejected %d ORFs with missing aligned species\n# Rejected %d ORFs with insufficient fraction aligned\n# Found %d usable alignments\n" % \
 		   (missing_species, bad_aligns, num_usable)
-	if not outstream is None:
+	for outstream in outstreams:
 		outstream.write(line)
-	if print_out:
-		print line,
 	return species_orf_dict, alignment_map
 
 
@@ -274,7 +270,7 @@ def computeStats(ortho_dict, alignment_dict, gene_dicts, tree, dist_fxn, begin_i
 def read_genomes_from_file(multi_files_fname, genome_dir, genome_dicts, column_index=1, load_fxn=biofile.firstField):
 	return readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_index, load_fxn)
 
-def readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_index=1, load_fxn=biofile.firstField):
+def readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_index=1, load_fxn=biofile.firstField, species=None):
 	# Format for
 	species_map = {}
 	for line in file(multi_files_fname,'r').readlines():
@@ -282,7 +278,12 @@ def readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_inde
 			flds = line.strip().split()
 			#print flds, column_index
 			species_map[flds[0]] = flds[column_index]
-	for spec in species_map.keys():
+	if species is None:
+		species = species_map.keys()
+	else:
+		assert set(species).intersection(set(species_map.keys())) == set(species), "Not all specified species found in mapping file"
+		
+	for spec in species:
 		genome_file = os.path.join(os.path.expanduser(genome_dir), species_map[spec])
 		if not os.path.isfile(genome_file):
 			print "# Cannot find file %s" % genome_file
