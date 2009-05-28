@@ -1474,7 +1474,7 @@ noop <- function(x) {
 }
 
 ## Takes a list of variables, plots kernel densities
-multidens <- function(x, log=F, kernel="r", col=rainbow(7), xaxt="s", axp3=3, legend.at=NULL, xlim=NULL, equal.height=F, ...) {
+multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, xaxt="s", axp3=3, legend.at=NULL, xlim=NULL, equal.height=F, ...) {
   if (is.data.frame(x) || is.matrix(x)) {
     x <- lapply(1:ncol(x),function(m){x[,m]})
   }
@@ -1500,19 +1500,22 @@ multidens <- function(x, log=F, kernel="r", col=rainbow(7), xaxt="s", axp3=3, le
     else {
       log.xlim <- NULL
     }
-    plot(dv$x, dv$y/max.height, type='l', col=col[1], xaxt='n', xlim=log.xlim, ...)
+    plot(dv$x, dv$y/max.height, type='l', col=col[1], xaxt='n', xlim=log.xlim, lty=lty, lwd=lwd, ...)
   }
   else {
-    plot(density(trans(v), na.rm=T, kernel=kernel), col=col[1], xaxt=xaxt, xlim=xlim, ...)
+    plot(density(trans(v), na.rm=T, kernel=kernel), col=col[1], xaxt=xaxt, xlim=xlim, lty=lty, lwd=lwd, ...)
   }
   if (length(x)>1) {
+    cols <- as.vector(replicate(length(x)/length(col) + 1,col))
+    ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
+    lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))    
     for (i in 2:length(x)) {
       dvi <- density(trans(x[[i]]), na.rm=T, kern=kernel)
       max.height <- 1.0
       if (equal.height) {
         max.height <- max(dvi$y, na.rm=T)
       }
-      lines(dvi$x, dvi$y/max.height, col=col[i], ...)
+      lines(dvi$x, dvi$y/max.height, col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
     }
   }
   ## X axis
