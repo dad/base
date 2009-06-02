@@ -1481,17 +1481,19 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, xaxt="
   if (!is.list(x)) {
     x <- list(x)
   }
+  ##cat("h1\n")  
   ## Isolate the first variable for initial plotting
   v <- na.omit(x[[1]])
   if (log) { trans <- log10 } else { trans <- noop }
 
-  
   dv <- density(trans(v[v>0]), na.rm=T, kernel=kernel)
+  ##cat("h2\n")
   max.height <- 1.0
   if (equal.height) {
     max.height <- max(dv$y, na.rm=T)
   }
 
+  ##  cat("h3\n")
   if (log) {
     ## Need to transform xlim if it's provided!
     if (!is.null(xlim)) {
@@ -1505,7 +1507,9 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, xaxt="
   else {
     plot(density(trans(v), na.rm=T, kernel=kernel), col=col[1], xaxt=xaxt, xlim=xlim, lty=lty, lwd=lwd, ...)
   }
+  ##    cat("h4\n")
   if (length(x)>1) {
+    if (is.null(col)) {col <- rainbow(length(x))}
     cols <- as.vector(replicate(length(x)/length(col) + 1,col))
     ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
     lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))    
@@ -1518,6 +1522,7 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, xaxt="
       lines(dvi$x, dvi$y/max.height, col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
     }
   }
+  ##    cat("h5\n")  
   ## X axis
   ## DAD: fix this!
   if (xaxt != 'n') {
@@ -1540,6 +1545,7 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, xaxt="
       axis(1, ...)
     }
   }
+  ##      cat("h6\n")
   ## Legend
   if (!is.null(legend.at)) {
     legend.names = names(x)
