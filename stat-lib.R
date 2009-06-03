@@ -1474,7 +1474,7 @@ noop <- function(x) {
 }
 
 ## Takes a list of variables, plots kernel densities
-multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, xaxt="s", axp3=3, legend.at=NULL, xlim=NULL, equal.height=F, ...) {
+multidens <- function(x, log=F, kernel="r", col="black", lty="solid", lwd=1, xaxt="s", axp3=3, legend.at=NULL, xlim=NULL, equal.height=F, ...) {
   if (is.data.frame(x) || is.matrix(x)) {
     x <- lapply(1:ncol(x),function(m){x[,m]})
   }
@@ -1507,9 +1507,9 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, xaxt="
   else {
     plot(density(trans(v), na.rm=T, kernel=kernel), col=col[1], xaxt=xaxt, xlim=xlim, lty=lty, lwd=lwd, ...)
   }
+  if (is.null(col)) {col <- rainbow(length(x))}
   ##    cat("h4\n")
   if (length(x)>1) {
-    if (is.null(col)) {col <- rainbow(length(x))}
     cols <- as.vector(replicate(length(x)/length(col) + 1,col))
     ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
     lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))    
