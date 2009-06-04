@@ -1474,7 +1474,7 @@ noop <- function(x) {
 }
 
 ## Takes a list of variables, plots kernel densities
-multidens <- function(x, log=F, kernel="r", col="black", lty="solid", lwd=1, xaxt="s", axp3=3, legend.at=NULL, xlim=NULL, equal.height=F, ...) {
+multidens <- function(x, log=F, kernel="r", col=rainbow(7), lty="solid", lwd=1, xaxt="s", axp3=3, legend.at=NULL, xlim=NULL, equal.height=F, ...) {
   if (is.data.frame(x) || is.matrix(x)) {
     x <- lapply(1:ncol(x),function(m){x[,m]})
   }
@@ -1493,19 +1493,18 @@ multidens <- function(x, log=F, kernel="r", col="black", lty="solid", lwd=1, xax
     max.height <- max(dv$y, na.rm=T)
   }
 
+  if (is.null(xlim)) {
+    ## Make xlims
+    xlim <- c(min(sapply(x,min,na.rm=T),na.rm=T), max(sapply(x,max,na.rm=T),na.rm=T))
+  }
+
   ##  cat("h3\n")
   if (log) {
     ## Need to transform xlim if it's provided!
-    if (!is.null(xlim)) {
-      log.xlim <- trans(xlim)
-    }
-    else {
-      log.xlim <- NULL
-    }
-    plot(dv$x, dv$y/max.height, type='l', col=col[1], xaxt='n', xlim=log.xlim, lty=lty, lwd=lwd, ...)
+    plot(dv$x, dv$y/max.height, type='l', col=col[1], xaxt='n', xlim=trans(xlim), lty=lty, lwd=lwd, ...)
   }
   else {
-    plot(density(trans(v), na.rm=T, kernel=kernel), col=col[1], xaxt=xaxt, xlim=xlim, lty=lty, lwd=lwd, ...)
+    plot(dv$x, dv$y/max.height, type='l', col=col[1], xaxt=xaxt, xlim=xlim, lty=lty, lwd=lwd, ...)
   }
   if (is.null(col)) {col <- rainbow(length(x))}
   ##    cat("h4\n")

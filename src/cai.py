@@ -430,8 +430,11 @@ _a_lyrata_optimal_codons_drummond = ['AAC','AAG','ACA','ATC','CAC','CAG','CCT','
 # From Duret and Mouchiroud, PNAS 1999
 _d_melanogaster_optimal_codons_duret99 = \
 ['CGC','CGT','CTC','CTG','TCC','TCG','ACC','CCC','GCC','GGC','GTC','GTG','AAG','AAC','CAG','CAC','GAG','GAC','TAC','TGC','TTC','ATC']
+## From inverse-Akashi analysis
 _d_melanogaster_optimal_codons_drummond = \
-['CGC','CGT','CTC','CTG','TCC','TCG','ACG','CCC','GCC','GGA','GTC','GTG','AAG','AAC','CAG','CAC','GAG','GAC','TAC','TGC','TTC','ATC']
+['TGC','GAC','GAG','TTC','CAC','AAG','AAC','CAG','TAC','ATC','GCC','GGC','CCC','ACC','GTG','TTG','CTG','AGG','CGC','AGC','TCC','TCG']
+										 
+#['CGC','CGT','CTC','CTG','TCC','TCG','ACG','CCC','GCC','GGA','GTC','GTG','AAG','AAC','CAG','CAC','GAG','GAC','TAC','TGC','TTC','ATC']
 _d_melanogaster_optimal_codons = _d_melanogaster_optimal_codons_duret99 #drummond
 
 # From Drummond and Wilke Cell 2008
