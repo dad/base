@@ -1159,24 +1159,33 @@ down.congruence <- function(x1, x2) {
 	congruence(x1[flds], x2[flds])
 }
 
-plot.cong <- function (x, axisnames=T, colors=colorRampPalette(c("blue","black","yellow"),space="rgb")(50), zlim=c(-1,1), ...) {
+plot.cong <- function (x, x.axisnames=NULL, y.axisnames=NULL, colors=colorRampPalette(c("blue","black","yellow"),space="rgb")(50), zlim=c(-1,1), ...) {
 	x <- as.matrix(x)
     nc <- ncol(x)
 	nr <- nrow(x)
     corr <- x
-    def.par <- par(no.readonly=T)
-	#if (axisnames) {
-	#    par(mar=c(2,12,12,2))
-	#}
     image(1:nc, 1:nr, t(corr)[1:nc,nr:1], col = colors,
         axes = FALSE, xlab='', ylab='', zlim=zlim, ...)
 
-    if (axisnames) {
-            axis(2, at = 1:nr, labels = rev(rownames(x)), las=1, ...)
-            axis(3, at = 1:nc, labels = (colnames(x)), las=2, ...)
-        }
+    if (!is.null(x.axisnames)) {
+      if (any(is.na(x.axisnames))) {
+        xaxn <- colnames(x)
+      }
+      else {
+        xaxn <- x.axisnames
+      }
+      axis(3, at = 1:nc, labels = xaxn, las=2, ...)
+    }
+    if (!is.null(y.axisnames)) {
+      if (any(is.na(y.axisnames))) {
+        yaxn <- rev(rownames(x))
+      }
+      else {
+        yaxn <- rev(y.axisnames)
+      }
+      axis(2, at = 1:nr, labels = yaxn, las=1, ...)
+    }
     box()
-    par(def.par)
 }
 
 
