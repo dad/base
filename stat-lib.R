@@ -29,7 +29,7 @@ my.axis <- function(side, at, log=F, expand.range=0.1, ...) {
     lat <- as.integer(log10(at))
     latseq <- min(lat,na.rm=T):max(lat,na.rm=T)
     labs <- lapply(latseq, function(m){substitute(10^i ,list(i=m))})
-    ##labs <- as.vector(lapply(lat, function(m){substitute(10^i ,list(i=m))}))  
+    ##labs <- as.vector(lapply(lat, function(m){substitute(10^i ,list(i=m))}))
     axis(side, at=10^(latseq), labels=as.expression(labs), ...)
   }
   else {
@@ -1490,7 +1490,7 @@ multidens <- function(x, log=F, kernel="r", col=rainbow(7), lty="solid", lwd=1, 
   if (!is.list(x)) {
     x <- list(x)
   }
-  ##cat("h1\n")  
+  ##cat("h1\n")
   ## Isolate the first variable for initial plotting
   v <- na.omit(x[[1]])
   if (log) { trans <- log10 } else { trans <- noop }
@@ -1520,7 +1520,7 @@ multidens <- function(x, log=F, kernel="r", col=rainbow(7), lty="solid", lwd=1, 
   if (length(x)>1) {
     cols <- as.vector(replicate(length(x)/length(col) + 1,col))
     ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
-    lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))    
+    lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))
     for (i in 2:length(x)) {
       dvi <- density(trans(x[[i]]), na.rm=T, kern=kernel)
       max.height <- 1.0
@@ -1530,7 +1530,7 @@ multidens <- function(x, log=F, kernel="r", col=rainbow(7), lty="solid", lwd=1, 
       lines(dvi$x, dvi$y/max.height, col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
     }
   }
-  ##    cat("h5\n")  
+  ##    cat("h5\n")
   ## X axis
   ## DAD: fix this!
   if (xaxt != 'n') {
@@ -1546,7 +1546,7 @@ multidens <- function(x, log=F, kernel="r", col=rainbow(7), lty="solid", lwd=1, 
       }
       r <- range(v[v>0], na.rm=T)
       ## xt <- axTicks(1, axp=c(r,axp3), usr=c(flo,cei), log=T)
-      xt <- axTicks(1, axp=c(10^c(flo,cei),axp3), usr=c(flo,cei), log=T)          
+      xt <- axTicks(1, axp=c(10^c(flo,cei),axp3), usr=c(flo,cei), log=T)
       axis(1, xt, at=log10(xt), ...)
     }
     else {
@@ -1558,12 +1558,13 @@ multidens <- function(x, log=F, kernel="r", col=rainbow(7), lty="solid", lwd=1, 
   if (!is.null(legend.at)) {
     legend.names = names(x)
     if (is.null(legend.names)) {
-      legend.names = as.character(1:4)
+      legend.names = as.character(1:length(x))
     }
     if (log) {
       legend.at <- c(log10(legend.at[1]), legend.at[2])
     }
-    legend(legend.at[1], legend.at[2], col=col[1:length(x)], legend=legend.names, lty=1)
+    legend.cols <- col[1:min(length(x), length(col))]
+    legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=1)
   }
 }
 
