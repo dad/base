@@ -1,8 +1,7 @@
 #! /usr/local/bin/python
 
 import sys, os, math, string, random
-sys.path = [os.path.expanduser('~/research/lib/src')] + sys.path
-import translate
+import translate, biofile
 
 class MuscleError(Exception):
 	"""MUSCLE alignment error"""
@@ -20,7 +19,7 @@ def align_sequences_with_header(seq_list, max_iters=16, exepath="~/develop/muscl
 	#print cmd
 	error = os.spawnv(os.P_WAIT, os.path.expanduser(exepath), [x for x in cmd.split()])
 	if not error:
-		seq_dict = translate.Read_FASTA_Dict(outfile_name)
+		seq_dict = biofile.readFASTADict(outfile_name)
 		os.remove(outfile_name)
 		os.remove(tmp_fasta_file)
 		return seq_dict.items()
@@ -48,7 +47,7 @@ def alignSequences(seq_list, max_iters=16, exepath="~/develop/muscle3.6_src/musc
 	error = os.spawnv(os.P_WAIT, os.path.expanduser(exepath), [x for x in cmd.split()])
 
 	if not error:
-		(hdrs, seqs) = translate.Read_FASTA(outfile_name)
+		(hdrs, seqs) = biofile.readFASTA(outfile_name)
 		os.remove(outfile_name)
 		os.remove(full_tmp_fasta_file)
 		return seqs
@@ -66,7 +65,7 @@ def align_profiles(seq_file1, seq_file2, max_iters=16, exepath="~/develop/muscle
 	error = os.spawnv(os.P_WAIT, os.path.expanduser(exepath), [x for x in cmd.split()])
 
 	if not error:
-		aldict = translate.Read_FASTA_Dict(outfile_name)
+		aldict = biofile.readFASTADict(outfile_name)
 		os.remove(outfile_name)
 		return aldict
 	else:
