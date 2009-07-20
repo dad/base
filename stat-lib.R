@@ -1493,9 +1493,12 @@ multidens <- function(x, log=F, kernel="r", col=rainbow(7), lty="solid", lwd=1, 
   ##cat("h1\n")
   ## Isolate the first variable for initial plotting
   v <- na.omit(x[[1]])
-  if (log) { trans <- log10 } else { trans <- noop }
+  if (log) {
+    trans <- log10;
+    v <- v[v>0]
+  } else { trans <- noop }
 
-  dv <- density(trans(v[v>0]), na.rm=T, kernel=kernel)
+  dv <- density(trans(v), na.rm=T, kernel=kernel)
   ##cat("h2\n")
   max.height <- 1.0
   if (equal.height) {
@@ -1522,12 +1525,15 @@ multidens <- function(x, log=F, kernel="r", col=rainbow(7), lty="solid", lwd=1, 
     ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
     lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))
     for (i in 2:length(x)) {
-      dvi <- density(trans(x[[i]]), na.rm=T, kern=kernel)
-      max.height <- 1.0
-      if (equal.height) {
-        max.height <- max(dvi$y, na.rm=T)
+      xi <- na.omit(x[[i]])
+      if (length(xi) > 2) {
+        dvi <- density(trans(xi), na.rm=T, kern=kernel)
+        max.height <- 1.0
+        if (equal.height) {
+          max.height <- max(dvi$y, na.rm=T)
+        }
+        lines(dvi$x, dvi$y/max.height, col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
       }
-      lines(dvi$x, dvi$y/max.height, col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
     }
   }
   ##    cat("h5\n")
