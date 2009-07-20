@@ -1,7 +1,7 @@
 #! /usr/local/bin/python
 
 import sys, os, math, string, random
-import translate, biofile
+import biofile
 
 class MuscleError(Exception):
 	"""MUSCLE alignment error"""
@@ -71,10 +71,10 @@ def align_profiles(seq_file1, seq_file2, max_iters=16, exepath="~/develop/muscle
 	else:
 		raise MuscleError, "Muscle error code %d" % error
 
-def alignGeneFromProtein(gene, prot_align):
-	return align_gene_from_protein(gene, prot_align)
-
 def align_gene_from_protein(gene, prot_align):
+	return alignGeneFromProtein(gene, prot_align)
+
+def alignGeneFromProtein(gene, prot_align):
 	j = 0
 	gene_align = []
 	for i in range(len(prot_align)):
