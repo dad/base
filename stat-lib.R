@@ -1483,59 +1483,88 @@ noop <- function(x) {
 }
 
 ## Takes a list of variables, plots kernel densities
-multidens <- function(x, log=F, kernel="r", col=rainbow(7), lty="solid", lwd=1, xaxt="s", axp3=3, legend.at=NULL, xlim=NULL, equal.height=F, ...) {
-  if (is.data.frame(x) || is.matrix(x)) {
-    x <- lapply(1:ncol(x),function(m){x[,m]})
-  }
-  if (!is.list(x)) {
-    x <- list(x)
-  }
-  ##cat("h1\n")
-  ## Isolate the first variable for initial plotting
-  v <- na.omit(x[[1]])
-  if (log) {
-    trans <- log10;
-    v <- v[v>0]
-  } else { trans <- noop }
+multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL, equal.height=F, ...) {
+	if (is.data.frame(x) || is.matrix(x)) {
+		col.names <- colnames(x)
+		x <- lapply(1:ncol(x),function(m){x[,m]})
+		names(x) <- col.names
+	}
+	if (!is.list(x)) {
+		x <- list(x)
+	}
+	#cat("h1\n")
+	## Colors
+	if (is.null(col)) {col <- rainbow(length(x))}
+	## Extend properties into vectors, if necessary
+	cols <- as.vector(replicate(length(x)/length(col) + 1,col))
+	ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
+	lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))
+	#cat("h2\n")
+	if (log) {
+		trans <- log10
+		inv.trans <- function(y) {10^y}
+	}
+	else {
+		trans <- noop
+		inv.trans <- noop
+	}
+	#cat("h3\n")
+	## Compute the densities
+	densities <- lapply(x, function(y) {
+		ny <- na.omit(y)
+		density(trans(ny), na.rm=T, kern=kernel)
+		})
+	#cat("h4\n")
+	max.heights <- lapply(densities, function(d) {max(d$y, na.rm=T)})
+	max.height <- max(unlist(max.heights), na.rm=T)
+	if (is.null(ylim)) {
+		if (equal.height) {
+			ylim=c(0,1.05)
+		}
+		else {
+			ylim=c(0,1.05*max.height)
+		}
+	}
 
-  dv <- density(trans(v), na.rm=T, kernel=kernel)
-  ##cat("h2\n")
-  max.height <- 1.0
-  if (equal.height) {
-    max.height <- max(dv$y, na.rm=T)
-  }
+	## X limits
+	if (is.null(xlim)) {
+		## Make xlims
+		valid.x <- x
+		if (log) {
+			valid.x <- lapply(x, function(y) {y[y>0]})
+		}
+		xmin <- min(sapply(valid.x,min,na.rm=T),na.rm=T)
+		xlim <- c(xmin, max(sapply(x,max,na.rm=T),na.rm=T))
+	}
 
-  if (is.null(xlim)) {
-    ## Make xlims
-    xlim <- c(min(sapply(x,min,na.rm=T),na.rm=T), max(sapply(x,max,na.rm=T),na.rm=T))
-  }
+	## Plot the first dataset
+	d <- densities[[1]]
+	if (log) {log.str <- "x"} else {log.str <- ""}
+	if (equal.height) {height.div <- max.height} else {height.div <- 1.0}
+	plot(inv.trans(d$x), d$y/height.div, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, ...)
+	for (i in 1:length(x)) {
+		d <- densities[[i]]
+		height.div <- 1.0
+		if (equal.height) {
+			height.div <- max.heights[[i]]
+		}
+		lines(inv.trans(d$x), d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+	}
 
-  ##  cat("h3\n")
-  if (log) {
-    ## Need to transform xlim if it's provided!
-    plot(dv$x, dv$y/max.height, type='l', col=col[1], xaxt='n', xlim=trans(xlim), lty=lty, lwd=lwd, ...)
-  }
-  else {
-    plot(dv$x, dv$y/max.height, type='l', col=col[1], xaxt=xaxt, xlim=xlim, lty=lty, lwd=lwd, ...)
-  }
-  if (is.null(col)) {col <- rainbow(length(x))}
+	## cat("h6\n")
+	## Legend
+	if (!is.null(legend.at)) {
+		legend.names = names(x)
+		if (is.null(legend.names)) {
+		  legend.names = as.character(1:length(x))
+		}
+		legend.cols <- col[1:min(length(x), length(col))]
+		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=1)
+	}
+}
+
+old <- function() {
   ##    cat("h4\n")
-  if (length(x)>1) {
-    cols <- as.vector(replicate(length(x)/length(col) + 1,col))
-    ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
-    lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))
-    for (i in 2:length(x)) {
-      xi <- na.omit(x[[i]])
-      if (length(xi) > 2) {
-        dvi <- density(trans(xi), na.rm=T, kern=kernel)
-        max.height <- 1.0
-        if (equal.height) {
-          max.height <- max(dvi$y, na.rm=T)
-        }
-        lines(dvi$x, dvi$y/max.height, col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
-      }
-    }
-  }
   ##    cat("h5\n")
   ## X axis
   ## DAD: fix this!
