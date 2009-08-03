@@ -1563,46 +1563,6 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend
 	}
 }
 
-old <- function() {
-  ##    cat("h4\n")
-  ##    cat("h5\n")
-  ## X axis
-  ## DAD: fix this!
-  if (xaxt != 'n') {
-    if (log) {
-      if (!is.null(xlim)) {
-        flo=log10(xlim[1])
-        cei = log10(xlim[2])
-      }
-      else {
-        cei <- ceiling(max(log10(x[[1]]), na.rm=T))
-        m <- min(v[v>0], na.rm=T)
-        flo <- log10(m)
-      }
-      r <- range(v[v>0], na.rm=T)
-      ## xt <- axTicks(1, axp=c(r,axp3), usr=c(flo,cei), log=T)
-      xt <- axTicks(1, axp=c(10^c(flo,cei),axp3), usr=c(flo,cei), log=T)
-      axis(1, xt, at=log10(xt), ...)
-    }
-    else {
-      axis(1, ...)
-    }
-  }
-  ##      cat("h6\n")
-  ## Legend
-  if (!is.null(legend.at)) {
-    legend.names = names(x)
-    if (is.null(legend.names)) {
-      legend.names = as.character(1:length(x))
-    }
-    if (log) {
-      legend.at <- c(log10(legend.at[1]), legend.at[2])
-    }
-    legend.cols <- col[1:min(length(x), length(col))]
-    legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=1)
-  }
-}
-
 multi.lm <- function(response, predictors, data, rank=F, na.last=T){
 	if (rank) {
 		data <- rankcols(data[append(response,predictors)], na.last=na.last)
