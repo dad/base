@@ -1483,7 +1483,7 @@ noop <- function(x) {
 }
 
 ## Takes a list of variables, plots kernel densities
-multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL, equal.height=F, ...) {
+multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL, equal.height=F, relative.heights=NULL, ...) {
 	if (is.data.frame(x) || is.matrix(x)) {
 		col.names <- colnames(x)
 		x <- lapply(1:ncol(x),function(m){x[,m]})
@@ -1517,6 +1517,13 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend
 	#cat("h4\n")
 	max.heights <- lapply(densities, function(d) {max(d$y, na.rm=T)})
 	max.height <- max(unlist(max.heights), na.rm=T)
+	if (!is.null(relative.heights)) {
+		relative.heights <- relative.heights/max(relative.heights, na.rm=T)
+		equal.height=T
+	}
+	else {
+		relative.heights <- seq(1,1,length.out=length(x))
+	}
 	if (is.null(ylim)) {
 		if (equal.height) {
 			ylim=c(0,1.05)
@@ -1548,7 +1555,7 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend
 		if (equal.height) {
 			height.div <- max.heights[[i]]
 		}
-		lines(inv.trans(d$x), d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+		lines(inv.trans(d$x), relative.heights[[i]]*d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
 	}
 
 	## cat("h6\n")
