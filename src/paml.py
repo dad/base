@@ -82,8 +82,8 @@ def getPairwiseDistancePhysicalKappa(seqs, seq_labels=None, tree_string=None, op
 	options_dict['runmode'] = '-2'
 
 	cm = CodeML('codon', options_dict)
-	print cm.options
-	print options_dict
+	#print cm.options
+	#print options_dict
 	cm.loadSequences(seqs, seq_labels, tree_string)
 	cm.run()
    	(dn, ds, nn, ns) = cm.getMultipleDistPhysical()
@@ -361,7 +361,21 @@ class CodeML:
 			else:
 				raise PAMLError, "Sequence type of %s is invalid." % self.seq_type
 		elif self.options['runmode'] == '0':
-			line = file('rst1','r').readlines()[0]
+			lines = file(self.outfile,'r').readlines()
+			# Find the point at which branch values are enumerated
+			for li in range(len(lines)):
+				# Looking for this line:  branch           t        N        S    dN/dS       dN       dS   N*dN   S*dS
+				if "branchtNSdN/dS" in ''.join(line.strip()):
+					target_line = li + 2
+			line = lines[target_line]
+			entries = []
+			# Go until we hit a blank line
+			while line.strip() != '':
+				flds = line.strip().split()
+				(branch_id, t, N, S, omega, dN, dS, NxdN, SxdS) = \
+					(flds[0], float(flds[1]), float(flds[2]), float(flds[3]), float(flds[4]), float(flds[5]), float(flds[6]), float(flds[7]), float(flds[8]))
+				## DAD: implement
+
 			flds = line.strip().split()
 			dn = float(flds[-2])
 			ds = float(flds[-1])
@@ -408,6 +422,49 @@ class CodeML:
 			return dd_sum, ds_sum, dn_sum
 		else:
 			raise PAMLError, "Type of %s is invalid." % self.seq_type
+
+	#---------------------------------------------------------------------
+	def getPairwiseGYRates(self):
+		"""Returns the distance(s) between two sequences after a run of CodeML.
+
+		If the run was with type 'protein', returns a single scalar representing
+		the distance between the amino acid sequences.  If the run was with
+		type 'codon', returns a 3-tuple, with the entries as:
+		'(maximum likelihood (ML) distance, ML synonomous rate,
+		ML non-synonomous rate, Nei and Gojobori 1986 (NG) distance,
+		NG synonomous rate, NG non-nysynonomous rate)'
+		Removes the distance files after they are read.
+		Returns 'None' if there is a problem."""
+		if self.seq_type == 'protein':
+			raise PAMLError, "Protein distances not supported for multiple sequences"
+		elif self.seq_type == 'codon':
+			distances = []
+			file_list = ['rst1']
+			for file_name in file_list:
+				if not os.path.isfile(file_name):
+					raise PAMLError, "Cannot find distance file %s." % file_name
+				else:
+					file = open(file_name, 'r')
+					lines = file.readlines()
+					file.close()
+					flds = lines[0].strip().split()
+					num_branches = (len(flds)-3)/3
+					ds_sum = 0.0
+					dn_sum = 0.0
+					dd_sum = 0.0
+					for i in range(num_branches+3, len(flds)-1,2):
+						ds_sum += float(flds[i])
+					for i in range(num_branches+3+1, len(flds),2):
+						dn_sum += float(flds[i])
+					for i in range(num_branches):
+						dd_sum += float(flds[i])
+					# get the distance
+					#print dd_sum, ds_sum, dn_sum
+			#		osremove(file_name)
+			return dd_sum, ds_sum, dn_sum
+		else:
+			raise PAMLError, "Type of %s is invalid." % self.seq_type
+
 	#---------------------------------------------------------------------
 	def getPairwisePhysicalRates(self):
 		return self.getMultiplePhysicalRates()

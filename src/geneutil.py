@@ -174,7 +174,7 @@ def computePairwiseStats(pair_dict, alignment_dict, gene_dicts, distFxn, begin_i
 		try:
 			base_prot = aldict[mspec]
 			base_gene = gene_dicts[mspec][morf]
-			base_gene = muscle.align_gene_from_protein(base_gene, base_prot)
+			base_gene = muscle.alignGeneFromProtein(base_gene, base_prot)
 			query_prot = aldict[relspec]
 			query_gene = gene_dicts[relspec][relorf]
 			query_gene = muscle.alignGeneFromProtein(query_gene, query_prot)
@@ -282,7 +282,7 @@ def readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_inde
 		species = species_map.keys()
 	else:
 		assert set(species).intersection(set(species_map.keys())) == set(species), "Not all specified species found in mapping file"
-		
+
 	for spec in species:
 		genome_file = os.path.join(os.path.expanduser(genome_dir), species_map[spec])
 		if not os.path.isfile(genome_file):
