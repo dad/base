@@ -14,25 +14,25 @@ class Tree(object):
 	'''
 	Python representation of a tree.
 	'''
-	
+
 	def __init__(self):
 		self._children = []
 		self._leaves_cache = None
 		self.name = None
 		self.length = None
-		
+
 	def addChild(self, c):
 		self._children.append(c)
 		c.parent = self
 		# we need to invalidate this when we add children
 		self._leaves_cache = None
-		
+
 	def getChildren(self):
 		'''
 		get_children() -- return the list of child leaves/sub-trees.
 		'''
 		return self._children
-	
+
 	def dfs_traverse(self,visitor):
 		'''
 		dfs_traverse(visitor) -- do a depth first traversal.
@@ -45,7 +45,7 @@ class Tree(object):
 			c.dfs_traverse(visitor)
 			visitor.post_visit_child(self, c)
 		visitor.post_visit_tree(self)
-		
+
 	def getLeaves(self):
 		'''
 		getLeaves() --  return list of leaves in this (sub-)tree.
@@ -63,7 +63,7 @@ class Tree(object):
 		for c in self._children:
 			res.extend(c.getNodes())
 		return res
-	
+
 	def getLineage(self):
 		lineage = [self]
 		top_parent = self
@@ -72,16 +72,19 @@ class Tree(object):
 			top_parent = top_parent.parent
 		return lineage
 
+	def measureFrom(self, node, measureFxn):
+		my_lineage = set(self.lineage)
+		her_lineage = set(node.lineage)
+		branch_nodes = my_lineage.symmetric_difference(her_lineage)
+		meas = sum([measureFxn(x) for x in branch_nodes ])
+		return meas
+
 	def distanceFrom(self, node):
-		my_lineage = self.lineage
-		her_lineage = node.lineage
-		branch_nodes = set(my_lineage).symmetric_difference(set(her_lineage))
-		length = sum([x.length for x in branch_nodes])
-		return length
+		return self.measureFrom(node, lambda x: x.length)
 
 	def isLeaf(self):
 		return len(self._children)==0
-	
+
 	# special functions and accessors...
 	def __repr__(self):
 		#print "# kids = ", len(self.children)
@@ -100,7 +103,7 @@ class Tree(object):
 		if self.parent == None: # I'm the root!
 			tree_str += ";"
 		return tree_str
-	
+
 	leaves = property(getLeaves, None, None,
 					  "List of leaves in this subtree.")
 	children = property(getChildren, None, None,
@@ -122,7 +125,7 @@ class TreeVisitor(object):
 		pre_visit_tree(t) -- callback called before exploring (sub-)tree t.
 		'''
 		pass
-	
+
 	def post_visit_tree(self,t):
 		'''
 		post_visit_tree(t) -- callback called after exploring (sub-)tree t.
@@ -154,7 +157,7 @@ class TreeVisitor(object):
 
 class _TreeBuilder(parser.AbstractHandler):
 	"""
-	Builds a tree 
+	Builds a tree
 	"""
 	def __init__(self):
 		self.stack = []

@@ -111,7 +111,9 @@ def getCodonSelectionCoefficients(seqs, seq_labels=None, tree_string=None, optio
 	sel_coef_dict = cm.getCodonSelectionCoefficients()
 	return sel_coef_dict
 
-def getBranchRates(seqs, tree, options={}):
+# Decorate tree with branch rates.  Each non-root node gets a
+# RateResult annotation showing the rates from that node to its parent.
+def getBranchRates(seqs, seq_labels, tree_string, options={}):
 	options_dict = options
 	# Ensure user tree; won't work with runmode=-2
 	# DAD: make this work with pairwise comparison...
@@ -121,65 +123,43 @@ def getBranchRates(seqs, tree, options={}):
 	# instantly look up the distance between them.
 	options_dict['runmode'] = '0'
 	cm = CodeML('codon', options_dict)
-	seq_labels = [x.name for x in tree.leaves]
-	cm.loadSequences(seqs, seq_labels=seq_labels, tree_string=str(tree))
+	tree = newick.tree.parseTree(tree_string)
+	leaf_dict = dict([(x.name,x) for x in tree.leaves])
+	assert set(leaf_dict.keys()) == set(seq_labels)
+	cm.loadSequences(seqs, seq_labels=seq_labels, tree_string=tree_string)
 	cm.run()
 	branch_rates = cm.getBranchRates()
+	# Now map branch rates onto the tree
 	# With n = the number of sequences, the first 1:n node numbers are in the order passed in.
 	# The remaining node numbers can be inferred from their branch IDs.
 	# Each branch can be uniquely identified by its root and tip.
 	# The branch IDs are integer..integer; map the integers to the corresponding subtree strings.
-	node_dict = dict([(n.name, n) for n in tree.nodes])
-	#for (k,v) in node_dict.items():
-	#	print k,v
-	#print "***"
-	#for n in tree.nodes:
-	#	print n
-	#print "***"
-	node_id_to_name_map = {}
-	for ni in range(len(seqs)):
-		node_id_to_name_map["%d"%(ni+1,)] = seq_labels[ni]
-	leaf_sep = "/"
-	name_to_node_map = {}
-	for x in tree.nodes:
-		if x.isLeaf():
-			name_to_node_map[x.name] = x
-		else:
-			leaf_names = [l.name for l in x.leaves]
-			leaf_names.sort()
-			name_to_node_map[leaf_sep.join(leaf_names)] = x
-			
-	for (k,v) in name_to_node_map.items():
-		print k,v
-	print "****"
+	id_node_map = {}
+	for ni in range(len(seq_labels)):
+		id_node_map["%d"%(ni+1,)] = leaf_dict[seq_labels[ni]]
+
 	# Sort branch rates by their leaves
 	branch_rate_list = []
 	for (k,v) in branch_rates.items():
 		bid = k.split('..')
 		branch_rate_list.append((bid[1], (k,v)))
 	branch_rate_list.sort()
-	
+
 	branch_rate_dict = {}
 	for (k,v) in [y for (x,y) in branch_rate_list]:
-		print k,v
 		ids = k.split("..")
 		# These are integer IDs
 		child_id = ids[1]
 		parent_id = ids[0]
 		# Should already have the child in our name map
-		child_node = node_dict[node_id_to_name_map[child_id]]
-		print child_node
-		# If we don't have the parent already, store it in the name map
-		if not node_id_to_name_map.has_key(parent_id):
+		child_node = id_node_map[child_id]
+		if not id_node_map.has_key(parent_id):
+			# Get the parent node
 			parent_node = child_node.parent
-			parent_node.name = "%s" % parent_node
-			node_id_to_name_map[parent_id] = parent_node.name
-		print node_id_to_name_map[child_id], parent_node
-		parent_node = node_dict[node_id_to_name_map[parent_id]]
-		branch_key = leaf_sep.join([child_node.name, parent_node.name])
-		print leaf_ids, k, v
-		
-	return branch_rate_dict
+			id_node_map[parent_id] = parent_node
+		# Now assign the branch rate entry to the child
+		child_node.branch_rate = v
+	return tree
 
 
 def osremove(fname):
@@ -187,8 +167,8 @@ def osremove(fname):
 		os.remove(fname)
 	except OSError, ose:
 		pass
-		
-		
+
+
 
 
 ##-------------------------------------------------------
@@ -205,10 +185,10 @@ class RateResult:
 	kappa = None
 	alpha = None
 	tree_length = None
-	
+
 	def __init__(self):
 		return
-	
+
 
 class CodonSelectionResult:
 	"""Class for storing results of FMutSel estimation of codon-specific selection and mutation parameters"""

@@ -12,5 +12,13 @@ if __name__=="__main__":
 	t = newick.tree.parseTree(tree_string)
 	cm = paml.CodeML()
 	opts = cm.getModelOptions("FMutSel-F")
-	br = paml.getBranchRates(seqs, t, options=opts)
-	
+	rate_tree = paml.getBranchRates(seqs, seq_labels=["s1","s2","s3","s4"], tree_string=tree_string, options=opts)
+	nodes = rate_tree.nodes
+	def dNdist(x):
+		return x.branch_rate.dn
+
+	for i in range(len(nodes)-1):
+		for j in range(i+1,len(nodes)):
+			dist = nodes[i].measureFrom(nodes[j], dNdist)
+			print nodes[i].name, nodes[j].name, dist
+
