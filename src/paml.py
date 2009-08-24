@@ -111,11 +111,56 @@ def getCodonSelectionCoefficients(seqs, seq_labels=None, tree_string=None, optio
 	sel_coef_dict = cm.getCodonSelectionCoefficients()
 	return sel_coef_dict
 
+def getBranchRates(seqs, tree, options={}):
+	options_dict = options
+	# Ensure user tree; won't work with runmode=-2
+	# DAD: make this work with pairwise comparison...
+	options_dict['runmode'] = '0'
+	cm = CodeML('codon', options_dict)
+	seq_labels = [x.name for x in tree.leaves]
+	cm.loadSequences(seqs, seq_labels=seq_labels, tree_string=str(tree))
+	cm.run()
+	branch_rates = cm.getBranchRates()
+	# With n = the number of sequences, the first 1:n node numbers are in the order passed in.
+	# The remaining node numbers can be inferred from their branch IDs.
+	# Each branch can be uniquely identified by its root and tip.
+	# The branch IDs are integer..integer; map the integers to the corresponding subtree strings.
+	branch_map = {}
+	for ni in range(len(seqs)):
+		branch_map["%d"%(ni+1,)] = seq_labels[ni]
+	leaf_sep = "--"
+	leaf_names_only = [(leaf_sep.join([x.name for x in n.leaves]), x) for n in tree.nodes if not n.isLeaf()]
+	print leaf_names_only
+	return
+	
+
 def osremove(fname):
 	try:
 		os.remove(fname)
 	except OSError, ose:
 		pass
+		
+		
+
+
+##-------------------------------------------------------
+# Classes for processing raw PAML output
+##-------------------------------------------------------
+
+class RateResult:
+	"""Class for storing results of an evolutionary rate calculation"""
+	dn = None
+	ds = None
+	num_syn_sites = None
+	num_ns_sites = None
+	omega = None
+	kappa = None
+	alpha = None
+	tree_length = None
+	
+	def __init__(self):
+		return
+	
 
 class CodonSelectionResult:
 	"""Class for storing results of FMutSel estimation of codon-specific selection and mutation parameters"""
@@ -249,6 +294,7 @@ class CodeML:
 		writeMultipleSequences(self.seqfile, seqs, seq_labels)
 		self.num_sequences = len(seqs)
 		self.sequence_length = len(seqs[0])
+		return seq_labels
 
 	def run(self):
 		"""Runs PAML program CodeML.
@@ -319,8 +365,8 @@ class CodeML:
 				ns = float(ns)
 		return syn, ns
 	#-----------------------------------------------------------------------
-	def getPairwiseRates(self):
-		"""Returns the distance(s) between two sequences after a run of CodeML.
+	def getBranchRates(self):
+		"""Returns branch lengths for a set of sequences after a run of CodeML.
 
 		If the run was with type 'protein', returns a number representing
 		the distance between the amino acid sequences.  If the run was with
@@ -328,58 +374,38 @@ class CodeML:
 		    (ML nonsynonymous rate, ML synonymous rate)
 		"""
 		if self.options['runmode'] == '-2':
-			if self.seq_type == 'protein':
-				if not os.path.isfile('2AA.t'):
-					raise PAMLError, "Cannot find 2AA.t."
-				else:
-					lines = file('2AA.t', 'r').readlines()
-					assert lines[0].strip() == '2'
-					assert len(lines) == 3, "Error, 2AA.t did not have 3 lines"
-					entries = lines[2].split()
-					assert len(entries) >= 2
-					return float(entries[-1]) # return protein distance
-			elif self.seq_type == 'codon':
-				distances = []
-				file_list = ['2ML.dN', '2ML.dS']
-				for file_name in file_list:
-					if not os.path.isfile(file_name):
-						raise PAMLError, "Cannot find distance file %s" % file_name
-					else:
-						lines = file(file_name, 'r').readlines()
-						assert lines[0].strip() == '2'
-						assert len(lines) == 3
-						entries = lines[2].split()
-						assert len(entries) >= 2
-						# get the distance
-						try:
-							dist = float(entries[-1])
-						except ValueError:
-							dist = -1
-						distances.append(dist)
-				assert len(distances) == 2
-				return tuple(distances)
-			else:
-				raise PAMLError, "Sequence type of %s is invalid." % self.seq_type
+			raise PAMLError, "CodeML.getBranchRates() not implemented for pairwise comparison (runmode=-2) yet."
 		elif self.options['runmode'] == '0':
+			if self.seq_type != "codon":
+				raise PAMLError, "CodeML.getBranchRates() not implemented for seq_type = %s." % self.seq_type
+			# Read the standard output file
 			lines = file(self.outfile,'r').readlines()
 			# Find the point at which branch values are enumerated
 			for li in range(len(lines)):
+				line = lines[li]
 				# Looking for this line:  branch           t        N        S    dN/dS       dN       dS   N*dN   S*dS
-				if "branchtNSdN/dS" in ''.join(line.strip()):
+				#print line.strip()
+				if "branchtNSdN/dS" in ''.join(line.strip().split()):
 					target_line = li + 2
 			line = lines[target_line]
-			entries = []
+			li = target_line
+			branch_entries = {}
 			# Go until we hit a blank line
 			while line.strip() != '':
 				flds = line.strip().split()
 				(branch_id, t, N, S, omega, dN, dS, NxdN, SxdS) = \
 					(flds[0], float(flds[1]), float(flds[2]), float(flds[3]), float(flds[4]), float(flds[5]), float(flds[6]), float(flds[7]), float(flds[8]))
-				## DAD: implement
-
-			flds = line.strip().split()
-			dn = float(flds[-2])
-			ds = float(flds[-1])
-			return (dn, ds)
+				res = RateResult()
+				res.dn = dN
+				res.ds = dS
+				res.omega = omega
+				res.tree_length = t
+				res.num_syn_sites = S
+				res.num_ns_sites = N
+				branch_entries[branch_id] = res
+				li = li+1
+				line = lines[li]
+			return branch_entries
 
 	#---------------------------------------------------------------------
 	def getMultipleRates(self):

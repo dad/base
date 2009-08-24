@@ -3,7 +3,7 @@
 import sys, os, math, string, random, pickle
 import stats
 
-def main():
+if __name__=="__main__":
 	h = stats.Histogram()
 	bin_min = -1.3
 	bin_max = 10
@@ -23,5 +23,3 @@ def main():
 
 	h = stats.Histogram()
 	print h
-
-main()

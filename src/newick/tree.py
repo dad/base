@@ -60,9 +60,8 @@ class Tree(object):
 
 	def getNodes(self):
 		res = [self]
-		if not self.isLeaf():
-			for c in self._children:
-				res.extend(c.nodes)
+		for c in self._children:
+			res.extend(c.getNodes())
 		return res
 	
 	def getLineage(self):
