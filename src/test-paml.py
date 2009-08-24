@@ -9,10 +9,14 @@ if __name__=="__main__":
 			"TTG---AATATCAAATCAGCTAAGAAGCGC------CAGTCTGTAAAGGCTCGTACGCACAACGGAAGCCGTCGATCTATGATGCGTAGTTTCATCAAGAAAGTATACGCAGCTTTCGAAGCTGGCGACAAGGCTGCTGCACAGAAAGCATTTAACGAAATGCAACCGATCGTAGACCGTCAGGCTGCTTTAGGTCTGATCCACAAAAACAAAGCTGACCGTCATAAAGCTAACCGGACTGCACAGATCAATTTACTGACT", \
 			"TTG---AATATCAAATCAGCTAAGAAGCGC------CAGTCTGTAAAGGCTCGTACGCACAACGCAAGCCGTCGCTCTATGATGCGTACTTTCATCAAGAAAGTATACGCAGCTATCGAAGCTGGCGACAAAGCTGCTGCACTGAAAGCATTTAACGAAATGCAACCGATCGTGGACCGTCAGGCTGCTAAAGGTCTGATCCACAAAAACAAAGCTGACCGTCATAAAGCTAACCGGACTGCACAGATCAATTTACTGACT"]
 	tree_string = "(s4,(s1,s2),s3);"
+	seq_labels=["s1","s2","s3","s4"]
 	t = newick.tree.parseTree(tree_string)
-	cm = paml.CodeML()
-	opts = cm.getModelOptions("FMutSel-F")
-	rate_tree = paml.getBranchRates(seqs, seq_labels=["s1","s2","s3","s4"], tree_string=tree_string, options=opts)
+	opts = paml.CodeML().getModelOptions("FMutSel-F")
+	cm = paml.CodeML("codon", opts)
+	cm.loadSequences(seqs, seq_labels, tree_string)
+	cm.run()
+	rate_tree = cm.getBranchRatesInTree(seq_labels, tree_string)
+	#rate_tree = paml.getBranchRates(seqs, , tree_string=tree_string, options=opts)
 	nodes = rate_tree.nodes
 	def dNdist(x):
 		return x.branch_rate.dn
@@ -21,4 +25,6 @@ if __name__=="__main__":
 		for j in range(i+1,len(nodes)):
 			dist = nodes[i].measureFrom(nodes[j], dNdist)
 			print nodes[i].name, nodes[j].name, dist
+	print rate_tree
+
 

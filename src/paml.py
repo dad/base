@@ -393,6 +393,53 @@ class CodeML:
 				ns = float(ns)
 		return syn, ns
 	#-----------------------------------------------------------------------
+	def getBranchRatesInTree(self, seq_labels, tree_string):
+		# Returns a newick.tree with each node n an n.branch_rate entry of type RateResult
+		# giving the evolutionary rate (and other data) separating node n from its parent.
+		# The goal is to be able to take any pair of nodes on the tree and
+		# instantly look up the distance between them.
+		# seq_labels define the order in which the original sequences were passed in;
+		# these will be sequentially numbered 1:n
+		# tree_string defines the tree, which must include all seq_labels and no others.
+		rate_tree = newick.tree.parseTree(tree_string)
+		leaf_dict = dict([(x.name,x) for x in rate_tree.leaves])
+		assert set(leaf_dict.keys()) == set(seq_labels)
+		branch_rates = self.getBranchRates()
+		# Now map branch rates onto the tree
+		# With n = the number of sequences, the first 1:n node numbers are in the order passed in.
+		# The remaining node numbers can be inferred from their branch IDs.
+		# Each branch can be uniquely identified by its root and tip.
+		# The branch IDs are integer..integer; map the integers to the corresponding subtree strings.
+		id_node_map = {}
+		for ni in range(len(seq_labels)):
+			id_node_map["%d"%(ni+1,)] = leaf_dict[seq_labels[ni]]
+
+		# Sort branch rates by the numerical value of the second (child) integer identifier
+		branch_rate_list = []
+		for (branch_id, rate_result) in branch_rates.items():
+			# branch ID is m..n where m > n
+			child_id = branch_id.split('..')[1]
+			branch_rate_list.append((child_id, (branch_id,rate_result)))
+		branch_rate_list.sort()
+
+		branch_rate_dict = {}
+		for (k,v) in [y for (x,y) in branch_rate_list]:
+			ids = k.split("..")
+			# These are integer IDs
+			child_id = ids[1]
+			parent_id = ids[0]
+			# Should already have the child in our name map
+			child_node = id_node_map[child_id]
+			if not id_node_map.has_key(parent_id):
+				# Get the parent node
+				parent_node = child_node.parent
+				id_node_map[parent_id] = parent_node
+				if parent_node.name is None:
+					parent_node.name = parent_id
+			# Now assign the branch rate entry to the child
+			child_node.branch_rate = v
+		return rate_tree
+
 	def getBranchRates(self):
 		"""Returns branch lengths for a set of sequences after a run of CodeML.
 
