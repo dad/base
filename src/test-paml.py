@@ -1,7 +1,7 @@
 #! /usr/local/bin/python
 
 import sys, os, math, string, random, pickle
-import paml, newick
+import paml, newick, translate
 
 if __name__=="__main__":
 	seqs = ["TTGGCTAATATCAAATCAGCTAAGAAGCGCGCCATTCAGTCTGAAAAGGCTCGTAAGCACAACGCAAGCCGTCGCTCTATGATGCGTACTTTCATCAAGAAAGTATACGCAGCTATCGAAGCTGGCGACAAAGCTGCTGCACAGAAAGCATTTAACGAAATGCAACCGATCGTGGACCGTCAGGCTGCTAAAGGTCTGATCCACAAAAACAAAGCTGCACGTCATAAGGCTAACCTGACTGCACAGATCAACAAACTGGCT", \
@@ -10,13 +10,13 @@ if __name__=="__main__":
 			"TTG---AATATCAAATCAGCTAAGAAGCGC------CAGTCTGTAAAGGCTCGTACGCACAACGCAAGCCGTCGCTCTATGATGCGTACTTTCATCAAGAAAGTATACGCAGCTATCGAAGCTGGCGACAAAGCTGCTGCACTGAAAGCATTTAACGAAATGCAACCGATCGTGGACCGTCAGGCTGCTAAAGGTCTGATCCACAAAAACAAAGCTGACCGTCATAAAGCTAACCGGACTGCACAGATCAATTTACTGACT"]
 	tree_string = "(s4,(s1,s2),s3);"
 	seq_labels=["s1","s2","s3","s4"]
-	t = newick.tree.parseTree(tree_string)
+	rate_tree = newick.tree.parseTree(tree_string)
 	opts = paml.CodeML().getModelOptions("FMutSel-F")
+	opts["RateAncestor"] = "1"
 	cm = paml.CodeML("codon", opts)
 	cm.loadSequences(seqs, seq_labels, tree_string)
 	cm.run()
-	rate_tree = cm.getBranchRatesInTree(seq_labels, tree_string)
-	#rate_tree = paml.getBranchRates(seqs, , tree_string=tree_string, options=opts)
+	cm.putBranchRatesOnTree(seq_labels, rate_tree)
 	nodes = rate_tree.nodes
 	def dNdist(x):
 		return x.branch_rate.dn
@@ -26,5 +26,9 @@ if __name__=="__main__":
 			dist = nodes[i].measureFrom(nodes[j], dNdist)
 			print nodes[i].name, nodes[j].name, dist
 	print rate_tree
+
+	cm.putAncestralSequencesOnTree(seq_labels, rate_tree)
+	for n in rate_tree.nodes:
+		print n.name, translate.translate(n.sequence)
 
 

@@ -393,15 +393,14 @@ class CodeML:
 				ns = float(ns)
 		return syn, ns
 	#-----------------------------------------------------------------------
-	def getBranchRatesInTree(self, seq_labels, tree_string):
+	def putBranchRatesOnTree(self, seq_labels, rate_tree):
 		# Returns a newick.tree with each node n an n.branch_rate entry of type RateResult
 		# giving the evolutionary rate (and other data) separating node n from its parent.
 		# The goal is to be able to take any pair of nodes on the tree and
 		# instantly look up the distance between them.
 		# seq_labels define the order in which the original sequences were passed in;
 		# these will be sequentially numbered 1:n
-		# tree_string defines the tree, which must include all seq_labels and no others.
-		rate_tree = newick.tree.parseTree(tree_string)
+		# rate_tree defines the tree, which must include all seq_labels as leaves and no others.
 		leaf_dict = dict([(x.name,x) for x in rate_tree.leaves])
 		assert set(leaf_dict.keys()) == set(seq_labels)
 		branch_rates = self.getBranchRates()
@@ -422,7 +421,7 @@ class CodeML:
 			branch_rate_list.append((child_id, (branch_id,rate_result)))
 		branch_rate_list.sort()
 
-		branch_rate_dict = {}
+		# Now map the branch rates onto the nodes of rate_tree
 		for (k,v) in [y for (x,y) in branch_rate_list]:
 			ids = k.split("..")
 			# These are integer IDs
@@ -438,8 +437,8 @@ class CodeML:
 					parent_node.name = parent_id
 			# Now assign the branch rate entry to the child
 			child_node.branch_rate = v
-		return rate_tree
 
+	#---------------------------------------------------------------------
 	def getBranchRates(self):
 		"""Returns branch lengths for a set of sequences after a run of CodeML.
 
@@ -481,6 +480,68 @@ class CodeML:
 				li = li+1
 				line = lines[li]
 			return branch_entries
+
+	#---------------------------------------------------------------------
+	def putAncestralSequencesOnTree(self, seq_labels, tree):
+		anc_seq_dict = self.getAncestralSequences()
+		node_dict = dict([(x.name, x) for x in tree.nodes])
+		for sid in anc_seq_dict.keys():
+			if node_dict.has_key(sid):
+				node_dict[sid].sequence = anc_seq_dict[sid]
+			else:
+				# PAML lists ancestral nodes as "node #n" where we may have nodes named "n" in the tree.
+				short_sid = sid[6:]
+				try:
+					node_dict[short_sid].sequence = anc_seq_dict[sid]
+				except KeyError, ke:
+					print "# Can't find a node named %s or %s in the tree %s" % (sid, short_sid, str(tree))
+
+	#---------------------------------------------------------------------
+	def getAncestralSequences(self):
+		"""Returns ancestral sequences after a run of CodeML.
+
+		If the run was with type 'protein', returns a number representing
+		the distance between the amino acid sequences.  If the run was with
+		type 'codon', returns a 2-tuple, with the entries as:
+		    (ML nonsynonymous rate, ML synonymous rate)
+		"""
+		if self.options['runmode'] == '-2':
+			raise PAMLError, "CodeML.getBranchRates() not implemented for pairwise comparison (runmode=-2) yet."
+		elif self.options['runmode'] == '0':
+			if self.seq_type != "codon":
+				raise PAMLError, "CodeML.getBranchRates() not implemented for seq_type = %s." % self.seq_type
+			if self.options["RateAncestor"] != "1":
+				raise PAMLError, "Can't retrieve ancestral sequences because RateAncestor is set to %s instead of 1" % self.options["RateAncestor"]
+			# Read the rst file
+			lines = file("rst",'r').readlines()
+			# Find the point at which branch values are enumerated
+			target_line = -1
+			for li in range(len(lines)):
+				line = lines[li]
+				# Looking for this line:  List of extant and reconstructed sequences
+				if line.strip() == "List of extant and reconstructed sequences":
+					# Two lines down is a pair of integers, n m, indicating n=number of sequences and m=number of nucleotide sites
+					flds = lines[li+2].strip().split()
+					num_seqs = int(flds[0])
+					seq_len = int(flds[1])
+					# Actual start of the sequences is four lines down
+					target_line = li + 4
+					break
+			if target_line < 0:
+				print "# Could not find ancestral sequences; are you sure you set RateAncestor=1?"
+				return
+			line = lines[target_line]
+			li = target_line
+			ancestral_sequences = {}
+			# Read the specified number of sequences
+			for ai in range(num_seqs):
+				flds = line.strip().split('  ')
+				seq_id = flds[0].strip()
+				seq = flds[-1].replace(" ","")
+				ancestral_sequences[seq_id] = seq
+				li = li+1
+				line = lines[li]
+			return ancestral_sequences
 
 	#---------------------------------------------------------------------
 	def getMultipleRates(self):
