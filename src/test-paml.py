@@ -26,6 +26,7 @@ if __name__=="__main__":
 			dist = nodes[i].measureFrom(nodes[j], dNdist)
 			print nodes[i].name, nodes[j].name, dist
 	print rate_tree
+	print newick.tree.parseTree("%s" % rate_tree)
 
 	cm.putAncestralSequencesOnTree(seq_labels, rate_tree)
 	for n in rate_tree.nodes:
