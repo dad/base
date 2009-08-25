@@ -19,15 +19,13 @@ if __name__=="__main__":
 				leaf_names.sort()
 				n.name = '_'.join(leaf_names)
 			print n.name
-	print tree2
+	assert str(tree2) == tree_str
 	tree2 = tree2.removeLeaf(node_dict2["sbay"])
-	node_dict2 = dict([(x.name, x) for x in tree2.nodes])
-	print tree2
+	assert str(tree2) == '(scas,((scer,spar),smik));'
 	tree2 = tree2.removeLeaf(node_dict2["scas"])
-	node_dict2 = dict([(x.name, x) for x in tree2.nodes])
-	print tree2
+	assert str(tree2) == '((scer,spar),smik);'
 	tree2 = tree2.removeLeaf(node_dict2["smik"])
-	node_dict2 = dict([(x.name, x) for x in tree2.nodes])
-	print tree2
-	# DAD: fix this!
+	assert str(tree2) == '(scer,spar);'
+	print "** All tests passed **"
+	#print tree2
 	
