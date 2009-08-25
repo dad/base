@@ -72,6 +72,17 @@ class Tree(object):
 			top_parent = top_parent.parent
 		return lineage
 
+	def getMostRecentCommonAncestor(self, node2):
+		lineage1 = self.lineage
+		lineage2 = set(node2.lineage)
+		mrca = None
+		for n in lineage1:
+			if n in lineage2:
+				mrca = n
+				break
+		return mrca
+
+
 	def measureFrom(self, node, measureFxn):
 		my_lineage = set(self.lineage)
 		her_lineage = set(node.lineage)
