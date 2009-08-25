@@ -20,13 +20,13 @@ if __name__=="__main__":
 				n.name = '_'.join(leaf_names)
 			print n.name
 	print tree2
-	tree2 = tree2.remove(node_dict2["scer"])
+	tree2 = tree2.removeLeaf(node_dict2["sbay"])
 	node_dict2 = dict([(x.name, x) for x in tree2.nodes])
 	print tree2
-	tree2 = tree2.remove(node_dict2["scas"])
+	tree2 = tree2.removeLeaf(node_dict2["scas"])
 	node_dict2 = dict([(x.name, x) for x in tree2.nodes])
 	print tree2
-	tree2 = tree2.remove(node_dict2["smik"])
+	tree2 = tree2.removeLeaf(node_dict2["smik"])
 	node_dict2 = dict([(x.name, x) for x in tree2.nodes])
 	print tree2
 	# DAD: fix this!

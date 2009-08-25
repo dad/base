@@ -4,7 +4,10 @@ A Python module for parsing Newick files.
 Copyright (C) 2003-2006, Thomas Mailund <mailund@birc.au.dk>
 
 This module contains the representation of trees and a parser for
-creating trees from a Newick string or file. '''
+creating trees from a Newick string or file. 
+
+Updated, extended and maintained by D. Allan Drummond <dadrummond@gmail.com>
+'''
 
 import lexer
 import parser
@@ -23,6 +26,7 @@ class Tree(object):
 		self._leaves_cache = None
 		self.name = None
 		self.length = None
+		self.parent = None
 
 	def addChild(self, c):
 		self._children.append(c)
@@ -30,33 +34,27 @@ class Tree(object):
 		# we need to invalidate this when we add children
 		self._leaves_cache = None
 	
-	def removeChild(self, c):
+	def removeLeaf(self, c):
 		# DAD: fix this!
 		#print self.name, "removing", c.name
-		self._children.remove(c)
-		self._leaves_cache = None
-		first_ancestor = self
-		#print len(self._children)
-		if len(self._children) <= 1:
-			# Remove self
-			par = self.parent
-			if not par is None:
-				# Add any remaining child; do nothing if no children
-				for child in self.children:
-					par.addChild(child)
-				par.removeChild(self)
-			# If we're removing the root, 
+		if not c in self.leaves:
+			raise TreeError, "%s is not a leaf of %s" % (c, self)
+		par = c.parent
+		par._children.remove(c)
+		root = self.lineage[-1]
+		if len(par._children) == 1:
+			lone_kid = par.children[0]
+			pp = par.parent
+			if not pp is None:
+				pp._children.remove(par)
+				pp.addChild(lone_kid)
 			else:
-				# Make a new root
-				new_par = self._children[0]
-				new_par.parent = None
-				#print "new: ", new_par
-				#for child in self.children:
-				#	new_par.addChild(child)
-				first_ancestor = new_par
-				#print "new2:", first_ancestor
-		return first_ancestor
-			
+				# par is the root
+				# re-root the tree at lone_kid
+				lone_kid.parent = None
+				root = lone_kid
+		return root
+				
 	
 	def remove(self, node):
 		# DAD: fix this!
