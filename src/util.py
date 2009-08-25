@@ -18,3 +18,9 @@ class OutStreams:
 		for outs in self.streams:
 			outs.write(line)
 	
+	def addStream(self, stream):
+		self.streams.append(stream)
+	
+	def removeStream(self, stream):
+		self.streams.remove(stream)
+	
