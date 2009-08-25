@@ -9,6 +9,9 @@ creating trees from a Newick string or file. '''
 import lexer
 import parser
 
+class TreeError(Exception):
+	"""Error manipulating a newick.tree object."""
+	
 
 class Tree(object):
 	'''
@@ -26,7 +29,44 @@ class Tree(object):
 		c.parent = self
 		# we need to invalidate this when we add children
 		self._leaves_cache = None
-
+	
+	def removeChild(self, c):
+		# DAD: fix this!
+		#print self.name, "removing", c.name
+		self._children.remove(c)
+		self._leaves_cache = None
+		first_ancestor = self
+		#print len(self._children)
+		if len(self._children) <= 1:
+			# Remove self
+			par = self.parent
+			if not par is None:
+				# Add any remaining child; do nothing if no children
+				for child in self.children:
+					par.addChild(child)
+				par.removeChild(self)
+			# If we're removing the root, 
+			else:
+				# Make a new root
+				new_par = self._children[0]
+				new_par.parent = None
+				#print "new: ", new_par
+				#for child in self.children:
+				#	new_par.addChild(child)
+				first_ancestor = new_par
+				#print "new2:", first_ancestor
+		return first_ancestor
+			
+	
+	def remove(self, node):
+		# DAD: fix this!
+		res = None
+		if not node.parent is None:
+			res = node.parent.removeChild(node)
+		else:
+			raise TreeError, "Cannot remove the root of the tree"
+		return res
+	
 	def getChildren(self):
 		'''
 		get_children() -- return the list of child leaves/sub-trees.
