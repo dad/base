@@ -369,13 +369,11 @@ class CodeML:
 						found = True
 					i += 1
 			elif self.options['runmode'] == '0':
-				if self.num_sequences == 2:
-					line = file('rst1','r').readlines()[0]
-					flds = line.strip().split()
-					kappa = float(flds[6])
-				else:
-					raise PAMLError, "Kappa extraction for runmode %s and # sequences = %d not implemented" % \
-						  (self.options['runmode'], self.num_sequences)
+				lines = file(self.outfile,'r').readlines()
+				for line in lines:
+					if "kappa (ts/tv) =" in line:
+						kappa = float(line.strip().split()[-1])
+						break
 			else:
 				raise PAMLError, "Kappa extraction for runmode %s not implemented" % self.options['runmode']
 		return kappa

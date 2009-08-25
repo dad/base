@@ -4,7 +4,7 @@ A Python module for parsing Newick files.
 Copyright (C) 2003-2006, Thomas Mailund <mailund@birc.au.dk>
 
 This module contains the representation of trees and a parser for
-creating trees from a Newick string or file. 
+creating trees from a Newick string or file.
 
 Updated, extended and maintained by D. Allan Drummond <dadrummond@gmail.com>
 '''
@@ -14,7 +14,7 @@ import parser
 
 class TreeError(Exception):
 	"""Error manipulating a newick.tree object."""
-	
+
 
 class Tree(object):
 	'''
@@ -33,7 +33,7 @@ class Tree(object):
 		c.parent = self
 		# we need to invalidate this when we add children
 		self._leaves_cache = None
-	
+
 	def removeLeaf(self, c):
 		# DAD: fix this!
 		#print self.name, "removing", c.name
@@ -41,6 +41,7 @@ class Tree(object):
 			raise TreeError, "%s is not a leaf of %s" % (c, self)
 		par = c.parent
 		par._children.remove(c)
+		par._leaves_cache = None
 		root = self.lineage[-1]
 		if len(par._children) == 1:
 			lone_kid = par.children[0]
@@ -54,17 +55,30 @@ class Tree(object):
 				lone_kid.parent = None
 				root = lone_kid
 		return root
-				
-	
-	def remove(self, node):
-		# DAD: fix this!
-		res = None
-		if not node.parent is None:
-			res = node.parent.removeChild(node)
-		else:
-			raise TreeError, "Cannot remove the root of the tree"
+
+	def unroot(self):
+		"""Unroot the tree in the Newick sense."""
+		root = self.root
+		if root.isRooted() and len(root.leaves) > 2:
+			# add one child's children directly to the root
+			# find first child that's not childless
+			kkids = [x for x in root.children if not x.isLeaf()]
+			target_kid = kkids[0]
+			for c in target_kid.children:
+				root.addChild(c)
+			root._children.remove(target_kid)
+
+	def isRooted(self):
+		root = self.root
+		res = len(root._children) == 2
+		if res:
+			# only way to not be rooted is to have only 2 leaves.
+			res = not (len(root.leaves) == 2)
 		return res
-	
+
+	def getRoot(self):
+		return self.lineage[-1]
+
 	def getChildren(self):
 		'''
 		get_children() -- return the list of child leaves/sub-trees.
@@ -120,16 +134,15 @@ class Tree(object):
 				break
 		return mrca
 
-
-	def measureFrom(self, node, measureFxn):
+	def measureFrom(self, node, measureFxn, combineFxn=sum):
 		my_lineage = set(self.lineage)
 		her_lineage = set(node.lineage)
 		branch_nodes = my_lineage.symmetric_difference(her_lineage)
-		meas = sum([measureFxn(x) for x in branch_nodes ])
+		meas = combineFxn([measureFxn(x) for x in branch_nodes ])
 		return meas
 
 	def distanceFrom(self, node):
-		return self.measureFrom(node, lambda x: x.length)
+		return self.measureFrom(node, lambda x: x.length, sum)
 
 	def isLeaf(self):
 		return len(self._children)==0
@@ -145,7 +158,8 @@ class Tree(object):
 				tree_str += sep+str(c)
 				sep = ','
 			tree_str += ")"
-		if not self.name is None:
+		#if not self.name is None:
+		if self.isLeaf():
 			tree_str += "%s" % self.name
 		if not self.length is None:
 			tree_str += ":%1.6f" % self.length
@@ -159,7 +173,9 @@ class Tree(object):
 					  "List of child nodes for this subtree.")
 	lineage = property(getLineage, doc="Line of descent of this subtree back to root.")
 
-	nodes = property(getNodes, None, None, "List of nodes in this subtree.")
+	nodes = property(getNodes, None, None, doc="List of nodes in this subtree.")
+
+	root = property(getRoot, None, None, doc="Root of this tree object (valid even for unrooted trees).")
 
 class TreeVisitor(object):
 	'''

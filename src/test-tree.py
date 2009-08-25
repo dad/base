@@ -26,6 +26,16 @@ if __name__=="__main__":
 	assert str(tree2) == '((scer,spar),smik);'
 	tree2 = tree2.removeLeaf(node_dict2["smik"])
 	assert str(tree2) == '(scer,spar);'
+
+	assert tree.isRooted()
+	#print tree.root
+	leaves = set(tree.leaves)
+	print tree
+	tree.unroot()
+	print tree
+	assert not tree.isRooted() and set(tree.leaves) == leaves
+
+	t3 = newick.tree.parseTree("(scer,spar);")
+	assert not t3.isRooted()
+
 	print "** All tests passed **"
-	#print tree2
-	
