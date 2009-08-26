@@ -293,6 +293,20 @@ def labelInternalNodes(tree, leaf_sep="_"):
 			leaf_names.sort()
 			n.name = leaf_sep.join(leaf_names)
 
+def mapLabelsOntoSubtree(master_tree, subtree):
+	master_node_dict = dict([(x.name, x) for x in master_tree.nodes])
+	sub_node_dict = dict([(x.name, x) for x in subtree.nodes])
+	leaf_names = [x.name for x in sub_node_dict.values() if x.isLeaf()]
+
+	for i in range(len(leaf_names)-1):
+		for j in range(i+1, len(leaf_names)):
+			s1 = leaf_names[i]
+			s2 = leaf_names[j]
+			sub_mrca = sub_node_dict[s1].getMostRecentCommonAncestor(sub_node_dict[s2])
+			mrca = master_node_dict[s1].getMostRecentCommonAncestor(master_node_dict[s2])
+			sub_mrca.name = mrca.name
+			#print s1, s2, sub_mrca.name
+
 
 def add_parent_links(tree):
 	'''Extend all nodes (except for the root, of course) with a parent link.'''

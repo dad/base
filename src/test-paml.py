@@ -3,6 +3,9 @@
 import sys, os, math, string, random, pickle
 import paml, newick, translate, geneutil, muscle, biofile
 
+def nearlyEqual(x,y):
+	return abs(x-y) < 1e-6
+
 def test001():
 	print "** Test 001 **"
 	seqs = ["TTGGCTAATATCAAATCAGCTAAGAAGCGCGCCATTCAGTCTGAAAAGGCTCGTAAGCACAACGCAAGCCGTCGCTCTATGATGCGTACTTTCATCAAGAAAGTATACGCAGCTATCGAAGCTGGCGACAAAGCTGCTGCACAGAAAGCATTTAACGAAATGCAACCGATCGTGGACCGTCAGGCTGCTAAAGGTCTGATCCACAAAAACAAAGCTGCACGTCATAAGGCTAACCTGACTGCACAGATCAACAAACTGGCT", \
@@ -18,33 +21,42 @@ def test001():
 	cm.loadSequences(seqs, seq_labels, tree_string)
 	cm.run()
 	cm.putBranchRatesOnTree(seq_labels, rate_tree)
+	cm.putAncestralSequencesOnTree(seq_labels, rate_tree, label="sequence")
+	newick.tree.labelInternalNodes(rate_tree)
 	nodes = rate_tree.nodes
+	node_dict = dict([(x.name, x) for x in nodes])
+
 	def dNdist(x):
 		return x.properties["rate"].dn
 
-	for i in range(len(nodes)-1):
-		for j in range(i+1,len(nodes)):
-			dist = nodes[i].measureFrom(nodes[j], dNdist)
-			print nodes[i].name, nodes[j].name, dist
-	print rate_tree
-	print newick.tree.parseTree("%s" % rate_tree)
+	assert nearlyEqual(node_dict["s1"].measureFrom(node_dict["s2"], dNdist), 0.0078)
+	assert nearlyEqual(node_dict["s1_s2_s3_s4"].measureFrom(node_dict["s1_s2"], dNdist), 0.0403)
+	assert nearlyEqual(node_dict["s4"].measureFrom(node_dict["s3"], dNdist), 0.0379)
+	assert nearlyEqual(node_dict["s1_s2"].measureFrom(node_dict["s3"], dNdist), 0.0782)
+	#for i in range(len(nodes)-1):
+	#	for j in range(i+1,len(nodes)):
+	#		dist = nodes[i].measureFrom(nodes[j], dNdist)
+	#		print nodes[i].name, nodes[j].name, dist
+	assert str(rate_tree) == str(newick.tree.parseTree("%s" % rate_tree))
 
-	cm.putAncestralSequencesOnTree(seq_labels, rate_tree, label="sequence")
-	for n in rate_tree.nodes:
-		print n.name, translate.translate(n.properties["sequence"])
+	anc_seq = "LNIKSAKKRQSVKARTHNASRRSMMRTFIKKVYAAIEAGDKAAALKAFNEMQPIVDRQAAKGLIHKNKADRHKANRTAQINLLT"
+	assert translate.translate(node_dict["s1_s2_s3_s4"].properties["sequence"]) == anc_seq
 
 def test002():
 	print "** Test 002 **"
+	tree = newick.tree.parseTree("((((scer,spar),smik),sbay),scas);")
+	newick.tree.labelInternalNodes(tree)
+	node_dict = dict([(x.name,x) for x in tree.nodes])
+	assert node_dict["scer"].getMostRecentCommonAncestor(node_dict["smik"]).name == "scer_smik_spar"
+
+def test003():
+	print "** Test 003 **"
 	# Tree remapping
 	whole_tree = newick.tree.parseTree("((((scer,spar),smik),sbay),scas);")
 	sub_tree = newick.tree.parseTree("((scer,smik),scas);")
 
 	# Name nodes on whole tree
-	for n in whole_tree.nodes:
-		if not n.name:
-			leaf_names = [x.name for x in n.leaves]
-			leaf_names.sort()
-			n.name = '_'.join(leaf_names)
+	newick.tree.labelInternalNodes(whole_tree)
 
 	if False:
 		# Only need to do this if you want more/other data.
@@ -83,21 +95,23 @@ def test002():
 	# Now remap the tree.
 	whole_node_dict = dict([(x.name, x) for x in whole_tree.nodes])
 	sub_node_dict = dict([(x.name, x) for x in sub_tree.nodes])
+	sub_names = [x.name for x in sub_tree.leaves]
 	#print whole_node_dict["scer"].getMostRecentCommonAncestor(whole_node_dict["smik"]).name
 
-	for i in range(len(seq_labels)-1):
-		for j in range(i+1, len(seq_labels)):
-			s1 = seq_labels[i]
-			s2 = seq_labels[j]
+	newick.tree.mapLabelsOntoSubtree(whole_tree, sub_tree)
+	for i in range(len(sub_names)-1):
+		for j in range(i+1, len(sub_names)):
+			s1 = sub_names[i]
+			s2 = sub_names[j]
 			sub_mrca = sub_node_dict[s1].getMostRecentCommonAncestor(sub_node_dict[s2])
 			mrca = whole_node_dict[s1].getMostRecentCommonAncestor(whole_node_dict[s2])
-			sub_mrca.name = mrca.name
-			print s1, s2, sub_mrca.name
+			assert sub_mrca.name == mrca.name
 
 
 if __name__=="__main__":
 	test001()
 	test002()
-
+	test003()
+	print "** All tests passed **"
 
 
