@@ -11,16 +11,18 @@ def printTiming(func):
 
 class OutStreams:
 	streams = []
-	def __init__(self, stream_list):
+	def __init__(self, stream_list=[]):
+		if not isinstance(stream_list, list):
+			stream_list = [stream_list]
 		self.streams = stream_list
 
 	def write(self, line):
 		for outs in self.streams:
 			outs.write(line)
-	
+
 	def addStream(self, stream):
 		self.streams.append(stream)
-	
+
 	def removeStream(self, stream):
 		self.streams.remove(stream)
-	
+

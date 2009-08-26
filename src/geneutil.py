@@ -1,7 +1,7 @@
 #! python
 
 import sys, os, math, string, random, pickle
-import translate, muscle, paml, biofile
+import translate, muscle, paml, biofile, util
 
 def default_alignment_print_fxn(num_alignments, prots, alignment, headers, orf):
 	print num_alignments, orf, len(alignment), " ".join(["%s-%s"%(x,y) for (x,y) in headers])
@@ -53,6 +53,15 @@ def makeAlignments(ortho_dict, cdna_dicts, filter_fxn=default_filter_fxn, filter
 
 def fracAligned(seqid, numid, numal, length):
 	return numal/float(length)
+
+def multipleFractionAligned(seqs, gap="-"):
+	non_gap_counts = [len(s)-s.count(gap) for s in seqs]
+	all_ungapped_count = 0
+	for i in range(len(seqs[0])):
+		if not gap in [x[i] for x in seqs]:
+			all_ungapped_count += 1
+	return [all_ungapped_count/float(c) for c in non_gap_counts]
+
 
 def alignStats(seqs, queryfxn, statsfxn):
 	vals = []
@@ -270,7 +279,9 @@ def computeStats(ortho_dict, alignment_dict, gene_dicts, tree, dist_fxn, begin_i
 def read_genomes_from_file(multi_files_fname, genome_dir, genome_dicts, column_index=1, load_fxn=biofile.firstField):
 	return readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_index, load_fxn)
 
-def readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_index=1, load_fxn=biofile.firstField, species=None):
+def readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_index=1, load_fxn=biofile.firstField, species=None, outstream=None):
+	if outstream is None:
+		outstream = util.OutStreams()
 	# Format for
 	species_map = {}
 	for line in file(multi_files_fname,'r').readlines():
@@ -286,9 +297,9 @@ def readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_inde
 	for spec in species:
 		genome_file = os.path.join(os.path.expanduser(genome_dir), species_map[spec])
 		if not os.path.isfile(genome_file):
-			print "# Cannot find file %s" % genome_file
+			outstream.write("# Cannot find file %s\n" % genome_file)
 		genome = biofile.readFASTADict(genome_file, load_fxn)
 		genome_dicts[spec] = genome
-		print "#", spec, genome_file, len(genome.keys()), genome.keys()[0]
+		outstream.write("# species=%s, genome file=%s has %d entries, example ID=%s\n" % (spec, genome_file, len(genome.keys()), genome.keys()[0]))
 	return species_map
 
