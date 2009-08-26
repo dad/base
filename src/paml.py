@@ -391,7 +391,7 @@ class CodeML:
 				ns = float(ns)
 		return syn, ns
 	#-----------------------------------------------------------------------
-	def putBranchRatesOnTree(self, seq_labels, rate_tree):
+	def putBranchRatesOnTree(self, seq_labels, rate_tree, label="rate"):
 		# Returns a newick.tree with each node n an n.branch_rate entry of type RateResult
 		# giving the evolutionary rate (and other data) separating node n from its parent.
 		# The goal is to be able to take any pair of nodes on the tree and
@@ -420,8 +420,8 @@ class CodeML:
 		branch_rate_list.sort()
 
 		# Now map the branch rates onto the nodes of rate_tree
-		for (k,v) in [y for (x,y) in branch_rate_list]:
-			ids = k.split("..")
+		for (branch_id,rate_result) in [y for (x,y) in branch_rate_list]:
+			ids = branch_id.split("..")
 			# These are integer IDs
 			child_id = ids[1]
 			parent_id = ids[0]
@@ -434,7 +434,7 @@ class CodeML:
 				if parent_node.name is None:
 					parent_node.name = parent_id
 			# Now assign the branch rate entry to the child
-			child_node.branch_rate = v
+			child_node.properties[label] = rate_result
 
 	#---------------------------------------------------------------------
 	def getBranchRates(self):
@@ -480,17 +480,17 @@ class CodeML:
 			return branch_entries
 
 	#---------------------------------------------------------------------
-	def putAncestralSequencesOnTree(self, seq_labels, tree):
+	def putAncestralSequencesOnTree(self, seq_labels, tree, label="sequence"):
 		anc_seq_dict = self.getAncestralSequences()
 		node_dict = dict([(x.name, x) for x in tree.nodes])
 		for sid in anc_seq_dict.keys():
 			if node_dict.has_key(sid):
-				node_dict[sid].sequence = anc_seq_dict[sid]
+				node_dict[sid].properties[label] = anc_seq_dict[sid]
 			else:
 				# PAML lists ancestral nodes as "node #n" where we may have nodes named "n" in the tree.
 				short_sid = sid[6:]
 				try:
-					node_dict[short_sid].sequence = anc_seq_dict[sid]
+					node_dict[short_sid].properties[label] = anc_seq_dict[sid]
 				except KeyError, ke:
 					print "# Can't find a node named %s or %s in the tree %s" % (sid, short_sid, str(tree))
 

@@ -27,6 +27,7 @@ class Tree(object):
 		self.name = None
 		self.length = None
 		self.parent = None
+		self._properties = {}
 
 	def addChild(self, c):
 		self._children.append(c)
@@ -76,6 +77,9 @@ class Tree(object):
 			res = not (len(root.leaves) == 2)
 		return res
 
+	def isRoot(self):
+		return self.parent is None
+
 	def getRoot(self):
 		return self.lineage[-1]
 
@@ -84,6 +88,12 @@ class Tree(object):
 		get_children() -- return the list of child leaves/sub-trees.
 		'''
 		return self._children
+
+	def getProperties(self):
+		'''
+		getProperties() -- return dictionary of properties
+		'''
+		return self._properties
 
 	def dfs_traverse(self,visitor):
 		'''
@@ -176,6 +186,8 @@ class Tree(object):
 	nodes = property(getNodes, None, None, doc="List of nodes in this subtree.")
 
 	root = property(getRoot, None, None, doc="Root of this tree object (valid even for unrooted trees).")
+
+	properties = property(getProperties, doc="Other data associated with this node")
 
 class TreeVisitor(object):
 	'''
@@ -272,6 +284,14 @@ def readTree(file):
 		if not line.startswith("#"):
 			string += line.strip()
 	return parseTree(string)
+
+def labelInternalNodes(tree, leaf_sep="_"):
+	for n in tree.nodes:
+		if not n.isLeaf():
+			# For Newick trees, the set of leaves uniquely identifies an internal node.
+			leaf_names = [x.name for x in n.leaves]
+			leaf_names.sort()
+			n.name = leaf_sep.join(leaf_names)
 
 
 def add_parent_links(tree):

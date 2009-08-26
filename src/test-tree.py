@@ -45,4 +45,11 @@ if __name__=="__main__":
 	for n in tree.nodes:
 		assert n.root == tree
 
+	print "** only one root"
+	num_roots = 0
+	for n in tree.nodes:
+		if n.isRoot():
+			num_roots += 1
+	assert num_roots == 1
+
 	print "** All tests passed **"
