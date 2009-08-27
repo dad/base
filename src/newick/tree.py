@@ -24,25 +24,24 @@ class Tree(object):
 	def __init__(self):
 		self._children = []
 		self._leaves_cache = None
+		self._properties = None
+		self._dict = None
 		self.name = None
 		self.length = None
 		self.parent = None
-		self._properties = {}
 
 	def addChild(self, c):
 		self._children.append(c)
 		c.parent = self
 		# we need to invalidate this when we add children
-		self._leaves_cache = None
+		self.setChanged()
 
 	def removeLeaf(self, c):
-		# DAD: fix this!
-		#print self.name, "removing", c.name
 		if not c in self.leaves:
 			raise TreeError, "%s is not a leaf of %s" % (c, self)
 		par = c.parent
 		par._children.remove(c)
-		par._leaves_cache = None
+		par.setChanged()
 		root = self.lineage[-1]
 		if len(par._children) == 1:
 			lone_kid = par.children[0]
@@ -50,13 +49,14 @@ class Tree(object):
 			if not pp is None:
 				pp._children.remove(par)
 				pp.addChild(lone_kid)
+				pp.setChanged()
 			else:
 				# par is the root
 				# re-root the tree at lone_kid
 				lone_kid.parent = None
 				root = lone_kid
 		return root
-
+	
 	def unroot(self):
 		"""Unroot the tree in the Newick sense."""
 		root = self.root
@@ -68,6 +68,7 @@ class Tree(object):
 			for c in target_kid.children:
 				root.addChild(c)
 			root._children.remove(target_kid)
+			root.setChanged()
 
 	def isRooted(self):
 		root = self.root
@@ -93,7 +94,20 @@ class Tree(object):
 		'''
 		getProperties() -- return dictionary of properties
 		'''
+		if self._properties is None:
+			self._properties = {}
 		return self._properties
+	
+	def getDict(self):
+		if self._dict is None:
+			self._dict = dict([(x.name,x) for x in self.nodes])
+		return self._dict
+	
+	def setChanged(self):
+		self._dict = None
+		self._leaves_cache = None
+		if self.parent:
+			self.parent.setChanged()
 
 	def dfs_traverse(self,visitor):
 		'''
@@ -107,6 +121,9 @@ class Tree(object):
 			c.dfs_traverse(visitor)
 			visitor.post_visit_child(self, c)
 		visitor.post_visit_tree(self)
+
+	def isLeaf(self):
+		return len(self._children)==0
 
 	def getLeaves(self):
 		'''
@@ -154,9 +171,6 @@ class Tree(object):
 	def distanceFrom(self, node):
 		return self.measureFrom(node, lambda x: x.length, sum)
 
-	def isLeaf(self):
-		return len(self._children)==0
-
 	# special functions and accessors...
 	def __repr__(self):
 		#print "# kids = ", len(self.children)
@@ -187,7 +201,9 @@ class Tree(object):
 
 	root = property(getRoot, None, None, doc="Root of this tree object (valid even for unrooted trees).")
 
-	properties = property(getProperties, doc="Other data associated with this node")
+	properties = property(getProperties, doc="Other data associated with this node.")
+
+	dict = property(getDict, doc="Dictionary of nodes, keyed by node name.")
 
 class TreeVisitor(object):
 	'''
@@ -305,8 +321,8 @@ def mapLabelsOntoSubtree(master_tree, subtree):
 			sub_mrca = sub_node_dict[s1].getMostRecentCommonAncestor(sub_node_dict[s2])
 			mrca = master_node_dict[s1].getMostRecentCommonAncestor(master_node_dict[s2])
 			sub_mrca.name = mrca.name
-			#print s1, s2, sub_mrca.name
-
+	# Tell the tree that it's had its names changed, so that, e.g., getDict() can be updated.
+	subtree.setChanged()
 
 def add_parent_links(tree):
 	'''Extend all nodes (except for the root, of course) with a parent link.'''
