@@ -160,21 +160,21 @@ def test_sbf():
 	print split_by_frame(gene2, 1)
 	print split_by_frame(gene2, 2)
 
-def getGC(gene):
+def getGC(gene, pseudocount = 0.0):
 	gene = gene.upper()
-	return (gene.count('G') + gene.count('C'))/float(len(gene))
+	return (gene.count('G') + gene.count('C') + pseudocount)/float(len(gene) + pseudocount)
 
-def getGC3(gene):
+def getGC3(gene, pseudocount = 0.0):
 	codons = split_by_frame(gene.upper(), 0)
-	return len([x for x in codons if len(x)==3 and (x[2]=='G' or x[2]=='C')])/float(len(codons))
+	return (len([x for x in codons if len(x)==3 and (x[2]=='G' or x[2]=='C')]) + pseudocount)/float(len(codons) + pseudocount)
 
-def getGCi(gene, indices):
+def getGCi(gene, indices, pseudocount = 0.0):
 	codons = split_by_frame(gene.upper(), 0)
-	sum = 0.0
+	sum_gc = 0.0
 	for i in indices:
 		assert i>0 and i<=3 # codon boundaries; one-based!
-		sum += len([x for x in codons if len(x)==3 and (x[i-1] in 'GC')])
-	return sum/float(len(indices)*len(codons))
+		sum_gc += len([x for x in codons if len(x)==3 and (x[i-1] in 'GC')])
+	return (sum_gc + pseudocount)/(float(len(indices)*len(codons)) + pseudocount)
 
 def getContent(gene, nts):
 	cont = 0
@@ -433,7 +433,7 @@ _d_melanogaster_optimal_codons_duret99 = \
 ## From inverse-Akashi analysis
 _d_melanogaster_optimal_codons_drummond = \
 ['TGC','GAC','GAG','TTC','CAC','AAG','AAC','CAG','TAC','ATC','GCC','GGC','CCC','ACC','GTG','TTG','CTG','AGG','CGC','AGC','TCC','TCG']
-										 
+
 #['CGC','CGT','CTC','CTG','TCC','TCG','ACG','CCC','GCC','GGA','GTC','GTG','AAG','AAC','CAG','CAC','GAG','GAC','TAC','TGC','TTC','ATC']
 _d_melanogaster_optimal_codons = _d_melanogaster_optimal_codons_duret99 #drummond
 
