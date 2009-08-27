@@ -30,9 +30,9 @@ def translate(seq):
 		try:
 			aa = codonToAA(codon)
 		except BioUtilsError: # unrecognized codon
-			return
+			return None
 		if aa == '*': # premature stop codon
-			return # return 'None'
+			return None
 		prot += aa
 	# last codon, might be stop codon
 	codon = seq[3 * (prot_length - 1) : 3 * prot_length]
