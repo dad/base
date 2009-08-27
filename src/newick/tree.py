@@ -9,8 +9,8 @@ creating trees from a Newick string or file.
 Updated, extended and maintained by D. Allan Drummond <dadrummond@gmail.com>
 '''
 
-import lexer
-import parser
+import copy
+import lexer, parser
 
 class TreeError(Exception):
 	"""Error manipulating a newick.tree object."""
@@ -56,7 +56,7 @@ class Tree(object):
 				lone_kid.parent = None
 				root = lone_kid
 		return root
-	
+
 	def unroot(self):
 		"""Unroot the tree in the Newick sense."""
 		root = self.root
@@ -97,12 +97,12 @@ class Tree(object):
 		if self._properties is None:
 			self._properties = {}
 		return self._properties
-	
+
 	def getDict(self):
 		if self._dict is None:
 			self._dict = dict([(x.name,x) for x in self.nodes])
 		return self._dict
-	
+
 	def setChanged(self):
 		self._dict = None
 		self._leaves_cache = None
@@ -160,6 +160,18 @@ class Tree(object):
 				mrca = n
 				break
 		return mrca
+
+	def subTree(self, leaf_names):
+		# Retrieve a valid Newick tree representing the embedded subtree for only the named leaves.
+		sub_tree = copy.deepcopy(self)
+		for l in sub_tree.leaves:
+			if not l.name in leaf_names:
+				# Remove this leaf.
+				sub_tree = sub_tree.removeLeaf(l)
+		#print sub_tree
+		sub_tree.setChanged()
+		return sub_tree
+
 
 	def measureFrom(self, node, measureFxn, combineFxn=sum):
 		my_lineage = set(self.lineage)

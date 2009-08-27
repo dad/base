@@ -51,12 +51,12 @@ if __name__=="__main__":
 		if n.isRoot():
 			num_roots += 1
 	assert num_roots == 1
-	
+
 	print "** dict!"
 	tree_str = "((((scer,spar),smik),sbay),scas);"
 	t = newick.tree.parseTree(tree_str)
 	assert t.dict["scer"].name == "scer"
-	
+
 	print "** proper behavior of the leaves cache"
 	l = set(t.leaves)
 	n = t.dict["scer"]
@@ -65,6 +65,13 @@ if __name__=="__main__":
 	n.addChild(new_tree)
 	assert set(t.leaves) != l
 	assert len(set(t.leaves)) == 9
-	
+
+	print "** subTree"
+	tree_str = "((((scer,spar),smik),sbay),scas);"
+	tree = newick.tree.parseTree(tree_str)
+	specs = [x.name for x in tree.leaves]
+	subspecs = specs[0:3]
+	subtree = tree.subTree(subspecs)
+	assert set(subspecs) == set([x.name for x in subtree.leaves])
 
 	print "** All tests passed **"
