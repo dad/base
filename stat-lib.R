@@ -37,6 +37,10 @@ my.axis <- function(side, at, log=F, expand.range=0.1, ...) {
   }
 }
 
+charlist <- function(x) {
+	n <- nchar(x)
+	return(substring(x,1:n,1:n))
+}
 
 
 lt <- function(x) {x[lower.tri(x)]}

@@ -113,11 +113,11 @@ def getCAI(gene, ln_rel_adapt):
 		raise BioUtilsError, "Gene is of invalid length."
 
 
-def getFop(gene, optimal_list):
+def getFop(gene, optimal_list, pseudocount=0.0):
 	(nOpt, nTot) = getNumOptimalCodons(gene.replace("U","T"), optimal_list)
 	fop = 0.0
-	if nTot != 0:
-		fop = float(nOpt)/nTot
+	if nTot + pseudocount > 0:
+		fop = (float(nOpt) + pseudocount)/(nTot + pseudocount)
 	return fop
 
 def isOptimal(codon, optimal_list):
