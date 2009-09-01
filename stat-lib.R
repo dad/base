@@ -107,6 +107,22 @@ scalecols <- function(mat, ...) {
 	}
 }
 
+scale.mat <- function(mat, dim=2, ...) {
+  # dim: 1=rows, 2=columns
+  if (dim==1) {
+	m <- t(apply(mat, dim, scale, ...))
+    colnames(m) <- colnames(mat)
+  }
+  else if (dim==2) {
+	m <- apply(mat, dim, scale, ...)
+  }
+  if (is.data.frame(mat)) {
+    m <- as.data.frame(m)
+    dimnames(m) <- dimnames(mat)
+  }
+  return(m)
+}
+
 scalerank <- function(x, na.last="keep", ...) {
 	scale(rank(x,na.last=na.last, ...))
 }
