@@ -303,3 +303,9 @@ def readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_inde
 		outstream.write("# species=%s, genome file=%s has %d entries, example ID=%s\n" % (spec, genome_file, len(genome.keys()), genome.keys()[0]))
 	return species_map
 
+_aa_molecular_weight_dict = {'A': 71.079, 'C': 103.145, 'E': 129.116, 'D': 115.089, 'G': 57.052, 'F': 147.177, 'I': 113.16, 'H': 137.141, 'K': 128.17, 'M': 131.2, 'L': 113.16, 'N': 114.104, 'Q': 128.131, 'P': 97.117, 'S': 87.078, 'R': 156.188, 'T': 101.105, 'W': 186.213, 'V': 99.133, 'Y': 163.176}
+
+def getMolecularWeight(prot_seq):
+	mw = sum([_aa_molecular_weight_dict[aa] for aa in prot_seq])
+	return mw
+	

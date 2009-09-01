@@ -575,7 +575,7 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.comp
 		}
 	}
 	# Off-diagonal, i<j
-    # Here, the covariance between two noisy variables is an unbiased estimate of the true covariance, assuming additive noise
+    # Here, the covariance between two noisy variables is an unbiased estimate of the true covariance, assuming additive uncorrelated noise
     # Our best estimate of the true value of the variables is given by the means.
 	ps <- combn(1:n.vars,2)
 	ps.names <- combn(colnames(mean.data),2)
