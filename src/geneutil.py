@@ -1,7 +1,7 @@
 #! python
 
 import sys, os, math, string, random, pickle
-import translate, muscle, paml, biofile, util
+import translate, muscle, biofile, util
 
 def default_alignment_print_fxn(num_alignments, prots, alignment, headers, orf):
 	print num_alignments, orf, len(alignment), " ".join(["%s-%s"%(x,y) for (x,y) in headers])
