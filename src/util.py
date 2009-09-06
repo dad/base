@@ -43,14 +43,14 @@ class DelimitedLineReader:
 		self.has_header = header
 		self.headers = None
 		self.handlers = []
-		
+
+		if self.has_header:
+			self.getHeader()
+			line = self.next(process=False)
+		else:
+			line = self.getRawLine()
 		if field_defs is None:
 			# Attempt to infer the handlers
-			if self.has_header:
-				self.getHeader()
-				line = self.next(process=False)
-			else:
-				line = self.getRawLine()
 			while self.isComment():
 				line = self.next(process=False)
 			assert self.isValid()
@@ -208,10 +208,25 @@ def test004():
 	inf.close()
 	print "** infer header types 2"
 
+def test005():
+	inf = file(os.path.expanduser("~/research/data/scerevisiae/scer-trna-anticodons.txt"),'r')
+	# Infer the types -- no header
+	fp = DelimitedLineReader(inf, header=True)
+	vals = []
+	v = fp.process()
+	while fp.isValid():
+		vals.append(v[2])
+		v = fp.next()
+	#print sum(vals)
+	assert fp.getNumRead() == 42
+	inf.close()
+	print "** lines read"
+
 if __name__=="__main__":
 	# Tests
 	test001()
 	test002()
 	test003()
 	test004()
+	test005()
 	print "** All tests passed **"
