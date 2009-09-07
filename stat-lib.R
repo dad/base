@@ -164,22 +164,7 @@ scale.common <- function(x, ...) {
 
 # Names of, for example, pairwise correlations between variables named in ns
 pair.names <- function(ns, sep='--') {
-	# ns = vector of names
-	n <- length(ns)
-	ret <- NULL
-	for (i in 1:(n-1)) {
-		for (j in (i+1):n) {
-			ret <- append(ret, paste(ns[i],ns[j], sep=sep))
-		}
-	}
-	ret
-}
-
-corr_names <- function(the_names) {
-	x <- expand.grid(the_names, the_names)
-	y <- paste(x[[1]],x[[2]], sep='--')
-	z <- matrix(y, nrow=length(the_names), ncol=length(the_names))
-	z[lower.tri(z)]
+  apply(combn(dn.flds,2), 2, function(m){paste(m,collapse=sep)})  
 }
 
 fc <- function(x, digits=3) {
