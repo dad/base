@@ -63,7 +63,7 @@ class DelimitedLineReader:
 	    flds = dlr.get()
 	"""
 	handler_dict = {"s":str, "f":looseFloatParser, "d":looseIntParser}
-	
+
 	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=True, comment_str="#", custom_handler_dict=None):
 		self.infile = in_file
 		self.delim = sep
@@ -104,7 +104,7 @@ class DelimitedLineReader:
 		self.cur_line = self.infile.readline()
 		if self.isValid():
 			self.n_lines_read += 1
-		# Read line until we find something 
+		# Read line until we find something
 		while self.isComment():
 			self.cur_line = self.file.readline()
 			self.n_lines_read += 1
@@ -123,7 +123,7 @@ class DelimitedLineReader:
 		if self.isValid():
 			res = self.processLine(self.cur_line, apply_handlers)
 		return res
-			
+
 	def processLine(self, line, apply_handlers=True):
 		if self.strip:
 			line = line.strip()
@@ -143,7 +143,7 @@ class DelimitedLineReader:
 
 	def isValid(self):
 		return self.cur_line
-	
+
 	def getRawLine(self):
 		return self.cur_line
 
@@ -182,7 +182,6 @@ class DelimitedLineReader:
 		if self.strip:
 			line = line.strip()
 		flds = line.split(self.delim)
-		print len(flds)
 		self.handlers = [None]*len(flds)
 		inferred_string = ""
 		for fi in range(len(flds)):
@@ -198,7 +197,7 @@ class DelimitedLineReader:
 					break
 				except ValueError:
 					continue
-			
+
 		#print inferred_string
 		return inferred_string
 
@@ -214,7 +213,7 @@ def test001():
 	assert sum(vals) == 273
 	inf.close()
 	print "** infer header types"
-		
+
 def test002():
 	inf = file(os.path.expanduser("~/research/data/scerevisiae/scer-trna-anticodons.txt"),'r')
 	fp = DelimitedLineReader(inf, "ssdss")
