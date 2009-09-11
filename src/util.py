@@ -26,15 +26,47 @@ class OutStreams:
 	def removeStream(self, stream):
 		self.streams.remove(stream)
 
+def looseIntParser(x):
+	v = None
+	try:
+		v = int(x)
+	except ValueError:
+		if x =='NA' or x =='':
+			v = None
+		else:
+			v = looseFloatParser(x)
+	return v
+
+def looseFloatParser(x):
+	v = None
+	try:
+		v = float(x)
+	except ValueError:
+		if x =='NA' or x =='':
+			v = None
+		else:
+			v = x
+	return v
+
+
 class ReaderError(Exception):
 	"""Exception class for Readers"""
 
+
 class DelimitedLineReader:
-	handler_dict = {"s":str, "f":float, "d":int}
+	"""
+	Class which parses delimited files line-by-line.
+	Typical usage:
+	dlr = DelimitedLineReader(file(...,'r'), delim='\t')
+	headers = dlr.getHeader()
+	while dlr.isValid():
+	    flds = dlr.get()
+	"""
+	handler_dict = {"s":str, "f":looseFloatParser, "d":looseIntParser}
 	
-	def __init__(self, in_file, header=True, field_defs=None, delim="\t", strip=True, comment_str="#", custom_handler_dict=None):
+	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=True, comment_str="#", custom_handler_dict=None):
 		self.infile = in_file
-		self.delim = delim
+		self.delim = sep
 		self.strip = strip
 		self.comment_str = comment_str
 		self.cur_flds = None
@@ -42,6 +74,7 @@ class DelimitedLineReader:
 		self.n_lines_read = 1
 		self.has_header = header
 		self.headers = None
+		self.field_defs = None
 		self.handlers = []
 
 		if self.has_header:
@@ -54,9 +87,10 @@ class DelimitedLineReader:
 			while self.isComment():
 				line = self.next(process=False)
 			assert self.isValid()
-			self.inferHandlers(line)
+			self.field_defs = self.inferHandlers(line)
 		else:
-			for h in field_defs:
+			self.field_defs = field_defs
+			for h in self.field_defs:
 				try:
 					self.handlers.append(self.handler_dict[h])
 				except KeyError: # unrecognized field definition
@@ -93,14 +127,18 @@ class DelimitedLineReader:
 	def processLine(self, line, apply_handlers=True):
 		if self.strip:
 			line = line.strip()
-		flds = line.split(self.delim)
-		if apply_handlers:
-			if not self.handlers:
-				# Infer handlers are strings
-				self.handlers = [str for i in range(len(flds))]
-			res = [self.handlers[i](flds[i]) for i in range(len(flds))]
+		if line != "":
+			flds = line.split(self.delim)
+			if apply_handlers:
+				assert len(flds) <= len(self.handlers)
+				if not self.handlers:
+					# Infer handlers are strings
+					self.handlers = [str for i in range(len(flds))]
+				res = [self.handlers[i](flds[i]) for i in range(len(flds))]
+			else:
+				res = flds
 		else:
-			res = flds
+			res = None
 		return res
 
 	def isValid(self):
@@ -144,6 +182,7 @@ class DelimitedLineReader:
 		if self.strip:
 			line = line.strip()
 		flds = line.split(self.delim)
+		print len(flds)
 		self.handlers = [None]*len(flds)
 		inferred_string = ""
 		for fi in range(len(flds)):
@@ -159,6 +198,7 @@ class DelimitedLineReader:
 					break
 				except ValueError:
 					continue
+			
 		#print inferred_string
 		return inferred_string
 
