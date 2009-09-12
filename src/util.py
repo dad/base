@@ -26,30 +26,51 @@ class OutStreams:
 	def removeStream(self, stream):
 		self.streams.remove(stream)
 
+def isNA(x):
+	return x == 'NA' or x == ''
+
 def looseIntParser(x):
 	v = None
 	try:
 		v = int(x)
 	except ValueError:
-		if x =='NA' or x =='':
+		if isNA(x):
 			v = None
 		else:
-			v = looseFloatParser(x)
+			v = naFloatParser(x)
 	return v
 
-def looseFloatParser(x):
+def naIntParser(x):
+	v = None
+	try:
+		v = int(x)
+	except ValueError, ve:
+		if isNA(x):
+			v = None
+		else:
+			raise ve
+	return v
+
+def naFloatParser(x):
 	v = None
 	try:
 		v = float(x)
-	except ValueError:
-		if x =='NA' or x =='':
+	except ValueError, ve:
+		if isNA(x):
 			v = None
 		else:
-			v = x
+			raise ve
 	return v
 
+def naStringParser(x):
+	"""A parser that respects NA's."""
+	v = None
+	if not isNA(x):
+		v = str(x)
+	return v
+
+
 class LineCache:
-	
 	"""Class for caching lines read by DelimitedLineReader."""
 	def __init__(self, instream):
 		self.cache = []
@@ -69,17 +90,23 @@ class LineCache:
 
 	def refill(self):
 		# Refill the cache
+		eof = False
 		for li in range(self.cache_size):
 			line = self.instream.readline()
 			# If end of file, bail.
 			if not line:
+				eof = True
 				break
 			else:
 				self.add(line)
+		return eof
 	
 	def getLine(self, index):
-		while index >= len(self.cache):
-			self.refill()
+		eof = False
+		while not eof and (index >= len(self.cache)):
+			eof = self.refill()
+		if index >= len(self.cache):
+			raise ReaderEOFError("Attempt to read past end of stream (%d, %d)" % (index, len(self.cache)))
 		return self.cache[index]
 	
 	def isEmpty(self):
@@ -91,6 +118,9 @@ class LineCache:
 class ReaderError(Exception):
 	"""Exception class for Readers"""
 
+class ReaderEOFError(ReaderError):
+	"""Error when Reader goes past end of file"""
+	
 
 class DelimitedLineReader:
 	"""
@@ -98,10 +128,10 @@ class DelimitedLineReader:
 	Typical usage:
 	dlr = DelimitedLineReader(file(...,'r'), delim='\t')
 	headers = dlr.getHeader()
-	while dlr.isValid():
-	    flds = dlr.get()
+	while not dlr.atEnd():
+	    flds = dlr.next()
 	"""
-	handler_dict = {"s":str, "f":looseFloatParser, "d":looseIntParser}
+	handler_dict = {"s":str, "f":naFloatParser, "d":naIntParser}
 
 	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=True, comment_str="#", custom_handler_dict=None):
 		self.infile = in_file
@@ -119,16 +149,12 @@ class DelimitedLineReader:
 		self.handlers = []
 
 		if self.has_header:
-			self.getHeader()
-			line = self.next(process=False)
-		else:
-			line = self.getRawLine()
+			# Position reader right after header
+			self.getHeader(move_to_data=True)
+			
 		if field_defs is None:
 			# Attempt to infer the handlers
-			while self.isComment():
-				line = self.next(process=False)
-			assert self.isValid()
-			self.field_defs = self.inferHandlers(line)
+			self.field_defs = self.inferHandlers()
 		else:
 			self.field_defs = field_defs
 			for h in self.field_defs:
@@ -146,7 +172,7 @@ class DelimitedLineReader:
 			self.cur_line = self.cache.pop()
 			self.n_lines_read += 1
 		else:
-			raise ReaderError("Attempt to read past end of stream")
+			raise ReaderEOFError("Attempt to read past end of stream")
 		# Read line until we find something
 		while self.isComment() and not self.atEnd():
 			self.cur_line = self.cache.pop() #self.file.readline()
@@ -215,41 +241,93 @@ class DelimitedLineReader:
 				res = line[0] == self.comment_str
 		return res
 
-	def getHeader(self):
-		if not self.headers:
-			li = 0
-			self.cur_line = self.cache.getLine(li)
-			while self.isComment():
-				li += 1
+	def getHeader(self, move_to_data=True):
+		if self.has_header:
+			if not self.headers:
+				li = 0
 				self.cur_line = self.cache.getLine(li)
-			if self.isValid() and not self.isComment():
-				self.headers = self.process(apply_handlers=False)
-			else:
-				raise ReaderError("Never encountered a header line")
-		return self.headers
+				while self.isComment():
+					li += 1
+					self.cur_line = self.cache.getLine(li)
+				if self.isValid() and not self.isComment():
+					self.headers = self.process(apply_handlers=False)
+					if move_to_data:
+						# Position reader at line following header
+						for pop_li in range(li+1):
+							self.cache.pop()
+							self.n_lines_read += 1
+				else:
+					raise ReaderError("Never encountered a header line")
+			return self.headers
+		else:
+			return None # No header
+	
+	def inferHandlerKey(self, fld):
+		# int -> float -> string
+		found_key = None
+		for handler_key in "dfs":  # DAD: should include custom handlers up front
+			handler = self.handler_dict[handler_key]
+			try:
+				res = handler(fld)
+				# If we get here without an exception, save the key
+				found_key = handler_key
+				break
+			except ValueError:
+				continue
+		return found_key
 
-	def inferHandlers(self, line):
+
+	def inferHandlers(self):
 		# DAD: run through fields until we've seen at least one non-NA for each.
-		if self.strip:
-			line = line.strip()
-		flds = line.split(self.delim)
-		self.handlers = [None]*len(flds)
-		inferred_string = ""
-		for fi in range(len(flds)):
-			fld = flds[fi]
-			# int -> float -> string
-			for handler_key in "dfs":
-				handler = self.handler_dict[handler_key]
+		handlers_identified = False
+		li = 0
+		self.cur_line = self.cache.getLine(li)
+		self.handlers = None
+		inferred_string = []
+		while not handlers_identified and self.isValid():
+			if not self.isComment():
+				# Not a comment line -- parse it.
+				if self.strip:
+					self.cur_line = self.cur_line.strip()
+				flds = self.cur_line.split(self.delim)
+				# Initialize empty handler list if we haven't done so already
+				if self.handlers is None:
+					self.handlers = [None]*len(flds)
+					inferred_string = ['X']*len(flds)
+				#print len([h for h in self.handlers if h is None]), inferred_string
+				for hi in range(len(self.handlers)):
+					fld = flds[hi]
+					if self.handlers[hi] is None:
+						if not isNA(fld):
+							handler_key = self.inferHandlerKey(fld)
+							inferred_string[hi] = handler_key
+							self.handlers[hi] = self.handler_dict[handler_key]
+					else: # handler has already been found; just confirm, and upgrade if necessary
+						try:
+							val = self.handlers[hi](fld)
+						except ValueError:
+							#print "upgrading handler", inferred_string[hi],
+							handler_key = self.inferHandlerKey(fld)
+							inferred_string[hi] = handler_key
+							self.handlers[hi] = self.handler_dict[handler_key]
+							#print "to", handler_key
+							
+				# We're finished when all handlers are not None.						
+				handlers_identified = len([h for h in self.handlers if h is None]) == 0
+			if not handlers_identified:
+				#print "cache:", self.cache.cache
+				li += 1
 				try:
-					res = handler(fld)
-					# If we get here without an exception, add the handler
-					self.handlers[fi] = handler
-					inferred_string += handler_key
-					break
-				except ValueError:
-					continue
-
+					self.cur_line = self.cache.getLine(li)
+				except ReaderEOFError:
+					# We've reached the end of the file with an inconclusive result -- some fields
+					# still can't have types inferred.
+					# Just assume everything's a string.
+					for hi in range(len(self.handlers)):
+						if self.handlers[hi] is None:
+							self.handlers[hi] = self.handler_dict["s"]
 		#print inferred_string
+		inferred_string = ''.join(inferred_string)
 		return inferred_string
 
 def test001():
@@ -271,7 +349,7 @@ def test001():
 	assert sum(vals) > n_lines
 	inf.close()
 	os.remove(fname)
-	print "** infer header types"
+	print "** 001 infer header types"
 
 def test002():
 	# Normal
@@ -286,7 +364,7 @@ def test002():
 		fp.next()
 	inf.close()
 	os.remove(fname)
-	print "** read through"
+	print "** 002 read through"
 
 def test003():
 	# Normal
@@ -301,7 +379,7 @@ def test003():
 	assert header == header_list
 	inf.close()
 	os.remove(fname)
-	print "** header parsing"
+	print "** 003 header parsing"
 
 def test004():
 	# Normal
@@ -322,7 +400,7 @@ def test004():
 	assert sum(vals) > n_lines
 	inf.close()
 	os.remove(fname)
-	print "** infer header types 2"
+	print "** 004 infer header types 2"
 
 def test005():
 	# Normal
@@ -339,14 +417,16 @@ def test005():
 	assert fp.getNumRead() == n_lines
 	inf.close()
 	os.remove(fname)
-	print "** lines read"
+	print "** 005 lines read"
 
 def test006():
 	# NA's at some frequency -- infer types.
 	n_lines = 100
 	header_list = ["str","float","int","str"]
 	fname = "tmp_normal.txt"
-	makeFile(fname, header_list, "sfds", n_lines, '\t', 0.1)
+	# Put an NA in the first line -- test the ability to look past to infer types
+	first_lines = [randString() + "\t1.00\tNA\t" + randString() + "\n"]
+	makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
 	inf = file(fname, 'r')
 	# Infer the types
 	fp = DelimitedLineReader(inf)
@@ -360,8 +440,49 @@ def test006():
 			vals.append(v[2])
 	assert sum(vals) > n_lines
 	inf.close()
-	os.remove(fname)
-	print "** infer header types with NA's"
+	#os.remove(fname)
+	print "** 006 infer header types with NA's"
+
+def test007():
+	# NA's in every line -- infer types.
+	n_lines = 0
+	header_list = ["str","float","int","str"]
+	fname = "tmp_normal.txt"
+	# Put an NA in the first line -- test the ability to look past to infer types
+	first_lines = [randString() + "\t59.3\tNA\t" + randString() + "\n", 
+		randString() + "\tNA\t12\t" + randString() + "\n"]
+	makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
+	inf = file(fname,'r')
+	# Infer the types
+	fp = DelimitedLineReader(inf, header=False)
+	header = fp.getHeader()
+	vals = []
+	while not fp.atEnd():
+		#print fp.cache.cache[-1],
+		v = fp.next()
+		#print v
+		if not v[2] is None:
+			vals.append(v[2])
+	assert sum(vals) == 12
+	inf.close()
+	#os.remove(fname)
+	print "** 007 infer header types with NA's in every line"
+
+def test008():
+	# NA's in every line -- infer types.
+	n_lines = 0
+	header_list = ["str","float","int","str"]
+	fname = "tmp_normal.txt"
+	# Put an NA in the first line -- test the ability to look past to infer types
+	first_lines = [randString() + "\t59.3\tNA\t" + randString() + "\n"]*100
+	makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
+	inf = file(fname,'r')
+	# Infer the types
+	fp = DelimitedLineReader(inf, header=False)
+	header = fp.getHeader()
+	inf.close()
+	#os.remove(fname)
+	print "** 008 infer header types with NA's in one full column"
 
 def randString():
 	return ''.join(random.sample(string.letters, 10))
@@ -369,12 +490,15 @@ def randInt():
 	return random.randint(1,10000)
 def randFloat():
 	return random.random()
-def makeFile(fname, headers, fld_types, n_lines, sep, na_prob):
+def makeFile(fname, headers, fld_types, n_lines, sep, na_prob, first_lines=None, last_lines=None):
 	dtype = {}
 	dtype['f'] = randFloat
 	dtype['d'] = randInt
 	dtype['s'] = randString
 	outf = file(fname,'w')
+	if first_lines:
+		for line in first_lines:
+			outf.write(line)
 	if headers:
 		assert len(headers) == len(fld_types)
 		outf.write("%s\n" % sep.join(headers))
@@ -391,28 +515,15 @@ def makeFile(fname, headers, fld_types, n_lines, sep, na_prob):
 				else:
 					line = sep.join([line, str(dtype[f]())])
 		outf.write("%s\n" % line)
-	return outf	
+	if last_lines:
+		for line in last_lines:
+			outf.write(line)
+	outf.close()
+	return fname
 				
 				
 
 if __name__=="__main__":
-	# Make test files
-	# Normal
-	makeFile("tmp_normal.txt", ["str","float","int","str"], "sfds", 100, '\t', 0.0)
-	# No header
-	makeFile("tmp_noheader.txt", None, "sfds", 100, '\t', 0.0)
-	# Ends with comments
-	f = makeFile("tmp_endcomments.txt", ["str","float","int","str"], "sfds", 100, '\t', 0.0)
-	f.write("# wakka\n")
-	f.write("# foo\n")
-	f.close()
-	# All comments
-	outf = file("tmp_allcomments.txt",'w')
-	for i in range(100):
-		outf.write("# Comment!\n")
-	outf.close()
-	# Randomly placed NA's in first several lines
-	
 	# Tests
 	test001()
 	test002()
@@ -420,4 +531,6 @@ if __name__=="__main__":
 	test004()
 	test005()
 	test006()
+	test007()
+	test008()
 	print "** All tests passed **"
