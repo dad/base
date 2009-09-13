@@ -198,6 +198,7 @@ class DelimitedLineReader:
 			line = line.strip()
 		if line != "":
 			flds = line.split(self.delim)
+			flds[-1] = flds[-1].strip() # Get rid of \n
 			if apply_handlers:
 				assert len(flds) <= len(self.handlers)
 				if not self.handlers:
@@ -290,11 +291,12 @@ class DelimitedLineReader:
 				if self.strip:
 					self.cur_line = self.cur_line.strip()
 				flds = self.cur_line.split(self.delim)
+				flds[-1] = flds[-1].strip() # Get rid of \n
 				# Initialize empty handler list if we haven't done so already
 				if self.handlers is None:
 					self.handlers = [None]*len(flds)
 					inferred_string = ['X']*len(flds)
-				#print len([h for h in self.handlers if h is None]), inferred_string
+				assert len(flds) == len(self.handlers), "Number of fields %d not equal to number of handlers %d" % (len(flds), len(self.handlers))
 				for hi in range(len(self.handlers)):
 					fld = flds[hi]
 					if self.handlers[hi] is None:
