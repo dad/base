@@ -442,7 +442,7 @@ def test006():
 			vals.append(v[2])
 	assert sum(vals) > n_lines
 	inf.close()
-	#os.remove(fname)
+	os.remove(fname)
 	print "** 006 infer header types with NA's"
 
 def test007():
@@ -467,7 +467,7 @@ def test007():
 			vals.append(v[2])
 	assert sum(vals) == 12
 	inf.close()
-	#os.remove(fname)
+	os.remove(fname)
 	print "** 007 infer header types with NA's in every line"
 
 def test008():
@@ -483,7 +483,7 @@ def test008():
 	fp = DelimitedLineReader(inf, header=False)
 	header = fp.getHeader()
 	inf.close()
-	#os.remove(fname)
+	os.remove(fname)
 	print "** 008 infer header types with NA's in one full column"
 
 def randString():
