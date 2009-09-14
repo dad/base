@@ -27,7 +27,7 @@ class OutStreams:
 		self.streams.remove(stream)
 
 def isNA(x):
-	return x == 'NA' or x == ''
+	return x is None or x == 'NA' or x == ''
 
 def looseIntParser(x):
 	v = None
@@ -158,7 +158,7 @@ class DelimitedLineReader:
 	"""
 	handler_dict = {"s":str, "f":naFloatParser, "d":naIntParser}
 
-	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=True, comment_str="#", custom_handler_dict=None, header_name_processor=basicHeaderFixer):
+	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=False, comment_str="#", custom_handler_dict=None, header_name_processor=basicHeaderFixer):
 		self.infile = in_file
 		self.delim = sep
 		self.strip = strip
@@ -514,7 +514,7 @@ def test008():
 	os.remove(fname)
 	print "** 008 infer header types with NA's in one full column"
 
-def msHeader(header_flds):
+def maxQuantHeader(header_flds):
 	# Header line
 	header_line = '\t'.join(header_flds)
 	header_line = header_line.lower()
@@ -559,7 +559,7 @@ def test010():
 	makeFile(fname, header_list, "ffds", n_lines, '\t', 0.1)
 	inf = file(fname,'r')
 	# Infer the types
-	fp = DelimitedLineReader(inf, header=True, header_name_processor=msHeader)
+	fp = DelimitedLineReader(inf, header=True, header_name_processor=maxQuantHeader)
 	header = fp.getHeader()
 	assert header[0] == 'ratio.hl'
 	assert header[-1] == 'this.plus.that'
