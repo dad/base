@@ -120,7 +120,32 @@ class ReaderError(Exception):
 
 class ReaderEOFError(ReaderError):
 	"""Error when Reader goes past end of file"""
-	
+
+def basicHeaderFixer(flds):
+	# Make headers unique
+	if len(flds) > len(set(flds)):
+		new_flds = ['']*len(flds)
+		for fi in range(len(flds)):
+			f = flds[fi]
+			f_count = flds.count(f)
+			if f_count == 1 or fi == 0:
+				new_flds[fi] = f
+			else:  # more than one instance
+				i = 1
+				new_fld_name = '%s.%d' % (f,i)
+				# only look at field names up to this one.
+				# if this is the first instance of a repeated field name,
+				# it will not be changed.
+				while new_fld_name in set(new_flds + flds[0:fi-1]):
+					i += 1
+					new_fld_name = '%s.%d' % (f,i)
+				new_flds[fi] = new_fld_name
+		# Ensure we've actually fixed the problem
+		assert len(new_flds) == len(set(new_flds))
+		res = new_flds
+	else:
+		res = flds
+	return res
 
 class DelimitedLineReader:
 	"""
@@ -133,7 +158,7 @@ class DelimitedLineReader:
 	"""
 	handler_dict = {"s":str, "f":naFloatParser, "d":naIntParser}
 
-	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=True, comment_str="#", custom_handler_dict=None):
+	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=True, comment_str="#", custom_handler_dict=None, header_name_processor=basicHeaderFixer):
 		self.infile = in_file
 		self.delim = sep
 		self.strip = strip
@@ -147,6 +172,7 @@ class DelimitedLineReader:
 		self.headers = None
 		self.field_defs = None
 		self.handlers = []
+		self.header_name_processor = header_name_processor
 
 		if self.has_header:
 			# Position reader right after header
@@ -259,6 +285,8 @@ class DelimitedLineReader:
 							self.n_lines_read += 1
 				else:
 					raise ReaderError("Never encountered a header line")
+			# Now process the headers -- e.g., de-dupe column names.
+			self.headers = self.header_name_processor(self.headers)
 			return self.headers
 		else:
 			return None # No header
@@ -371,7 +399,7 @@ def test002():
 def test003():
 	# Normal
 	n_lines = 100
-	header_list = ["str","float","int","str"]
+	header_list = ["str","float","int","anotherStr"]
 	fname = "tmp_normal.txt"
 	makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
 	inf = file(fname, 'r')
@@ -486,6 +514,60 @@ def test008():
 	os.remove(fname)
 	print "** 008 infer header types with NA's in one full column"
 
+def msHeader(header_flds):
+	# Header line
+	header_line = '\t'.join(header_flds)
+	header_line = header_line.lower()
+	header_line = header_line.replace("h/l", "hl")
+	header_line = header_line.replace(" ", ".")
+	header_line = header_line.replace("(", ".")
+	header_line = header_line.replace(".[%]", "")
+	header_line = header_line.replace("[", ".")
+	header_line = header_line.replace("]", "")
+	header_line = header_line.replace(")", "")
+	header_line = header_line.replace("/", '.')
+	header_line = header_line.replace("+", "plus")
+	header_line = header_line.replace(".\t", '\t')
+	header_line = header_line.replace(".\n", '\n')
+	header_line = header_line.replace("..", '.')
+	header_flds = header_line.strip().split('\t')
+	return header_flds
+
+def test009():
+	# Header processing
+	n_lines = 100
+	header_list = ["int","int.1","int","int"]
+	fname = "tmp_normal.txt"
+	makeFile(fname, header_list, "ffds", n_lines, '\t', 0.1)
+	inf = file(fname,'r')
+	# Infer the types
+	fp = DelimitedLineReader(inf)
+	header = fp.getHeader()
+	assert header[0] == 'int'
+	assert header[1] == 'int.1'
+	assert header[2] == 'int.2'
+	assert header[3] == 'int.3'
+	inf.close()
+	os.remove(fname)
+	print "** 009 header processing"
+	
+def test010():
+	# Header processing
+	n_lines = 100
+	header_list = ["Ratio (H/L)","float","int","This + That"]
+	fname = "tmp_normal.txt"
+	makeFile(fname, header_list, "ffds", n_lines, '\t', 0.1)
+	inf = file(fname,'r')
+	# Infer the types
+	fp = DelimitedLineReader(inf, header=True, header_name_processor=msHeader)
+	header = fp.getHeader()
+	assert header[0] == 'ratio.hl'
+	assert header[-1] == 'this.plus.that'
+	inf.close()
+	os.remove(fname)
+	print "** 010 header processing: custom header processor"
+	
+
 def randString():
 	return ''.join(random.sample(string.letters, 10))
 def randInt():
@@ -535,4 +617,6 @@ if __name__=="__main__":
 	test006()
 	test007()
 	test008()
+	test009()
+	test010()
 	print "** All tests passed **"
