@@ -29,6 +29,12 @@ class OutStreams:
 def isNA(x):
 	return x is None or x == 'NA' or x == ''
 
+def strNA(x):
+	if isNA(x):
+		return "NA"
+	else:
+		return str(x)
+
 def looseIntParser(x):
 	v = None
 	try:
