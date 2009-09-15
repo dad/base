@@ -77,10 +77,10 @@ class LineCache:
 		self.instream = instream
 		self.cache_size = 100
 		self.refill()
-	
+
 	def add(self, line):
 		self.cache.append(line)
-	
+
 	def pop(self):
 		# Use standard Python queue pattern
 		res = self.cache.pop(0)
@@ -100,7 +100,7 @@ class LineCache:
 			else:
 				self.add(line)
 		return eof
-	
+
 	def getLine(self, index):
 		eof = False
 		while not eof and (index >= len(self.cache)):
@@ -108,10 +108,10 @@ class LineCache:
 		if index >= len(self.cache):
 			raise ReaderEOFError("Attempt to read past end of stream (%d, %d)" % (index, len(self.cache)))
 		return self.cache[index]
-	
+
 	def isEmpty(self):
 		return len(self.cache) == 0
-	
+
 	def len(self):
 		return len(self.cache)
 
@@ -170,19 +170,18 @@ class DelimitedLineReader:
 		self.n_lines_read = 0
 		self.has_header = header
 		self.headers = None
-		self.field_defs = None
+		self.field_defs = field_defs
 		self.handlers = []
 		self.header_name_processor = header_name_processor
 
 		if self.has_header:
 			# Position reader right after header
 			self.getHeader(move_to_data=True)
-			
+
 		if field_defs is None:
 			# Attempt to infer the handlers
 			self.field_defs = self.inferHandlers()
 		else:
-			self.field_defs = field_defs
 			for h in self.field_defs:
 				try:
 					self.handlers.append(self.handler_dict[h])
@@ -230,7 +229,15 @@ class DelimitedLineReader:
 				if not self.handlers:
 					# Infer handlers are strings
 					self.handlers = [str for i in range(len(flds))]
-				res = [self.handlers[i](flds[i]) for i in range(len(flds))]
+				try:
+					res = [self.handlers[i](flds[i]) for i in range(len(flds))]
+				except ValueError, ve:
+					# Adaptively update handlers if there was a value error.
+					for xi in range(i, len(flds)):
+						handler_key = self.inferHandlerKey(flds[xi])
+						self.handlers[xi] = self.handler_dict[handler_key]
+					# Reapply the new handlers to get the data.
+					res = [self.handlers[i](flds[i]) for i in range(len(flds))]
 			else:
 				res = flds
 		else:
@@ -290,7 +297,7 @@ class DelimitedLineReader:
 			return self.headers
 		else:
 			return None # No header
-	
+
 	def inferHandlerKey(self, fld):
 		# int -> float -> string
 		found_key = None
@@ -324,6 +331,8 @@ class DelimitedLineReader:
 				if self.handlers is None:
 					self.handlers = [None]*len(flds)
 					inferred_string = ['X']*len(flds)
+				if len(flds) != len(self.handlers):
+					print flds
 				assert len(flds) == len(self.handlers), "Number of fields %d not equal to number of handlers %d" % (len(flds), len(self.handlers))
 				for hi in range(len(self.handlers)):
 					fld = flds[hi]
@@ -341,8 +350,8 @@ class DelimitedLineReader:
 							inferred_string[hi] = handler_key
 							self.handlers[hi] = self.handler_dict[handler_key]
 							#print "to", handler_key
-							
-				# We're finished when all handlers are not None.						
+
+				# We're finished when all handlers are not None.
 				handlers_identified = len([h for h in self.handlers if h is None]) == 0
 			if not handlers_identified:
 				#print "cache:", self.cache.cache
@@ -479,7 +488,7 @@ def test007():
 	header_list = ["str","float","int","str"]
 	fname = "tmp_normal.txt"
 	# Put an NA in the first line -- test the ability to look past to infer types
-	first_lines = [randString() + "\t59.3\tNA\t" + randString() + "\n", 
+	first_lines = [randString() + "\t59.3\tNA\t" + randString() + "\n",
 		randString() + "\tNA\t12\t" + randString() + "\n"]
 	makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
 	inf = file(fname,'r')
@@ -550,7 +559,7 @@ def test009():
 	inf.close()
 	os.remove(fname)
 	print "** 009 header processing"
-	
+
 def test010():
 	# Header processing
 	n_lines = 100
@@ -566,7 +575,24 @@ def test010():
 	inf.close()
 	os.remove(fname)
 	print "** 010 header processing: custom header processor"
-	
+
+def test011():
+	# Adaptive field redefinition
+	n_lines = 100
+	header_list = ["float","float","int","str"]
+	fname = "tmp_normal.txt"
+	last_lines = ["0.2\t0.3\tnot.an.int\twakka\n"]
+	makeFile(fname, header_list, "ffds", n_lines, '\t', 0.01, last_lines=last_lines)
+	inf = file(fname,'r')
+	# Infer the types
+	fp = DelimitedLineReader(inf, header=True, header_name_processor=maxQuantHeader)
+	header = fp.getHeader()
+	while not fp.atEnd():
+		flds = fp.next()
+	inf.close()
+	os.remove(fname)
+	print "** 011 adaptive handler updating"
+
 
 def randString():
 	return ''.join(random.sample(string.letters, 10))
@@ -604,8 +630,8 @@ def makeFile(fname, headers, fld_types, n_lines, sep, na_prob, first_lines=None,
 			outf.write(line)
 	outf.close()
 	return fname
-				
-				
+
+
 
 if __name__=="__main__":
 	# Tests
@@ -619,4 +645,5 @@ if __name__=="__main__":
 	test008()
 	test009()
 	test010()
+	test011()
 	print "** All tests passed **"
