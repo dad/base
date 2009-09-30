@@ -2,6 +2,9 @@ library(Hmisc)
 library(pls)
 source("~/research/lib/pcor.R")
 
+ep <- function(x) {
+	eval(parse(text=x))
+}
 
 barplot.ci <- function(x, param.name, ylim=NULL, ...) {
   params <- sapply(x, function(m) {coef(m)[[param.name]]})
@@ -164,11 +167,15 @@ scale.common <- function(x, ...) {
 
 # Names of, for example, pairwise correlations between variables named in ns
 pair.names <- function(ns, sep='--') {
-  apply(combn(dn.flds,2), 2, function(m){paste(m,collapse=sep)})  
+  apply(combn(dn.flds,2), 2, function(m){paste(m,collapse=sep)})
 }
 
 fc <- function(x, digits=3) {
 	format(x, digits=digits)
+}
+
+quick.formula <- function(response, predictors) {
+	as.formula(paste(response,"~",paste(predictors,collapse="+")))
 }
 
 # Modified summary function for class mvr

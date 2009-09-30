@@ -35,6 +35,25 @@ def strNA(x):
 	else:
 		return str(x)
 
+def formatNA(x, format, sep=None):
+	if isinstance(x, list):
+		flds = format.split(sep)
+		if sep is None:
+			sep = '\t'
+		assert len(flds) == len(x)
+		res = []
+		for i in range(len(x)):
+			if isNA(x[i]):
+				res.append("NA")
+			else:
+				res.append(flds[i] % x[i])
+		return sep.join(res)
+	else:
+		if isNA(x):
+			return "NA"
+		else:
+			return format % x
+
 def looseIntParser(x):
 	v = None
 	try:
