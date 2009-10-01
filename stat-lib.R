@@ -101,13 +101,7 @@ rankcols <- function(mat, na.last="keep", ...) {
 }
 
 scalecols <- function(mat, ...) {
-	m <- apply(mat, 2, scale, ...)
-	if (is.data.frame(mat)) {
-		return(as.data.frame(m))
-	}
-	else {
-		return(m)
-	}
+	return(scale.mat(mat,dim=2))
 }
 
 scale.mat <- function(mat, dim=2, ...) {
@@ -1495,7 +1489,8 @@ noop <- function(x) {
 }
 
 ## Takes a list of variables, plots kernel densities
-multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL, equal.height=F, relative.heights=NULL, ...) {
+multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL, equal.height=F, relative.heights=NULL, xlab="x", ylab="Density", ...) {
+	extra.args <- list(...)
 	if (is.data.frame(x) || is.matrix(x)) {
 		col.names <- colnames(x)
 		x <- lapply(1:ncol(x),function(m){x[,m]})
@@ -1560,7 +1555,26 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend
 	d <- densities[[1]]
 	if (log) {log.str <- "x"} else {log.str <- ""}
 	if (equal.height) {height.div <- max.height} else {height.div <- 1.0}
-	plot(inv.trans(d$x), d$y/height.div, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, ...)
+	## Infer X and Y labels, if not passed in
+	if (missing(xlab) | is.null(xlab)) {
+		if (!is.null(names(x)[1])) {
+			xlab <- names(x)[1]
+		}
+		else {
+			xlab <- "x"
+		}
+	}
+	if (missing(ylab) | is.null(ylab)) {
+		if (equal.height) {
+			ylab <- "Peak-normalized density"
+		}
+		else {
+			ylab <- "Density"
+		}
+	}
+
+	## Actually plot the data
+	plot(inv.trans(d$x), d$y/height.div, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, ...)
 	for (i in 1:length(x)) {
 		d <- densities[[i]]
 		height.div <- 1.0
