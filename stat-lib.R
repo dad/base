@@ -30,9 +30,8 @@ barplot.err <- function(x, x.err, ...) {
 my.axis <- function(side, at, log=F, expand.range=0.1, ...) {
   if (log) {
     lat <- as.integer(log10(at))
-    latseq <- min(lat,na.rm=T):max(lat,na.rm=T)
+    latseq <- seq(min(lat,na.rm=T),max(lat,na.rm=T),1)
     labs <- lapply(latseq, function(m){substitute(10^i ,list(i=m))})
-    ##labs <- as.vector(lapply(lat, function(m){substitute(10^i ,list(i=m))}))
     axis(side, at=10^(latseq), labels=as.expression(labs), ...)
   }
   else {
@@ -41,8 +40,7 @@ my.axis <- function(side, at, log=F, expand.range=0.1, ...) {
 }
 
 charlist <- function(x) {
-	n <- nchar(x)
-	return(substring(x,1:n,1:n))
+	strsplit(x)
 }
 
 
