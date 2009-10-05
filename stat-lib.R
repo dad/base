@@ -40,7 +40,7 @@ my.axis <- function(side, at, log=F, expand.range=0.1, ...) {
 }
 
 charlist <- function(x) {
-	strsplit(x)
+	unlist(strsplit(x, ""))
 }
 
 
