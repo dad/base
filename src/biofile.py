@@ -5,20 +5,20 @@ class BioFileError:
 	def __init__(self, s):
 		return
 
-def writeFASTA(seq_list, filename, headers=None):
-	outf = file(filename, 'w')
-	i = 0
+def writeFASTA(seq_list, outfile, headers=None):
+	n_written = 0
 	if headers is None:
 		headers = ["%d"%(j+1,) for j in range(len(seq_list))]
 	for (hdr,seq) in zip(headers,seq_list):
 		line = ">%s\n%s\n" % (hdr, seq)
-		outf.write(line)
-		i += 1
-	outf.close()
-	return i
+		outfile.write(line)
+		n_written += 1
+	return n_written
 
-def writeFASTADict(seq_dict, filename):
-	return writeFASTA(seq_dict.values(), filename, headers=seq_dict.keys())
+def writeFASTADict(seq_dict, outfile):
+	headers = seq_dict.keys()
+	seqs = [seq_dict[k] for k in headers]
+	return writeFASTA(seqs, outfile, headers=headers)
 
 #-----------------------------------------------------------------------------------
 def readFASTA(infile_name):
@@ -92,7 +92,7 @@ def getIDFunction(s):
 		return getGeneID
 	return firstField
 
-def readFASTADict(infile_name, fxn = firstField):
+def readFASTADict(infile_name, key_fxn = firstField):
 	#(headers, sequences) = readFASTADict(infile)
 	infile_name = os.path.expanduser(infile_name)
 	fdict = {}
@@ -112,7 +112,7 @@ def readFASTADict(infile_name, fxn = firstField):
 				seq = []
 			try:
 				s = line[1:].strip()
-				currHeader = fxn(s)
+				currHeader = key_fxn(s)
 			except Exception, e:
 				#print line[1:].rstrip()
 				continue

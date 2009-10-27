@@ -160,6 +160,13 @@ _aa_rna_codons = [x for x in _rna_codons if not _genetic_code[x] == '*']
 def geneticCode():
 	return _genetic_code
 
+
+_three_letter_codes = {
+	'A':'Ala', 'C':'Cys', 'D':'Asp', 'E':'Glu', 'F':'Phe', 'G':'Gly', 'H':'His', 'I':'Ile', 'K':'Lys', 'L':'Leu', 'M':'Met', 'N':'Asn', 'P':'Pro', 'Q':'Gln', 'R':'Arg', 'S':'Ser', 'T':'Thr', 'V':'Val', 'W':'Trp', 'Y':'Tyr'}
+
+def threeLetterCodes():
+	return _three_letter_codes
+
 #---------------------------------------------------------------------------
 def codonToAA(codon):
 	"""Returns one-letter amino acid for codon.

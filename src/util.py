@@ -94,6 +94,9 @@ def naStringParser(x):
 		v = str(x)
 	return v
 
+def dictParser(x, entry_sep=';', key_sep='='):
+	entries = x.split(entry_sep)
+	return dict([entry.split(key_sep) for entry in entries])
 
 class LineCache:
 	"""Class for caching lines read by DelimitedLineReader."""
@@ -254,15 +257,20 @@ class DelimitedLineReader:
 				if not self.handlers:
 					# Infer handlers are strings
 					self.handlers = [str for i in range(len(flds))]
-				try:
-					res = [self.handlers[i](flds[i]) for i in range(len(flds))]
-				except ValueError, ve:
-					# Adaptively update handlers if there was a value error.
-					for xi in range(i, len(flds)):
-						handler_key = self.inferHandlerKey(flds[xi])
-						self.handlers[xi] = self.handler_dict[handler_key]
-					# Reapply the new handlers to get the data.
-					res = [self.handlers[i](flds[i]) for i in range(len(flds))]
+				done_processing = False
+				while not done_processing:
+					try:
+						# Apply the new handlers to get the data.
+						res = [self.handlers[hi](flds[hi]) for hi in range(len(flds))]
+						done_processing = True
+					except ValueError, ve:
+						#print "updating handler %d" % hi
+						# Adaptively update handlers if there was a value error.
+						handler_key = self.inferHandlerKey(flds[hi])
+						self.handlers[hi] = self.handler_dict[handler_key]
+						# Reapply the new handlers to get the data.
+						#res = [self.handlers[i](flds[i]) for i in range(len(flds))]
+
 			else:
 				res = flds
 		else:
@@ -393,6 +401,15 @@ class DelimitedLineReader:
 		#print inferred_string
 		inferred_string = ''.join(inferred_string)
 		return inferred_string
+
+	def setHandlerType(self, handler_index, type_string):
+		try:
+			self.handlers[handler_index] = self.handler_dict[type_string]
+		except KeyError, ke:
+			raise ReaderError, "Unknown handler type %s" % type_string
+		except IndexError:
+			raise ReaderError, "Bad handler index %d" % handler_index
+
 
 def test001():
 	# Normal
