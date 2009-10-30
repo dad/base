@@ -398,6 +398,7 @@ class DelimitedLineReader:
 					for hi in range(len(self.handlers)):
 						if self.handlers[hi] is None:
 							self.handlers[hi] = self.handler_dict["s"]
+					handlers_identified = True
 		#print inferred_string
 		inferred_string = ''.join(inferred_string)
 		return inferred_string
