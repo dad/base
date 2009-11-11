@@ -220,7 +220,7 @@ class DelimitedLineReader:
 						except KeyError, ke:
 							raise ReaderError("No custom handler provided for field-type %s" % h)
 
-	def next(self, process=True):
+	def next(self, process=True, apply_handlers=True):
 		if not self.atEnd():
 			self.cur_line = self.cache.pop()
 			self.n_lines_read += 1
@@ -233,11 +233,22 @@ class DelimitedLineReader:
 		res = None
 		if self.isValid():
 			if process:
-				self.cur_flds = self.process()
+				self.cur_flds = self.process(apply_handlers)
 				res = self.cur_flds
 			else:
 				res = self.cur_line
 		#print "$%d-%s^" % (self.getNumRead(), self.getRawLine())
+		return res
+
+	def nextDict(self, apply_handlers=True):
+		## Return fields as a dictionary, keyed by the header names
+		headers = self.getHeader()
+		res = None
+		if not headers is None:
+			flds = self.next(True, apply_handlers)
+			res = dict(zip(headers, flds))
+		else:
+			raise ReaderError, "Attempt to return dictionary of fields, but header is empty"
 		return res
 
 	def process(self, apply_handlers=True):

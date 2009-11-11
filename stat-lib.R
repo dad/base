@@ -29,6 +29,8 @@ barplot.err <- function(x, x.err, ...) {
 
 my.axis <- function(side, at, log=F, expand.range=0.1, ...) {
   if (log) {
+  	at <- unlist(at)
+  	at <- at[at>0]
     lat <- as.integer(log10(at))
     latseq <- seq(min(lat,na.rm=T),max(lat,na.rm=T),1)
     labs <- lapply(latseq, function(m){substitute(10^i ,list(i=m))})
@@ -1487,7 +1489,8 @@ noop <- function(x) {
 }
 
 ## Takes a list of variables, plots kernel densities
-multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL, equal.height=F, relative.heights=NULL, xlab="x", ylab="Density", ...) {
+multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
+	equal.height=F, relative.heights=NULL, xlab="x", ylab="Density", weight.list=NULL, ...) {
 	extra.args <- list(...)
 	if (is.data.frame(x) || is.matrix(x)) {
 		col.names <- colnames(x)
@@ -1515,9 +1518,17 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend
 	}
 	#cat("h3\n")
 	## Compute the densities
-	densities <- lapply(x, function(y) {
-		ny <- na.omit(y)
-		density(trans(ny), na.rm=T, kern=kernel)
+	densities <- lapply(names(x), function(n) {
+		if (is.null(weight.list)) {
+			y <- x[[n]]
+			ny <- na.omit(y)
+			density(trans(ny), na.rm=T, kern=kernel)
+		}
+		else {
+			y <- data.frame(x=x[[n]], w=weight.list[[n]])
+			ny <- na.omit(y)
+			density(trans(ny$x), na.rm=T, kern=kernel, weights=ny$w/sum(ny$w,na.rm=T))
+		}
 		})
 	#cat("h4\n")
 	max.heights <- lapply(densities, function(d) {max(d$y, na.rm=T)})
