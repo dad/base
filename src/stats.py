@@ -182,8 +182,25 @@ def geometricMean(numlist):
 	if n == 0:
 		# Can happen if only entry is zero.
 		return 0.0
-
 	return math.exp(log_sum / float(n))
+#----------------------------------------------------------------------------------
+def weightedMean(numlist, weights):
+	"""Returns the weighted mean of a list of numbers.
+
+	If any entries of the list are 'None' or '-', they are removed
+	first."""
+	wxsum = 0.0
+	wsum = 0.0
+	
+	assert len(numlist) == len(weights)
+	
+	for (x,w) in zip(numlist, weights):
+		wxsum += x*w
+		wsum += w
+	if wsum == 0.0:
+		return 0.0
+	return wxsum/wsum
+
 #--------------------------------------------------------------------------------
 def Variance(numlist):
 	"""Returns the sample variance of a list of numbers.

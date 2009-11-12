@@ -1518,17 +1518,18 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend
 	}
 	#cat("h3\n")
 	## Compute the densities
-	densities <- lapply(names(x), function(n) {
+	densities <- lapply(1:length(x), function(n) {
 		if (is.null(weight.list)) {
 			y <- x[[n]]
 			ny <- na.omit(y)
-			density(trans(ny), na.rm=T, kern=kernel)
+			d <- density(trans(ny), na.rm=T, kern=kernel)
 		}
 		else {
 			y <- data.frame(x=x[[n]], w=weight.list[[n]])
 			ny <- na.omit(y)
-			density(trans(ny$x), na.rm=T, kern=kernel, weights=ny$w/sum(ny$w,na.rm=T))
+			d <- density(trans(ny$x), na.rm=T, kern=kernel, weights=ny$w/sum(ny$w,na.rm=T))
 		}
+		d
 		})
 	#cat("h4\n")
 	max.heights <- lapply(densities, function(d) {max(d$y, na.rm=T)})
@@ -1561,7 +1562,6 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend
 	}
 
 	## Plot the first dataset
-	d <- densities[[1]]
 	if (log) {log.str <- "x"} else {log.str <- ""}
 	if (equal.height) {height.div <- max.height} else {height.div <- 1.0}
 	## Infer X and Y labels, if not passed in
@@ -1583,6 +1583,7 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend
 	}
 
 	## Actually plot the data
+	d <- densities[[1]]
 	plot(inv.trans(d$x), d$y/height.div, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, ...)
 	for (i in 1:length(x)) {
 		d <- densities[[i]]
