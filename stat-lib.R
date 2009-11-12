@@ -159,7 +159,7 @@ scale.common <- function(x, ...) {
 
 # Names of, for example, pairwise correlations between variables named in ns
 pair.names <- function(ns, sep='--') {
-  apply(combn(dn.flds,2), 2, function(m){paste(m,collapse=sep)})
+  apply(combn(ns,2), 2, function(m){paste(m,collapse=sep)})
 }
 
 fc <- function(x, digits=3) {
@@ -520,13 +520,13 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.comp
 			}
 		}
 	}
-
 	# Compute the means of the data
 	comb <- combine.model(x, meas.names, wts, na.rm=na.rm)
 	mean.data <- comb$means
 	mean.data.xform <- mean.data
 	var.data <- comb$vars
-
+    
+    
 	# Transform data after means have been computed
 	if (!is.null(trans.fxn)) {
 		x <- apply(x, 2, trans.fxn)
