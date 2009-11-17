@@ -527,8 +527,8 @@ cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.comp
 	mean.data <- comb$means
 	mean.data.xform <- mean.data
 	var.data <- comb$vars
-    
-    
+
+
 	# Transform data after means have been computed
 	if (!is.null(trans.fxn)) {
 		x <- apply(x, 2, trans.fxn)
@@ -1489,7 +1489,7 @@ noop <- function(x) {
 }
 
 ## Takes a list of variables, plots kernel densities
-multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
+multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
 	equal.height=F, relative.heights=NULL, xlab="x", ylab="Density", weight.list=NULL, ...) {
 	extra.args <- list(...)
 	if (is.data.frame(x) || is.matrix(x)) {
@@ -1591,7 +1591,12 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend
 		if (equal.height) {
 			height.div <- max.heights[[i]]
 		}
-		lines(inv.trans(d$x), relative.heights[[i]]*d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+		if (fill) {
+			polygon(inv.trans(d$x), relative.heights[[i]]*d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+		}
+		else {
+			lines(inv.trans(d$x), relative.heights[[i]]*d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+		}
 	}
 
 	## cat("h6\n")
