@@ -2,6 +2,13 @@ library(Hmisc)
 library(pls)
 source("~/research/lib/pcor.R")
 
+dev.out <- function(fname, fdir="../figures/", width=7, height=7, pdf.figures=T) {
+  if (pdf.figures) ext = ".pdf" else ext = ".png"
+  if (pdf.figures) pdf(paste(fdir,fname,ext,sep=""), width=width, height=height, family="Helvetica")
+  else png(paste(fdir,fname,ext,sep=""), width=width*(480/7), height=height*(480/7))
+}
+
+
 ep <- function(x) {
 	eval(parse(text=x))
 }
@@ -1487,6 +1494,65 @@ ez.window <- function(x,y, n.per.window, step.size, x.fxn=median, y.fxn=mean, lo
 noop <- function(x) {
 	x
 }
+
+multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
+	equal.height=F, relative.heights=NULL, xlab="x", ylab="Empirical CDF", weight.list=NULL, ...) {
+	extra.args <- list(...)
+	if (is.data.frame(x) || is.matrix(x)) {
+		col.names <- colnames(x)
+		x <- lapply(1:ncol(x),function(m){x[,m]})
+		names(x) <- col.names
+	}
+	if (!is.list(x)) {
+		x <- list(x)
+	}
+	if (is.null(col)) {col <- rainbow(length(x))}
+	## Extend properties into vectors, if necessary
+	cols <- as.vector(replicate(length(x)/length(col) + 1,col))
+	ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
+	lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))
+	#cat("h2\n")
+	if (log) {
+		trans <- log10
+		inv.trans <- function(y) {10^y}
+	}
+	else {
+		trans <- noop
+		inv.trans <- noop
+	}
+
+	densities <- lapply(1:length(x), function(n) {
+      y <- x[[n]]
+      ny <- na.omit(y)
+      d <- ecdf(trans(ny))
+      d
+    })
+	#cat("h4\n")
+
+	## X limits
+	if (is.null(xlim)) {
+		## Make xlims
+		valid.x <- x
+		if (log) {
+			valid.x <- lapply(x, function(y) {y[y>0]})
+		}
+		xmin <- min(sapply(valid.x,min,na.rm=T),na.rm=T)
+		xlim <- c(xmin, max(sapply(x,max,na.rm=T),na.rm=T))
+	}
+
+    length.out <- 1000
+    at <- seq(trans(xlim[1]), trans(xlim[2]), length.out=length.out)
+    
+	if (log) {log.str <- "x"} else {log.str <- ""}
+	plot(inv.trans(at), densities[[1]](at), type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, ...)
+	for (i in 1:length(x)) {
+		d <- densities[[i]]
+		lines(inv.trans(at), d(at), col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+	}
+    
+    
+    
+  }
 
 ## Takes a list of variables, plots kernel densities
 multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
