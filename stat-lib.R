@@ -1541,20 +1541,26 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 
     length.out <- 1000
     at <- seq(trans(xlim[1]), trans(xlim[2]), length.out=length.out)
-    
+
 	if (log) {log.str <- "x"} else {log.str <- ""}
 	plot(inv.trans(at), densities[[1]](at), type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, ...)
 	for (i in 1:length(x)) {
 		d <- densities[[i]]
 		lines(inv.trans(at), d(at), col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
 	}
-    
-    
-    
-  }
+
+	if (!is.null(legend.at)) {
+		legend.names = names(x)
+		if (is.null(legend.names)) {
+		  legend.names = as.character(1:length(x))
+		}
+		legend.cols <- col[1:min(length(x), length(col))]
+		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys)
+	}
+}
 
 ## Takes a list of variables, plots kernel densities
-multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
+multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
 	equal.height=F, relative.heights=NULL, xlab="x", ylab="Density", weight.list=NULL, ...) {
 	extra.args <- list(...)
 	if (is.data.frame(x) || is.matrix(x)) {
@@ -1672,9 +1678,11 @@ multidens <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALSE, l
 		  legend.names = as.character(1:length(x))
 		}
 		legend.cols <- col[1:min(length(x), length(col))]
-		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=1)
+		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys)
 	}
 }
+
+multidens <- multi.density
 
 multi.lm <- function(response, predictors, data, rank=F, na.last=T){
 	if (rank) {
