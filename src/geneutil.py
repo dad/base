@@ -147,5 +147,5 @@ def getMolecularWeight(prot_seq):
 	return mw
 
 def getAAFraction(seq, aa, pseudocount=0.0):
-	return (seq.count(aa) + pseudocount)/(len(seq) + pseudocount)
+	return (seq.count(aa) + pseudocount)/len(seq)
 

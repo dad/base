@@ -117,7 +117,7 @@ def getFop(gene, optimal_list, pseudocount=0.0):
 	(nOpt, nTot) = getNumOptimalCodons(gene.replace("U","T"), optimal_list)
 	fop = 0.0
 	if nTot + pseudocount > 0:
-		fop = (float(nOpt) + pseudocount)/(nTot + pseudocount)
+		fop = (float(nOpt) + pseudocount)/nTot
 	return fop
 
 def isOptimal(codon, optimal_list):
@@ -162,11 +162,11 @@ def test_sbf():
 
 def getGC(gene, pseudocount = 0.0):
 	gene = gene.upper()
-	return (gene.count('G') + gene.count('C') + pseudocount)/float(len(gene) + pseudocount)
+	return (gene.count('G') + gene.count('C') + pseudocount)/float(len(gene))
 
 def getGC3(gene, pseudocount = 0.0):
 	codons = split_by_frame(gene.upper(), 0)
-	return (len([x for x in codons if len(x)==3 and (x[2]=='G' or x[2]=='C')]) + pseudocount)/float(len(codons) + pseudocount)
+	return (len([x for x in codons if len(x)==3 and (x[2]=='G' or x[2]=='C')]) + pseudocount)/float(len(codons))
 
 def getGCi(gene, indices, pseudocount = 0.0):
 	codons = split_by_frame(gene.upper(), 0)
@@ -174,14 +174,14 @@ def getGCi(gene, indices, pseudocount = 0.0):
 	for i in indices:
 		assert i>0 and i<=3 # codon boundaries; one-based!
 		sum_gc += len([x for x in codons if len(x)==3 and (x[i-1] in 'GC')])
-	return (sum_gc + pseudocount)/(float(len(indices)*len(codons)) + pseudocount)
+	return (sum_gc + pseudocount)/(float(len(indices)*len(codons)))
 
-def getContent(gene, nts):
+def getContent(gene, nts, pseudocount=0.0):
 	cont = 0
 	for x in gene:
 		if x in nts:
 			cont += 1
-	return cont/float(len(gene))
+	return (cont+pseudocount)/float(len(gene))
 
 
 def test_getGC3():
