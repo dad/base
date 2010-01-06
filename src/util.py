@@ -26,6 +26,16 @@ class OutStreams:
 	def removeStream(self, stream):
 		self.streams.remove(stream)
 
+def isBlank(s):
+	return s.strip() == ''
+
+def isComment(s, comment_char='#'):
+	st = s.strip()
+	res = False
+	if len(st) > 0:
+		res = st[0] == comment_char
+	return res
+
 def isNA(x):
 	return x is None or x == 'NA' or x == ''
 

@@ -40,7 +40,7 @@ barplot.err <- function(x, x.err, ...) {
 	segments(bp, x-x.err, bp, x+x.err)
 }
 
-my.axis <- function(side, at, log=F, expand.range=0.0, ...) {
+my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, ...) {
   if (log) {
   	at <- unlist(at)
   	at <- at[at>0]
@@ -50,7 +50,12 @@ my.axis <- function(side, at, log=F, expand.range=0.0, ...) {
     range.expanded <- floor(c(range[1]-range.expansion.factor, range[2]+range.expansion.factor))
     latseq <- seq(range.expanded[1], range.expanded[2],1)
     labs <- lapply(latseq, function(m){substitute(10^i ,list(i=m))})
-    axis(side, at=10^(latseq), labels=as.expression(labs), ...)
+	place.at <- 10^latseq
+    if (log.at) {
+    	# Put labels at log-transformed locations.
+    	place.at <- latseq
+    }
+    axis(side, at=place.at, labels=as.expression(labs), ...)
   }
   else {
     axis(side, at, ...)
