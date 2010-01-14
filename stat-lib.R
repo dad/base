@@ -1,5 +1,8 @@
+# For rcorr functions
 library(Hmisc)
+# For pcr functions
 library(pls)
+# For pcor functions
 source("~/research/lib/pcor.R")
 
 dev.out <- function(fname, fdir="../figures/", width=7, height=7, pdf.figures=T) {
@@ -10,6 +13,10 @@ dev.out <- function(fname, fdir="../figures/", width=7, height=7, pdf.figures=T)
 
 ep <- function(x) {
 	eval(parse(text=x))
+}
+
+catn <- function(s, sep='') {
+  cat(paste(s, sep=sep),'\n')
 }
 
 barplot.ci <- function(x, param.name, ylim=NULL, ...) {
@@ -38,7 +45,10 @@ my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, ...) {
   	at <- unlist(at)
   	at <- at[at>0]
     lat <- as.integer(log10(at))
-    latseq <- seq(min(lat,na.rm=T),max(lat,na.rm=T),1)
+    range <- c(min(lat,na.rm=T),max(lat,na.rm=T))
+    range.expansion.factor <- (range[2]-range[1])*expand.range
+    range.expanded <- floor(c(range[1]-range.expansion.factor, range[2]+range.expansion.factor))
+    latseq <- seq(range.expanded[1], range.expanded[2],1)
     labs <- lapply(latseq, function(m){substitute(10^i ,list(i=m))})
 	place.at <- 10^latseq
     if (log.at) {
@@ -56,8 +66,13 @@ charlist <- function(x) {
 	unlist(strsplit(x, ""))
 }
 
-
+## Lower triangle
 lt <- function(x) {x[lower.tri(x)]}
+
+## Lower triangle
+ut <- function(x) {x[upper.tri(x)]}
+
+## Trace
 tr <- function(x) {sum(diag(x),na.rm=T)}
 
 id.match <- function(x, y, id.x, id.y) {
