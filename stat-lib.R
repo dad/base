@@ -438,6 +438,24 @@ mean.model <- function(x, meas.names, wts=NULL, na.rm=FALSE, scale=FALSE) {
 	as.data.frame(mean.data)
 }
 
+rcor.grid <- function(x, y, na.rm=FALSE, method='s') {
+	res <- list()
+	res$r <- matrix(0,nrow=ncol(x),ncol=ncol(y))
+	res$n <- matrix(0,nrow=ncol(x),ncol=ncol(y))
+	# Ignore NAs from each pair individually
+	name.pairs <- as.matrix(expand.grid(1:ncol(x), 1:ncol(y)))
+	for (i in 1:nrow(name.pairs)) {
+		m <- name.pairs[i,]
+		d <- na.omit(data.frame(x=x[,m[[1]]], y=y[,m[[2]]]))
+		res$r[m[[1]],m[[2]]] <- cor(d$x, d$y, method=method)
+		res$n[m[[1]],m[[2]]] <- nrow(d)
+	}
+	dimnames(res$r) <- list(colnames(x), colnames(y))
+	dimnames(res$n) <- dimnames(res$r)
+	class(res) <- "rcov"
+	res
+}
+
 # DAD: currently does not properly handle rcov(x,y) with x and y matrices.
 # DAD: fix
 rcov <- function(x, y=NULL, na.rm=FALSE) {
