@@ -485,13 +485,23 @@ rcov <- function(x, y=NULL, na.rm=FALSE) {
 		}
 		else {
 			# Ignore NAs from each pair individually
-			name.pairs <- as.matrix(expand.grid(1:ncol(x), 1:ncol(x)))
-			for (i in 1:nrow(name.pairs)) {
-				m <- name.pairs[i,]
+			name.pairs <- combn(1:ncol(x), 2) #as.matrix(expand.grid(1:ncol(x), 1:ncol(x)))
+			for (i in 1:ncol(name.pairs)) {
+				m <- name.pairs[,i]
 				y <- na.omit(x[,m])
 				res$r[m[[1]],m[[2]]] <- cov(y[,1], y[,2])
 				res$n[m[[1]],m[[2]]] <- nrow(y)
+				# Covariance is symmetric
+				res$r[m[[2]],m[[1]]] <- res$r[m[[1]],m[[2]]]
+				res$n[m[[2]],m[[1]]] <- res$n[m[[1]],m[[2]]]
 			}
+			# Variances on the diagonal
+			for (i in 1:ncol(x)) {
+				y <- na.omit(x[,i])
+				res$r[i,i] <- var(y)
+				res$n[i,i] <- length(y)
+			}
+
 		}
 		dimnames(res$r) <- list(colnames(x), colnames(x))
 		dimnames(res$n) <- dimnames(res$r)
