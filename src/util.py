@@ -10,11 +10,10 @@ def printTiming(func):
 	return wrapper
 
 class OutStreams:
-	streams = []
 	def __init__(self, stream_list=[]):
 		if not isinstance(stream_list, list):
 			stream_list = [stream_list]
-		self.streams = stream_list
+		self.streams = stream_list[:]
 
 	def write(self, line):
 		for outs in self.streams:
