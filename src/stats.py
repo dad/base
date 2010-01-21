@@ -86,6 +86,72 @@ class Histogram:
 	def total(self):
 		return sum(self.bins) + len(self.extras)
 
+
+class Summary:
+	def __init__(self):
+		self.mean = None
+		self.sd = None
+		self.se = None
+		self.variance = None
+		self.n = None
+
+class Accumulator:
+	def __init__(self, store=False):
+		self.sum = 0.0
+		self.sum_sq = 0.0
+		self.n = 0
+		self.store = store
+		if self.store:
+			self.data = []
+
+	def add(self, x):
+		self.sum += x
+		self.sum_sq += x*x
+		self.n += 1
+		if self.store:
+			self.data.append(x)
+
+	def getMean(self):
+		return self.sum/self.n
+
+	def getMedian(self):
+		res = None
+		if self.store:
+			res = stats.Median(self.data)
+		return res
+
+	def getVariance(self):
+		if self.n == 1:
+			return 0.0
+		if self.n < 1:
+			return None
+		mu = self.getMean()
+		return (1.0/(self.n-1.0))*(self.sum_sq - self.n*mu*mu)
+
+	def getN(self):
+		return self.n
+
+	def getSD(self):
+		return math.sqrt(self.getVariance())
+
+	def getSE(self):
+		return self.getSD()/math.sqrt(self.n)
+
+	def getData(self):
+		res = None
+		if self.store:
+			res = self.data
+		return res
+
+	def getSummary(self):
+		s = Summary()
+		s.mean = self.getMean()
+		s.n = self.getN()
+		s.variance = self.getVariance()
+		s.sd = math.sqrt(s.variance)
+		s.se = s.sd/math.sqrt(s.n)
+		return s
+
 #---------
 def StatsSummary(numlist):
 	n = len(numlist)
@@ -191,9 +257,9 @@ def weightedMean(numlist, weights):
 	first."""
 	wxsum = 0.0
 	wsum = 0.0
-	
+
 	assert len(numlist) == len(weights)
-	
+
 	for (x,w) in zip(numlist, weights):
 		wxsum += x*w
 		wsum += w
@@ -451,7 +517,7 @@ def pearsonCorrelation(x, y):
 
 def PearsonCorrelation(xdata, ydata):
 	return pearsonCorrelation(xdata, ydata)
-	
+
 def test_pearsonCorrelation():
 	eps = 1e-6
 	nv = 100
