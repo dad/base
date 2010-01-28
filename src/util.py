@@ -109,10 +109,11 @@ def dictParser(x, entry_sep=';', key_sep='='):
 
 class LineCache:
 	"""Class for caching lines read by DelimitedLineReader."""
-	def __init__(self, instream):
+	def __init__(self, instream, comment_str='#'):
 		self.cache = []
 		self.instream = instream
 		self.cache_size = 100
+		self.comment_str = comment_str
 		self.refill()
 
 	def add(self, line):
@@ -135,7 +136,8 @@ class LineCache:
 				eof = True
 				break
 			else:
-				self.add(line)
+				if not line.strip().startswith(self.comment_str):
+					self.add(line)
 		return eof
 
 	def getLine(self, index):
@@ -201,7 +203,7 @@ class DelimitedLineReader:
 		self.strip = strip
 		self.comment_str = comment_str
 		# Data
-		self.cache = LineCache(self.infile)
+		self.cache = LineCache(self.infile, comment_str=self.comment_str)
 		self.cur_flds = None
 		self.cur_line = None
 		self.n_lines_read = 0
@@ -235,10 +237,6 @@ class DelimitedLineReader:
 			self.n_lines_read += 1
 		else:
 			raise ReaderEOFError("Attempt to read past end of stream")
-		# Read line until we find something
-		while self.isComment() and not self.atEnd():
-			self.cur_line = self.cache.pop() #self.file.readline()
-			self.n_lines_read += 1
 		res = None
 		if self.isValid():
 			if process:
@@ -656,6 +654,24 @@ def test011():
 	os.remove(fname)
 	print "** 011 adaptive handler updating"
 
+def test012():
+	# Comment as last line
+	n_lines = 10
+	header_list = ["str","float","int","str"]
+	fname = "tmp_normal.txt"
+	makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
+	inf = file(fname, 'a')
+	inf.write("# comment\n")
+	inf.close()
+	inf = file(fname, 'r')
+	# Infer the types
+	fp = DelimitedLineReader(inf)
+	while not fp.atEnd():
+		flds = fp.nextDict()
+	inf.close()
+	os.remove(fname)
+	print "** 012 comment as last line"
+
 
 def randString():
 	return ''.join(random.sample(string.letters, 10))
@@ -709,4 +725,5 @@ if __name__=="__main__":
 	test009()
 	test010()
 	test011()
+	test012()
 	print "** All tests passed **"
