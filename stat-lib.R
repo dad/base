@@ -12,7 +12,7 @@ dev.out <- function(fname, fdir="../figures/", width=7, height=7, pdf.figures=T)
 }
 
 p.0 <- function(...) {
-  paste(...,sep='')
+  paste(...,sep='.')
 }
 
 ep <- function(x) {
