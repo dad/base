@@ -11,6 +11,10 @@ dev.out <- function(fname, fdir="../figures/", width=7, height=7, pdf.figures=T)
 	else png(paste(fdir,fname,ext,sep=""), width=width*(480/7), height=height*(480/7))
 }
 
+p.0 <- function(...) {
+  paste(...,sep='')
+}
+
 ep <- function(x) {
 	eval(parse(text=x))
 }
