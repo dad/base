@@ -95,6 +95,13 @@ class Summary:
 		self.variance = None
 		self.n = None
 
+	def __str__(self):
+		if self.n == 0:
+			return "no data"
+		else:
+			return "mean = %1.2E, var = %1.2E, N = %d" % (self.mean, self.variance, self.n)
+
+
 class Accumulator:
 	def __init__(self, store=False):
 		self.sum = 0.0
@@ -112,7 +119,10 @@ class Accumulator:
 			self.data.append(x)
 
 	def getMean(self):
-		return self.sum/self.n
+		mean = 0.0
+		if self.n > 0:
+			mean = self.sum/self.n
+		return mean
 
 	def getMedian(self):
 		res = None
@@ -148,8 +158,9 @@ class Accumulator:
 		s.mean = self.getMean()
 		s.n = self.getN()
 		s.variance = self.getVariance()
-		s.sd = math.sqrt(s.variance)
-		s.se = s.sd/math.sqrt(s.n)
+		if not s.variance is None:
+			s.sd = math.sqrt(s.variance)
+			s.se = s.sd/math.sqrt(s.n)
 		return s
 
 #---------
