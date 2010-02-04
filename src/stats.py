@@ -142,9 +142,17 @@ class Accumulator:
 		return self.n
 
 	def getSD(self):
+		if self.n == 1:
+			return 0.0
+		if self.n < 1:
+			return None
 		return math.sqrt(self.getVariance())
 
 	def getSE(self):
+		if self.n == 1:
+			return 0.0
+		if self.n < 1:
+			return None
 		return self.getSD()/math.sqrt(self.n)
 
 	def getData(self):
