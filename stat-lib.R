@@ -19,6 +19,10 @@ catn <- function(s, sep='') {
   cat(paste(s, sep=sep),'\n')
 }
 
+p.0 <- function(...) {
+	paste(..., sep='.')
+}
+
 barplot.ci <- function(x, param.name, ylim=NULL, ...) {
   params <- sapply(x, function(m) {coef(m)[[param.name]]})
   lower.cis <- sapply(1:length(x), function(m) {confint(x[[m]], param.name)[[1]]})
