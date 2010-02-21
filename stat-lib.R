@@ -1730,7 +1730,7 @@ multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALS
 		  legend.names = as.character(1:length(x))
 		}
 		legend.cols <- col[1:min(length(x), length(col))]
-		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, cex=cex.legend)
+		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, cex=cex.legend, lwd=lwds)
 	}
 }
 
