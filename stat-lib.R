@@ -1303,17 +1303,17 @@ eigen.reconstruct <- function(eig, indices) {
 
 # This function allows a correlation/covariance matrix to be submitted
 # directly for principal components analysis.
-matrix.prcomp <- function(raw.cmat, select.flds=NULL, raw.data=NULL, scores=FALSE, meth="spearman") {
-	#print(deparse(substitute(raw.cmat)))
+matrix.prcomp <- function(covmat, select.flds=NULL, raw.data=NULL, scores=FALSE, meth="spearman") {
+	#print(deparse(substitute(covmat)))
 	if (is.null(select.flds)) {
-		if (is.null(colnames(raw.cmat))) {
-			select.flds <- 1:ncol(raw.cmat)
+		if (is.null(colnames(covmat))) {
+			select.flds <- 1:ncol(covmat)
 		}
 		else {
-			select.flds <- colnames(raw.cmat)
+			select.flds <- colnames(covmat)
 		}
 	}
-	cmat <- raw.cmat[select.flds,select.flds]
+	cmat <- covmat[select.flds,select.flds]
 	#princomp(x=raw.data, covmat=cmat, scores=scores)
 	e <- eigen(cmat)
 	loadings <- e$vectors

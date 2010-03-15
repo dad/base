@@ -1,4 +1,4 @@
-import time, os, random, string
+import time, os, random, string, sys
 
 def printTiming(func):
 	def wrapper(*arg):
@@ -271,6 +271,10 @@ class DelimitedLineReader:
 			flds = line.split(self.delim)
 			flds[-1] = flds[-1].strip() # Get rid of \n
 			if apply_handlers:
+				if len(flds) > len(self.handlers):
+					print len(flds), len(self.handlers)
+					print flds
+					sys.exit()
 				assert len(flds) <= len(self.handlers)
 				if not self.handlers:
 					# Infer handlers are strings
