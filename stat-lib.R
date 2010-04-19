@@ -34,6 +34,19 @@ barplot.ci <- function(x, param.name, ylim=NULL, ...) {
   segments(pts, upper.cis, pts, lower.cis)
 }
 
+# DAD: may wish to combine these two functions.
+#barplot.err <- function(x, x.lower, x.upper=NULL, ylim, ...) {
+#	if (is.null(ylim)) {
+#		ylim <- c(min(x.lower,na.rm=T),max(x.upper,na.rm=T))
+#	}
+#	if (is.null(x.upper)) {
+#		## Interpret x.lower as delta.
+#		x.upper <- x + (x-x.lower)
+#	}
+#	bp <- barplot(x, ylim=ylim, ...)
+#	segments(bp, x.lower, bp, x.upper)
+#}
+
 barplot.err <- function(x, x.err, ...) {
 	f.args <- list(...)
 	if (is.null(f.args$ylim)) {
