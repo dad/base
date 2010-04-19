@@ -1,6 +1,6 @@
 #! /usr/local/bin/python
 
-import sys, os, math, string, random, pickle
+import sys, os, math, string, random, pickle, shutil
 import paml, newick, translate, geneutil, muscle, biofile
 
 def nearlyEqual(x,y):
@@ -15,7 +15,7 @@ def test001():
 	tree_string = "(s4,(s1,s2),s3);"
 	seq_labels=["s1","s2","s3","s4"]
 	rate_tree = newick.tree.parseTree(tree_string)
-	opts = paml.CodeML().getModelOptions("FMutSel-F")
+	opts = paml.CodeML.FMutSel_F_options
 	opts["RateAncestor"] = "1"
 	cm = paml.CodeML("codon", opts)
 	cm.loadSequences(seqs, seq_labels, tree_string)
@@ -41,6 +41,7 @@ def test001():
 
 	anc_seq = "LNIKSAKKRQSVKARTHNASRRSMMRTFIKKVYAAIEAGDKAAALKAFNEMQPIVDRQAAKGLIHKNKADRHKANRTAQINLLT"
 	assert translate.translate(node_dict["s1_s2_s3_s4"].properties["sequence"]) == anc_seq
+	shutil.rmtree(cm.tmpdir)
 
 def test002():
 	print "** Test 002 **"
@@ -84,7 +85,7 @@ def test003():
 	seq_labels = [x.name for x in sub_tree.leaves]
 	seqs = [seq_dict[k] for k in seq_labels]
 	# Run PAML
-	opts = paml.CodeML().getModelOptions("FMutSel-F")
+	opts = paml.CodeML.FMutSel_F_options
 	opts["RateAncestor"] = "1"
 	cm = paml.CodeML("codon", opts)
 	cm.loadSequences(seqs, seq_labels, str(sub_tree))
@@ -106,12 +107,54 @@ def test003():
 			sub_mrca = sub_node_dict[s1].getMostRecentCommonAncestor(sub_node_dict[s2])
 			mrca = whole_node_dict[s1].getMostRecentCommonAncestor(whole_node_dict[s2])
 			assert sub_mrca.name == mrca.name
+	shutil.rmtree(cm.tmpdir)
+
+def test004():
+	print "** Test 004 **"
+	seqs = ["TTGGCTAATATCAAATCAGCTAAGAAGCGCGCCATTCAGTCTGAAAAGGCTCGTAAGCACAACGCAAGCCGTCGCTCTATGATGCGTACTTTCATCAAGAAAGTATACGCAGCTATCGAAGCTGGCGACAAAGCTGCTGCACAGAAAGCATTTAACGAAATGCAACCGATCGTGGACCGTCAGGCTGCTAAAGGTCTGATCCACAAAAACAAAGCTGCACGTCATAAGGCTAACCTGACTGCACAGATCAACAAACTGGCT", \
+			"TTGGCTAATATCAAATCAGCTAAGAAGCGCGCCGTTCAGTCTGAAAAGGCTCGTAAGCACAACGCAAGCCGTCGCTCTATGATGCGTACTTTCATCAAGAAAGTATACGCAGCTATCGAAGCTGGCGACAAAGCTGCTGCACTGAAAGCATTTAACGAAATGCAACCGATCGTGGACCGTCAGGCTGCTAAAGGTCTGATCCACAAAAACAAAGCTGCACGTCATAAAGCTAACCTGACTGCACAGATCAACAAACTGGCT", \
+			"TTG---AATATCAAATCAGCTAAGAAGCGC------CAGTCTGTAAAGGCTCGTACGCACAACGGAAGCCGTCGATCTATGATGCGTAGTTTCATCAAGAAAGTATACGCAGCTTTCGAAGCTGGCGACAAGGCTGCTGCACAGAAAGCATTTAACGAAATGCAACCGATCGTAGACCGTCAGGCTGCTTTAGGTCTGATCCACAAAAACAAAGCTGACCGTCATAAAGCTAACCGGACTGCACAGATCAATTTACTGACT", \
+			"TTG---AATATCAAATCAGCTAAGAAGCGC------CAGTCTGTAAAGGCTCGTACGCACAACGCAAGCCGTCGCTCTATGATGCGTACTTTCATCAAGAAAGTATACGCAGCTATCGAAGCTGGCGACAAAGCTGCTGCACTGAAAGCATTTAACGAAATGCAACCGATCGTGGACCGTCAGGCTGCTAAAGGTCTGATCCACAAAAACAAAGCTGACCGTCATAAAGCTAACCGGACTGCACAGATCAATTTACTGACT"]
+	tree_string = "(s4,(s1,s2),s3);"
+	seq_labels=["s1","s2","s3","s4"]
+	rate_tree = newick.tree.parseTree(tree_string)
+	opts = paml.CodeML.FMutSel_F_options
+	opts["RateAncestor"] = "1"
+	tmp_dirname = 'tmp-paml-%s' % ''.join(random.sample(string.letters, 10))
+	cm = paml.CodeML("codon", opts, tmpdir=tmp_dirname)
+	cm.loadSequences(seqs, seq_labels, tree_string)
+	cm.run()
+	target_fname = os.path.join(cm.tmpdir, cm.default_options["outfile"])
+	assert(os.path.exists(target_fname))
+	cm.putBranchRatesOnTree(seq_labels, rate_tree)
+	cm.putAncestralSequencesOnTree(seq_labels, rate_tree, label="sequence")
+	newick.tree.labelInternalNodes(rate_tree)
+	nodes = rate_tree.nodes
+	node_dict = dict([(x.name, x) for x in nodes])
+
+	def dNdist(x):
+		return x.properties["rate"].dn
+
+	assert nearlyEqual(node_dict["s1"].measureFrom(node_dict["s2"], dNdist), 0.0078)
+	assert nearlyEqual(node_dict["s1_s2_s3_s4"].measureFrom(node_dict["s1_s2"], dNdist), 0.0403)
+	assert nearlyEqual(node_dict["s4"].measureFrom(node_dict["s3"], dNdist), 0.0379)
+	assert nearlyEqual(node_dict["s1_s2"].measureFrom(node_dict["s3"], dNdist), 0.0782)
+	#for i in range(len(nodes)-1):
+	#	for j in range(i+1,len(nodes)):
+	#		dist = nodes[i].measureFrom(nodes[j], dNdist)
+	#		print nodes[i].name, nodes[j].name, dist
+	assert str(rate_tree) == str(newick.tree.parseTree("%s" % rate_tree))
+
+	anc_seq = "LNIKSAKKRQSVKARTHNASRRSMMRTFIKKVYAAIEAGDKAAALKAFNEMQPIVDRQAAKGLIHKNKADRHKANRTAQINLLT"
+	assert translate.translate(node_dict["s1_s2_s3_s4"].properties["sequence"]) == anc_seq
+	shutil.rmtree(cm.tmpdir)
 
 
 if __name__=="__main__":
 	test001()
 	test002()
 	test003()
+	test004()
 	print "** All tests passed **"
 
 

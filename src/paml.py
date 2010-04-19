@@ -279,7 +279,7 @@ class CodeML:
 	model_table = {"FMutSel-F":FMutSel_F_options, "FMutSel":FMutSel_options, "F3x4":F3x4_options}
 
 	#-----------------------------------------------------------------------
-	def __init__(self, seq_type='codon', options_dict={}, prog = 'codeml'):
+	def __init__(self, seq_type='codon', options_dict={}, prog = 'codeml', tmpdir = None):
 	  	"""Setup to run the PAML program CodeML for amino acids or nucleotides.
 
 		'type' specifies if we are looking at amino acids (type = 'protein') or
@@ -292,6 +292,14 @@ class CodeML:
 			self.seq_type = 'codon'
 		else:
 			raise PAMLError, "Sequence type of %s is invalid; valid options are 'codon' or 'protein'." % self.seq_type
+		# Temporary directory into which all files will be written
+		if tmpdir is None:
+			self.tmpdir = 'tmp-paml-%s' % ''.join(random.sample(string.letters, 10))
+		else:
+			self.tmpdir = tmpdir
+		if not os.path.isdir(self.tmpdir):
+			os.makedirs(self.tmpdir)
+		# The program we'll run
 		self.prog = prog
 		#if !os.path.isfile(self.prog):
 		#	raise PAMLError, "Cannot find PAML program %s" % (self.prog,)
@@ -309,11 +317,16 @@ class CodeML:
 			self.options[k] = v
 
 		# Files
-		self.controlfile = 'codeml-controlfile-tmp.txt'
+		#self.controlfile = 'codeml-controlfile-tmp.txt'
 		self.tmpfile = 'codeml-tmpfile-tmp.txt'
-		self.treefile = self.options['treefile']
+		#self.treefile = self.options['treefile']
 		self.outfile = self.options['outfile']
-		self.seqfile = self.options['seqfile']
+		#self.seqfile = self.options['seqfile']
+		self.controlfile = self.getFullPath('codeml-controlfile-tmp.txt')
+		#self.tmpfile = self.getFullPath('codeml-tmpfile-tmp.txt')
+		self.treefile = self.getFullPath(self.options['treefile'])
+		#self.outfile = self.getFullPath(self.options['outfile'])
+		self.seqfile = self.getFullPath(self.options['seqfile'])
 
 		# Sequence information
 		self.num_sequences = -1
@@ -328,6 +341,9 @@ class CodeML:
 		except KeyError:
 			raise PAMLError, "Can't find model options for '%s'" % model_key
 		return opts
+
+	def getFullPath(self, fname):
+		return os.path.join(self.tmpdir, fname)
 
 	#-----------------------------------------------------------------------
 
@@ -354,11 +370,19 @@ class CodeML:
 
 		# Write out new control file
 		for (k,v) in self.options.items():
+			#if k in ['treefile','outfile','seqfile']:
+			#	ctrl_file.write('%s = %s\n' % (k,self.getFullPath(v)))
+			#else:
 			ctrl_file.write('%s = %s\n' % (k,v))
 		ctrl_file.close()
 		# run program
-		cmd = "%s %s > %s" % (self.prog, self.controlfile, self.tmpfile)
+		(ctrl_path, ctrl_fname) = os.path.split(self.controlfile)
+		curdir = os.getcwd()
+		os.chdir(self.tmpdir)
+		cmd = "%s %s > %s" % (self.prog, ctrl_fname, self.tmpfile)
+		#print cmd
 		code = os.system(cmd)
+		os.chdir(curdir)
 		#code = os.spawnv(os.P_WAIT, self.prog, [x for x in cmd.split()])
 		if code != 0:
 			raise PAMLError, "Error running PAML; code was %s." % code
@@ -390,7 +414,7 @@ class CodeML:
 						found = True
 					i += 1
 			elif self.options['runmode'] == '0':
-				lines = file(self.outfile,'r').readlines()
+				lines = file(self.getFullPath(self.outfile),'r').readlines()
 				for line in lines:
 					if "kappa (ts/tv) =" in line:
 						kappa = float(line.strip().split()[-1])
@@ -400,7 +424,7 @@ class CodeML:
 		return kappa
 	#-----------------------------------------------------------------------
 	def getSites(self):
-		for line in file(self.tmpfile, 'r').readlines():
+		for line in file(self.getFullPath(self.tmpfile), 'r').readlines():
 			flds = line.split()
 			if len(flds) < 3:
 				continue
@@ -472,7 +496,7 @@ class CodeML:
 			if self.seq_type != "codon":
 				raise PAMLError, "CodeML.getBranchRates() not implemented for seq_type = %s." % self.seq_type
 			# Read the standard output file
-			lines = file(self.outfile,'r').readlines()
+			lines = file(self.getFullPath(self.outfile),'r').readlines()
 			# Find the point at which branch values are enumerated
 			for li in range(len(lines)):
 				line = lines[li]
@@ -532,7 +556,7 @@ class CodeML:
 			if self.options["RateAncestor"] != "1":
 				raise PAMLError, "Can't retrieve ancestral sequences because RateAncestor is set to %s instead of 1" % self.options["RateAncestor"]
 			# Read the rst file
-			lines = file("rst",'r').readlines()
+			lines = file(self.getFullPath("rst"),'r').readlines()
 			# Find the point at which branch values are enumerated
 			target_line = -1
 			for li in range(len(lines)):
@@ -578,7 +602,7 @@ class CodeML:
 			raise PAMLError, "Protein distances not supported for multiple sequences"
 		elif self.seq_type == 'codon':
 			distances = []
-			file_list = ['rst1']
+			file_list = [self.getFullPath('rst1')]
 			for file_name in file_list:
 				if not os.path.isfile(file_name):
 					raise PAMLError, "Cannot find distance file %s." % file_name
@@ -620,7 +644,7 @@ class CodeML:
 			raise PAMLError, "Protein distances not supported for multiple sequences"
 		elif self.seq_type == 'codon':
 			distances = []
-			file_list = ['rst1']
+			file_list = [self.getFullPath('rst1')]
 			for file_name in file_list:
 				if not os.path.isfile(file_name):
 					raise PAMLError, "Cannot find distance file %s." % file_name
@@ -667,7 +691,7 @@ class CodeML:
 			if not os.path.isfile(self.tmpfile):
 				raise PAMLError, "Cannot find distance-containing temporary file %s." % self.tmpfile
 			else:
-				f = file(self.tmpfile, 'r')
+				f = file(self.getFullPath(self.tmpfile), 'r')
 				lines = f.readlines()
 				f.close()
 				# For runmode = -2 (pairwise):
@@ -751,7 +775,7 @@ class CodeML:
 			raise PAMLError, "Protein distances not supported for multiple sequences"
 		elif self.seq_type == 'codon':
 			distances = []
-			rstfilename = 'rst1'
+			rstfilename = self.getFullPath('rst1')
 			if not os.path.isfile(rstfilename):
 				raise PAMLError, "Cannot find distance-containing temporary file %s." % os.path.join(os.getcwd(),rstfilename)
 			else:
@@ -767,12 +791,12 @@ class CodeML:
 	#------------------------------------------------------------------------
 	def getSiteProportions(self):
 		"""Retrieves posterior probabilities of each dN/dS class after a CodeML run.
-
 		"""
-		if not os.path.isfile("rst"):
-			raise PAMLError, "Cannot find distance-class-probability-containing temporary file %s." % "rst"
+		rst_fname = self.getFullPath("rst")
+		if not os.path.isfile(rst_fname):
+			raise PAMLError, "Cannot find distance-class-probability-containing temporary file %s." % rst_fname
 		else:
-			f = file("rst",'r')
+			f = file(rst_fname,'r')
 			lines = f.readlines()
 			f.close()
 			probs = []
@@ -791,9 +815,10 @@ class CodeML:
 	def getCodonSelectionCoefficients(self):
 		"""Retrieves codon substitution selection coefficients
 		"""
-		if not os.path.isfile("rst"):
-			raise PAMLError, "Cannot find distance-class-probability-containing temporary file %s." % "rst"
-		f = file("rst",'r')
+		rst_fname = self.getFullPath("rst")
+		if not os.path.isfile(rst_fname):
+			raise PAMLError, "Cannot find distance-class-probability-containing temporary file %s." % rst_fname
+		f = file(rst_fname,'r')
 		lines = f.readlines()
 		f.close()
 
