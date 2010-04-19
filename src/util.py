@@ -24,6 +24,18 @@ class OutStreams:
 
 	def removeStream(self, stream):
 		self.streams.remove(stream)
+	
+	def flush(self):
+		for outs in self.streams:
+			outs.flush()
+
+# Sample with replacement
+# http://code.activestate.com/recipes/273085-sample-with-replacement/
+def sample_wr(population, k):
+    "Chooses k random elements (with replacement) from a population"
+    n = len(population)
+    _random, _int = random.random, int  # speed hack
+    return [_int(_random() * n) for i in xrange(k)]
 
 def isBlank(s):
 	return s.strip() == ''

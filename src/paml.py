@@ -213,6 +213,18 @@ class CodonSelectionResult:
 				   (self.codon_J, self.codon_I, self.FJ_FI, self.pMut_JI, self.pSub_JI, self.FI_FJ, self.pMut_IJ, self.pSub_IJ)
 		return line
 
+	def parseFrom(self, line):
+		flds = line.strip().split()
+		self.codon_I = flds[0]
+		self.codon_J = flds[1]
+		self.FI_FJ = float(flds[3])
+		self.pMut_IJ = float(flds[4])
+		self.pSub_IJ = float(flds[5])
+		self.FJ_FI = float(flds[6])
+		self.pMut_JI = float(flds[7])
+		self.pSub_JI = float(flds[8])
+
+
 #----------------------------------------------------------------------------------
 class CodeML:
 	"Class for running the PAML program codeml."
@@ -790,16 +802,8 @@ class CodeML:
 				break
 			#example line:
 			#TTC     TTT     CT      -1.91356        0.22056 0.07306 1.91356 0.03255 0.07306 0.07306 0.07306
-			flds = line.strip().split()
 			res = CodonSelectionResult()
-			res.codon_I = flds[0]
-			res.codon_J = flds[1]
-			res.FI_FJ = float(flds[3])
-			res.pMut_IJ = float(flds[4])
-			res.pSub_IJ = float(flds[5])
-			res.FJ_FI = float(flds[6])
-			res.pMut_JI = float(flds[7])
-			res.pSub_JI = float(flds[8])
+			res.parseFrom(line)
 			key = "%s-%s" % (res.codon_I, res.codon_J)
 			codon_selection_dict[key] = res
 		return codon_selection_dict

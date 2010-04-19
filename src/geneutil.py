@@ -68,7 +68,7 @@ def alignStats(seqs, queryfxn, statsfxn):
 			vals.append(queryfxn(seqid, numid, numal, len(seqs[i])))
 	return statsfxn(vals)
 
-def getAlignments(alignment_dict, tree, alignment_threshold, outstreams):
+def getAlignments(alignment_dict, tree, alignment_threshold, outstream):
 	# Assemble set of acceptable alignments
 	species_orf_dict = {}
 	alignment_map = {}
@@ -81,8 +81,7 @@ def getAlignments(alignment_dict, tree, alignment_threshold, outstreams):
 	num_usable = 0
 
 	line = "# Species = (%s)\n# Found %d total ORFs with alignments\n" % (', '.join(tree_species), len(alignment_dict.keys()))
-	for outstream in outstreams:
-		outstream.write(line)
+	outstream.write(line)
 	for orf in alignment_dict.keys():
 		(al_len, spec_orf_pairs, aligned_prots) = alignment_dict[orf]
 		#print al_len, spec_orf_pairs
@@ -107,8 +106,7 @@ def getAlignments(alignment_dict, tree, alignment_threshold, outstreams):
 
 	line = "# Rejected %d ORFs with missing aligned species\n# Rejected %d ORFs with insufficient fraction aligned\n# Found %d usable alignments\n" % \
 		   (missing_species, bad_aligns, num_usable)
-	for outstream in outstreams:
-		outstream.write(line)
+	outstream.write(line)
 	return species_orf_dict, alignment_map
 
 def readGenomesFromFile(multi_files_fname, genome_dir, genome_dicts, column_index=1, load_fxn=biofile.firstField, species=None, outstream=None):
