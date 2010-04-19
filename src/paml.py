@@ -194,10 +194,10 @@ class CodonSelectionResult:
 	"""Class for storing results of FMutSel estimation of codon-specific selection and mutation parameters"""
 	codon_I = None      # codon I
 	codon_J = None      # codon J
-	FI_FJ = None        # 2Ns_IJ, the population-scaled fitness difference between codon I and J
+	x2Ns_IJ = None      # 2Ns_IJ, the population-scaled fitness difference between codon I and J, 2N(f_J - f_I)
 	pMut_IJ = None      # probability of a mutation from codon I to J
 	pSub_IJ = None      # probability of a substitution from codon I to J
-	FJ_FI = None        # 2Ns_IJ, the population-scaled fitness difference between codon J and I
+	x2NS_JI = None      # 2Ns_IJ, the population-scaled fitness difference between codon J and I, 2N(f_I - f_J)
 	pMut_JI = None      # probability of a mutation from codon J to I
 	pSub_JI = None      # probability of a substitution from codon J to I
 
@@ -207,20 +207,29 @@ class CodonSelectionResult:
 	def __str__(self):
 		if self.codon_I < self.codon_J:
 			line = "%s\t%s\t%1.4f\t%1.4f\t%1.4f\t%1.4f\t%1.4f\t%1.4f" % \
-				   (self.codon_I, self.codon_J, self.FI_FJ, self.pMut_IJ, self.pSub_IJ, self.FJ_FI, self.pMut_JI, self.pSub_JI)
+				   (self.codon_I, self.codon_J, self.x2Ns_IJ, self.pMut_IJ, self.pSub_IJ, self.x2Ns_JI, self.pMut_JI, self.pSub_JI)
 		else:
 			line = "%s\t%s\t%1.4f\t%1.4f\t%1.4f\t%1.4f\t%1.4f\t%1.4f" % \
-				   (self.codon_J, self.codon_I, self.FJ_FI, self.pMut_JI, self.pSub_JI, self.FI_FJ, self.pMut_IJ, self.pSub_IJ)
+				   (self.codon_J, self.codon_I, self.x2Ns_JI, self.pMut_JI, self.pSub_JI, self.x2Ns_IJ, self.pMut_IJ, self.pSub_IJ)
 		return line
+	
+	def getFieldNames(self):
+		#return "codon.i\tcodon.j\tx2Ns.ij\tpmut.ij\tpsub.ij\tx2Ns.ji\tpmut.ji\tpsub.ji".split('\t')
+		return "codon_I\tcodon_J\tx2Ns_IJ\tpMut_IJ\tpSub_IJ\tx2Ns_JI\tpMut_JI\tpSub_JI".split('\t')
+
+	def getNumericalFieldNames(self):
+		return "x2Ns_IJ\tpMut_IJ\tpSub_IJ\tx2Ns_JI\tpMut_JI\tpSub_JI".split('\t')
+#		return "x2Ns.ij\tpmut.ij\tpsub.ij\tx2Ns.ji\tpmut.ji\tpsub.ji".split('\t')
 
 	def parseFrom(self, line):
 		flds = line.strip().split()
 		self.codon_I = flds[0]
 		self.codon_J = flds[1]
-		self.FI_FJ = float(flds[3])
+		# flds[2] is the nucleotide pair ij
+		self.x2Ns_IJ = float(flds[3])
 		self.pMut_IJ = float(flds[4])
 		self.pSub_IJ = float(flds[5])
-		self.FJ_FI = float(flds[6])
+		self.x2Ns_JI = float(flds[6])
 		self.pMut_JI = float(flds[7])
 		self.pSub_JI = float(flds[8])
 
