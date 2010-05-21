@@ -48,7 +48,8 @@ def readFASTA(infile_name):
 					frag = ''.join(seq)
 					sequences.append(frag.upper())
 					seq = []
-				headers.append(line[1 :].rstrip())
+				# Strip off leading '>'
+				headers.append(line[1:].rstrip())
 			else:
 				frag = line.rstrip().upper()
 				seq.append(frag)
