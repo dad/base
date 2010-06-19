@@ -1,25 +1,103 @@
 #!/usr/bin/python
-"""Module for computing codon bias.
+"""Module for manipulating aspects of codon bias.
 
 Original version by Jesse Bloom, 2004.
-Augmented by D. Allan Drummond, 2004-2007."""
+Augmented by D. Allan Drummond, 2004-2010."""
 
-import re, os, sys, string, math, translate, random
+import re, os, sys, string, math, random
+import translate
 
 class BioUtilsError(Exception):
-    """Error using one of the bio utils."""
+	"""Error using one of the bio utils."""
 
-# The functions getCodonCounts(),
+class CodingFrequencies:
+	def __init__(self, pseudocount=0):
+		# Track the frequency of each codon relative to its synonyms
+		self.codon_freqs = {}
+		self.aa_counts = {}
+		# Track the frequency of each nucleotide relative to all nucleotides
+		self.nucleotide_freqs = {}
+		self.nucleotide_counts = pseudocount
+		self.gc = translate.geneticCode()
+		
+		for nt in 'ACGT':
+			self.nucleotide_freqs[nt] = pseudocount
+		for codon in translate.AADNACodons():
+			self.codon_freqs[codon] = pseudocount
+			self.aa_counts[self.gc[codon]] = pseudocount
+	
+	def countCodon(self, codon):
+		self.codon_freqs[codon] += 1
+		self.aa_counts[self.gc[codon]] += 1
 
-def conservedSite(site, master_prot, other_prots):
-	other_aas = [p[site] for p in other_prots]
-	if '-' in other_aas:
-		return None
-	else:
-		return other_aas.count(master_prot[site]) == len(other_aas)
+	def countNucleotide(self, nucleotide):
+		self.nucleotide_freqs[nucleotide] += 1
+		self.nucleotide_counts += 1
+	
 
-def getCodonCounts(cdna, master_prot, other_prots):
-	gc = translate._genetic_code
+# Goal: compute p_I and p_i for i=A
+def getEmpiricalFrequencies(cdna, pseudocount=0):
+	cf = CodingFrequencies(pseudocount)
+	cdna = cdna.upper().replace('U','T')
+	codons = split(cdna)
+	for codon in codons:
+		cf.countCodon(codon)
+		for i in range(3):
+			cf.countNucleotide(codon[i])
+	return cf
+
+def splitByConservation(conservationFxn, master_cdna, master_prot, other_cdnas, other_prots, n_terminal_start=0):
+	""" Divide cDNA into conserved and variable portions based on conservationFxn.
+	"""
+	gc = translate.geneticCode()
+	all_tables = []
+	# One table per amino acid class per gene
+	dna_codon_map = {}
+	for codon in translate.AADNACodons():
+		dna_codon_map[codon] = True
+
+	# Split into codons and replace U with T
+	other_codon_seqs = [split(s.replace('U','T')) for s in other_cdnas]
+	master_codon_seq = split(master_cdna.replace('U','T'))
+
+	# Determine the point at which we begin counting: that's n_terminal_start amino acids in.
+	# n_terminal_start is also the number of amino acids to skip; if n_terminal_start = 1,
+	# then we skip one amino acid.
+	naa = 0
+	i = 0
+	while naa < n_terminal_start:
+		if master_prot[i] != '-':
+			naa += 1
+		i += 1
+	gapped_n_terminal_start = i
+	# Can't be any closer to the beginning than n_terminal_start
+	assert gapped_n_terminal_start >= n_terminal_start
+	
+	cons_cdna = ""
+	var_cdna = ""
+
+	for i in range(gapped_n_terminal_start, len(master_prot)):
+		master_codon = master_codon_seq[i]
+		if master_codon in ['---', 'ATG','TGG','TAG','TGA','TAA']:
+			# skip gaps, M, W and stops
+			continue
+		try:
+			other_codons = [s[i] for s in other_codon_seqs]
+			if dna_codon_map[master_codon]:   # Make sure we know about this codon; prevents errors from NNN-type codons
+				conserved = conservationFxn(i, master_prot, other_prots, master_codon, other_codons)
+				if conserved is None:
+					continue
+				if conserved:
+					cons_cdna += master_codon
+				else:
+					var_cdna += master_codon
+		except KeyError:
+			continue
+	return cons_cdna, var_cdna	
+
+# The functions getCodonCounts() and getAkashi2x2TablesForORF() are for inverse-Akashi analyses.
+def getCodonCounts(conservationFxn, master_cdna, master_prot, other_cdnas, other_prots, n_terminal_start=0):
+	gc = translate.geneticCode()
 	all_tables = []
 	# One table per amino acid class per gene
 	conserved_codon_counts = {}
@@ -30,29 +108,47 @@ def getCodonCounts(cdna, master_prot, other_prots):
 		variable_codon_counts[codon] = 0
 		dna_codon_map[codon] = True
 
-	for i in range(len(cdna)/3):
-		codon = cdna[3*i:3*i+3].replace("U","T")
-		if codon in ['---', 'ATG','TGG','TAG','TGA','TAA']:
+	# Split into codons and replace U with T
+	other_codon_seqs = [split(s.replace('U','T')) for s in other_cdnas]
+	master_codon_seq = split(master_cdna.replace('U','T'))
+
+	# Determine the point at which we begin counting: that's n_terminal_start amino acids in.
+	# n_terminal_start is also the number of amino acids to skip; if n_terminal_start = 1,
+	# then we skip one amino acid.
+	naa = 0
+	i = 0
+	while naa < n_terminal_start:
+		if master_prot[i] != '-':
+			naa += 1
+		i += 1
+	gapped_n_terminal_start = i
+	# Can't be any closer to the beginning than n_terminal_start
+	assert gapped_n_terminal_start >= n_terminal_start
+
+	for i in range(gapped_n_terminal_start, len(master_prot)):
+		master_codon = master_codon_seq[i]
+		if master_codon in ['---', 'ATG','TGG','TAG','TGA','TAA']:
 			# skip gaps, M, W and stops
 			continue
 		try:
-			found = dna_codon_map[codon]  # Make sure we know about this codon
-			conserved = conservedSite(i, master_prot, other_prots)
+			other_codons = [s[i] for s in other_codon_seqs]
+			found = dna_codon_map[master_codon]  # Make sure we know about this codon
+			conserved = conservationFxn(i, master_prot, other_prots, master_codon, other_codons)
 			if conserved is None:
 				continue
 			if conserved:
-				conserved_codon_counts[codon] += 1
+				conserved_codon_counts[master_codon] += 1
 			else:
-				variable_codon_counts[codon] += 1
+				variable_codon_counts[master_codon] += 1
 		except KeyError:
 			continue
 	return conserved_codon_counts, variable_codon_counts
 
-def getAkashi2x2TablesForORF(aligned_cdna, aligned_prot, other_aligned_prots):
+def getAkashi2x2TablesForORF(conservationFxn, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount, n_terminal_start):
 	# Now build the tables for this gene
-	# Compute conserved--optimal association using each codon as optimal
-	gc = translate._genetic_code
-	(conserved_codon_counts, variable_codon_counts) = getCodonCounts(aligned_cdna, aligned_prot, other_aligned_prots)
+	# Compute conserved--preferred association using each codon as preferred in turn
+	gc = translate.geneticCode()
+	(conserved_codon_counts, variable_codon_counts) = getCodonCounts(conservationFxn, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, n_terminal_start)
 	gene_codon_tables = {}
 	for codon in translate.AADNACodons():
 		gene_codon_tables[codon] = []
@@ -60,10 +156,11 @@ def getAkashi2x2TablesForORF(aligned_cdna, aligned_prot, other_aligned_prots):
 		codons = translate.getCodonsForAA(aa, rna=False)
 		for codon in codons:
 			# Get contingency table for each codon
-			# cons-opt, cons-un, var-opt, var-un
-			cons_not_codon = sum([conserved_codon_counts[x] for x in conserved_codon_counts.keys() if (gc[x] == aa and not x == codon)])
-			var_not_codon = sum([variable_codon_counts[x] for x in variable_codon_counts.keys() if (gc[x] == aa and not x == codon)])
-			table = [conserved_codon_counts[codon], cons_not_codon, variable_codon_counts[codon], var_not_codon]
+			# cons-pref, cons-un, var-pref, var-un
+			cons_not_codon = sum([conserved_codon_counts[x] for x in conserved_codon_counts.keys() if (gc[x] == aa) and (x != codon)])
+			var_not_codon = sum([variable_codon_counts[x] for x in variable_codon_counts.keys() if (gc[x] == aa) and (x != codon)])
+			# Add the pseudocount to each entry
+			table = [conserved_codon_counts[codon]+pseudocount, cons_not_codon+pseudocount, variable_codon_counts[codon]+pseudocount, var_not_codon+pseudocount]
 			gene_codon_tables[codon].append(tuple(table))
 	return gene_codon_tables
 
