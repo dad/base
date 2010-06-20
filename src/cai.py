@@ -19,6 +19,7 @@ class CodingFrequencies:
 		self.nucleotide_freqs = {}
 		self.nucleotide_counts = pseudocount
 		self.gc = translate.geneticCode()
+		self.pseudocount = pseudocount
 		
 		for nt in 'ACGT':
 			self.nucleotide_freqs[nt] = pseudocount
@@ -28,19 +29,28 @@ class CodingFrequencies:
 				self.codon_freqs[codon] = pseudocount
 				self.aa_counts[aa] = pseudocount
 	
+	def getPseudocount(self):
+		return self.pseudocount
+	
 	def countCodon(self, codon):
 		self.codon_freqs[codon] += 1
 		self.aa_counts[self.gc[codon]] += 1
+		for i in range(3):
+			self.countNucleotide(codon[i])
 
 	def countNucleotide(self, nucleotide):
 		self.nucleotide_freqs[nucleotide] += 1
 		self.nucleotide_counts += 1
 	
+	def addCodons(self, codons):
+		for codon in codons:
+			self.countCodon(codon)
+	
 	def getNucleotideProportion(self, nucleotide):
 		nt_count = self.nucleotide_counts
 		res = 0.0
 		if nt_count > 0:
-			res = self.nucleotide_freqs[nucleotide]/float(nt_count)
+			res = self.getNucleotideCount(nucleotide)/float(nt_count)
 		return res
 	
 	def getCodonProportion(self, codon):
@@ -51,8 +61,11 @@ class CodingFrequencies:
 			res = self.codon_freqs[codon]/float(aa_count)
 		return res
 	
-	def getNucleotideCount(self):
-		return self.nucleotide_counts
+	def getNucleotideCount(self, nt):
+		return self.nucleotide_freqs[nt]
+	
+	def getCodonCount(self, codon):
+		return self.codon_freqs[codon]
 	
 	def getAACount(self, aa):
 		return self.aa_counts[aa]
@@ -64,8 +77,6 @@ def getEmpiricalFrequencies(cdna, pseudocount=0):
 	codons = split(cdna)
 	for codon in codons:
 		cf.countCodon(codon)
-		for i in range(3):
-			cf.countNucleotide(codon[i])
 	return cf
 
 def test_getEmpiricalFrequencies():
