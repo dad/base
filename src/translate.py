@@ -114,18 +114,6 @@ def randomReverseTranslate(prot, rna=False):
 	#print sequenceDiffs(prot, translate.TranslateRaw(gene))
 	return gene
 
-def DNACodons():
-	return [x for x in _genetic_code.keys() if not 'U' in x]
-
-def RNACodons():
-	return _rna_codons
-
-def AADNACodons():
-	return _aa_dna_codons
-
-def AARNACodons():
-	return _aa_rna_codons
-
 #---------------------------------------------------------------------------
 # The universal genetic code
 _genetic_code = {
@@ -159,6 +147,18 @@ _aa_rna_codons = [x for x in _rna_codons if not _genetic_code[x] == '*']
 
 def geneticCode():
 	return _genetic_code
+
+def DNACodons():
+	return [x for x in _genetic_code.keys() if not 'U' in x]
+
+def RNACodons():
+	return _rna_codons
+
+def AADNACodons():
+	return _aa_dna_codons
+
+def AARNACodons():
+	return _aa_rna_codons
 
 
 _three_letter_codes = {

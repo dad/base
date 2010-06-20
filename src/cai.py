@@ -22,9 +22,11 @@ class CodingFrequencies:
 		
 		for nt in 'ACGT':
 			self.nucleotide_freqs[nt] = pseudocount
-		for codon in translate.AADNACodons():
-			self.codon_freqs[codon] = pseudocount
-			self.aa_counts[self.gc[codon]] = pseudocount
+		for aa in translate.AAs():
+			codons = translate.getCodonsForAA(aa, rna=False)
+			for codon in codons:
+				self.codon_freqs[codon] = pseudocount
+				self.aa_counts[aa] = pseudocount
 	
 	def countCodon(self, codon):
 		self.codon_freqs[codon] += 1
@@ -34,17 +36,49 @@ class CodingFrequencies:
 		self.nucleotide_freqs[nucleotide] += 1
 		self.nucleotide_counts += 1
 	
+	def getNucleotideProportion(self, nucleotide):
+		nt_count = self.nucleotide_counts
+		res = 0.0
+		if nt_count > 0:
+			res = self.nucleotide_freqs[nucleotide]/float(nt_count)
+		return res
+	
+	def getCodonProportion(self, codon):
+		aa = self.gc[codon]
+		aa_count = self.aa_counts[aa]
+		res = 0.0
+		if aa_count > 0:
+			res = self.codon_freqs[codon]/float(aa_count)
+		return res
+	
+	def getNucleotideCount(self):
+		return self.nucleotide_counts
+	
+	def getAACount(self, aa):
+		return self.aa_counts[aa]
 
 # Goal: compute p_I and p_i for i=A
 def getEmpiricalFrequencies(cdna, pseudocount=0):
 	cf = CodingFrequencies(pseudocount)
-	cdna = cdna.upper().replace('U','T')
+	#cdna = cdna.upper().replace('U','T')
 	codons = split(cdna)
 	for codon in codons:
 		cf.countCodon(codon)
 		for i in range(3):
 			cf.countNucleotide(codon[i])
 	return cf
+
+def test_getEmpiricalFrequencies():
+	gene = 'ATGGATTATACCTAC'
+	cf = getEmpiricalFrequencies(gene)
+	assert cf.getNucleotideProportion('A') == 5.0/15
+	assert cf.getCodonProportion('TAC') == 1.0/2
+	assert cf.getCodonProportion('GGG') == 0.0
+	cf = getEmpiricalFrequencies(gene, 1)
+	assert cf.getNucleotideProportion('A') == 6.0/16
+	assert cf.getCodonProportion('TAC') == 2.0/3
+	assert cf.getCodonProportion('GGG') == 1.0
+	print "# test_getEmpiricalFrequencies passed"
 
 def splitByConservation(conservationFxn, master_cdna, master_prot, other_cdnas, other_prots, n_terminal_start=0):
 	""" Divide cDNA into conserved and variable portions based on conservationFxn.
@@ -57,8 +91,8 @@ def splitByConservation(conservationFxn, master_cdna, master_prot, other_cdnas, 
 		dna_codon_map[codon] = True
 
 	# Split into codons and replace U with T
-	other_codon_seqs = [split(s.replace('U','T')) for s in other_cdnas]
-	master_codon_seq = split(master_cdna.replace('U','T'))
+	other_codon_seqs = [split(s.upper().replace('U','T')) for s in other_cdnas]
+	master_codon_seq = split(master_cdna.upper().replace('U','T'))
 
 	# Determine the point at which we begin counting: that's n_terminal_start amino acids in.
 	# n_terminal_start is also the number of amino acids to skip; if n_terminal_start = 1,
@@ -82,8 +116,9 @@ def splitByConservation(conservationFxn, master_cdna, master_prot, other_cdnas, 
 			# skip gaps, M, W and stops
 			continue
 		try:
-			other_codons = [s[i] for s in other_codon_seqs]
-			if dna_codon_map[master_codon]:   # Make sure we know about this codon; prevents errors from NNN-type codons
+			aa = gc[master_codon]
+			if aa in translate.degenerateAAs(): # skip M, W and stops
+				other_codons = [s[i] for s in other_codon_seqs]
 				conserved = conservationFxn(i, master_prot, other_prots, master_codon, other_codons)
 				if conserved is None:
 					continue
@@ -92,8 +127,17 @@ def splitByConservation(conservationFxn, master_cdna, master_prot, other_cdnas, 
 				else:
 					var_cdna += master_codon
 		except KeyError:
+			# If codon not in genetic code
 			continue
-	return cons_cdna, var_cdna	
+	return cons_cdna, var_cdna
+
+def test_splitByConservation():
+	gene = 'ATGGATTATACCTAC'
+	prot = 'MDYTY'
+	other_genes = ['ATGGATTATACCTAC','ATGGATTATACCTAC']
+	other_prots = [translate.translate(g) for g in other_genes]
+	print "# test_splitByConservation passed"
+
 
 # The functions getCodonCounts() and getAkashi2x2TablesForORF() are for inverse-Akashi analyses.
 def getCodonCounts(conservationFxn, master_cdna, master_prot, other_cdnas, other_prots, n_terminal_start=0):
@@ -943,3 +987,6 @@ def getOptimalCodons(master_species):
 	opt_codons.sort()
 	return opt_codons
 
+if __name__=='__main__':
+	test_getEmpiricalFrequencies()
+	test_splitByConservation()
