@@ -20,7 +20,7 @@ class CodingFrequencies:
 		self.nucleotide_counts = pseudocount
 		self.gc = translate.geneticCode()
 		self.pseudocount = pseudocount
-		
+
 		for nt in 'ACGT':
 			self.nucleotide_freqs[nt] = pseudocount
 		for aa in translate.AAs():
@@ -28,10 +28,10 @@ class CodingFrequencies:
 			for codon in codons:
 				self.codon_freqs[codon] = pseudocount
 				self.aa_counts[aa] = pseudocount
-	
+
 	def getPseudocount(self):
 		return self.pseudocount
-	
+
 	def countCodon(self, codon):
 		self.codon_freqs[codon] += 1
 		self.aa_counts[self.gc[codon]] += 1
@@ -41,18 +41,18 @@ class CodingFrequencies:
 	def countNucleotide(self, nucleotide):
 		self.nucleotide_freqs[nucleotide] += 1
 		self.nucleotide_counts += 1
-	
+
 	def addCodons(self, codons):
 		for codon in codons:
 			self.countCodon(codon)
-	
+
 	def getNucleotideProportion(self, nucleotide):
 		nt_count = self.nucleotide_counts
 		res = 0.0
 		if nt_count > 0:
 			res = self.getNucleotideCount(nucleotide)/float(nt_count)
 		return res
-	
+
 	def getCodonProportion(self, codon):
 		aa = self.gc[codon]
 		aa_count = self.aa_counts[aa]
@@ -60,15 +60,103 @@ class CodingFrequencies:
 		if aa_count > 0:
 			res = self.codon_freqs[codon]/float(aa_count)
 		return res
-	
+
 	def getNucleotideCount(self, nt):
 		return self.nucleotide_freqs[nt]
-	
+
 	def getCodonCount(self, codon):
 		return self.codon_freqs[codon]
-	
+
 	def getAACount(self, aa):
 		return self.aa_counts[aa]
+
+def estimateSelectionCoefficients(cons_cf, var_cf):
+	"""Takes two cai.CodonFrequencies objects; returns estimated selection coefficients for each codon."""
+	# 2Ns_var-->cons = ln p_I(cons)/p_I(var) - sum_i ln [p_i(cons)/p_i(var)]
+	codon_sc_dict = {}
+	for aa in translate.degenerateAAs():
+		for codon in translate.getCodonsForAA(aa, rna=False):
+			ln_p_I_cons = math.log(cons_cf.getCodonProportion(codon))
+			ln_p_I_var = math.log(var_cf.getCodonProportion(codon))
+			ln_p_i_sum = 0.0
+			for i in range(3):
+				ln_p_i_cons = math.log(cons_cf.getNucleotideProportion(codon[i]))
+				ln_p_i_var = math.log(var_cf.getNucleotideProportion(codon[i]))
+				ln_p_i_sum += ln_p_i_cons - ln_p_i_var
+			scaled_s = ln_p_I_cons - ln_p_I_var - ln_p_i_sum
+			n_aas = cons_cf.getAACount(aa) + var_cf.getAACount(aa)
+			codon_sc_dict[codon] = (scaled_s, n_aas)
+	return codon_sc_dict
+
+def test_estimateSelectionCoefficients():
+	gene = 'ATGGATTATACCTACGACTACACTTATGATTATACCTAC'
+	prot = translate.translate(gene)
+	other_genes = ['ATGGATTATACCTACGACTACACTTATGACTACACTTAT']
+	other_prots = [translate.translate(g) for g in other_genes]
+	(cons_cdna, var_cdna) = splitByConservation(conservedAAconservedCodon, gene, prot, other_genes, other_prots, 0)
+	assert cons_cdna == 'GATTATACCTACGACTACACTTAT'
+	assert var_cdna == 'GATTATACCTAC'
+	# MDYTYDYTYDYTY
+	cons_cf = CodingFrequencies(pseudocount=1)
+	var_cf = CodingFrequencies(pseudocount=1)
+	cons_cf.addCodons(split(cons_cdna))
+	var_cf.addCodons(split(var_cdna))
+	fwd_sc_dict = estimateSelectionCoefficients(cons_cf, var_cf)
+	rev_sc_dict = estimateSelectionCoefficients(var_cf, cons_cf)
+	for codon in split(var_cdna):
+		(fwd_sc, fwd_n) = fwd_sc_dict[codon]
+		(rev_sc, rev_n) = rev_sc_dict[codon]
+		assert fwd_sc == -rev_sc
+	print "# test_estimateSelectionCoefficients passed"
+
+def randomizeConservationCategory(cons_cf, var_cf):
+	"""Takes two cai.CodonFrequencies objects; returns two objects in which the codon counts are preserved but the category of each codon is randomized."""
+	cons_pseudo = cons_cf.getPseudocount()
+	var_pseudo = var_cf.getPseudocount()
+	rand_cons_cf = CodingFrequencies(cons_pseudo)
+	rand_var_cf = CodingFrequencies(var_pseudo)
+	# Make merged lists of codons for each amino acid
+	# If var has n codons, select n at random from the merged list and add
+	for aa in translate.degenerateAAs():
+		# Assemble the merged list of codons
+		codons = []
+		total_n_cons = 0
+		total_n_var = 0
+		for codon in translate.getCodonsForAA(aa, rna=False):
+			n_cons = cons_cf.getCodonCount(codon)
+			n_var = var_cf.getCodonCount(codon)
+			codons += [codon]*(n_cons + n_var - cons_pseudo - var_pseudo)
+			total_n_cons += n_cons - cons_pseudo
+			total_n_var += n_var - var_pseudo
+		random.shuffle(codons)
+		# Now portion them out
+		rand_cons_cf.addCodons(codons[0:total_n_cons])
+		rand_var_cf.addCodons(codons[total_n_cons:])
+		assert len(codons) == total_n_cons + total_n_var
+		assert rand_cons_cf.getAACount(aa) == cons_cf.getAACount(aa)
+		assert rand_var_cf.getAACount(aa) == var_cf.getAACount(aa)
+	return rand_cons_cf, rand_var_cf
+
+def test_randomizeConservationCategory():
+	gene = 'ATGGATTATACCTACGACTACACTTATGATTATACCTAC'
+	prot = translate.translate(gene)
+	other_genes = ['ATGGATTATACCTACGACTACACTTATGACTACACTTAT']
+	other_prots = [translate.translate(g) for g in other_genes]
+	(cons_cdna, var_cdna) = splitByConservation(conservedAAconservedCodon, gene, prot, other_genes, other_prots, 0)
+	assert cons_cdna == 'GATTATACCTACGACTACACTTAT'
+	assert var_cdna == 'GATTATACCTAC'
+	# MDYTYDYTYDYTY
+	cons_cf = CodingFrequencies(pseudocount=1)
+	var_cf = CodingFrequencies(pseudocount=1)
+	cons_cf.addCodons(split(cons_cdna))
+	var_cf.addCodons(split(var_cdna))
+	fwd_sc_dict = estimateSelectionCoefficients(cons_cf, var_cf)
+	rev_sc_dict = estimateSelectionCoefficients(var_cf, cons_cf)
+	for codon in split(var_cdna):
+		(fwd_sc, fwd_n) = fwd_sc_dict[codon]
+		(rev_sc, rev_n) = rev_sc_dict[codon]
+		assert fwd_sc == -rev_sc
+	print "# test_randomizeConservationCategory passed"
 
 # Goal: compute p_I and p_i for i=A
 def getEmpiricalFrequencies(cdna, pseudocount=0):
@@ -90,6 +178,67 @@ def test_getEmpiricalFrequencies():
 	assert cf.getCodonProportion('TAC') == 2.0/3
 	assert cf.getCodonProportion('GGG') == 1.0
 	print "# test_getEmpiricalFrequencies passed"
+
+# Conservation functions...
+def conservedAAconservedCodon(site, master_prot, other_prots, master_codon, other_codons):
+	other_aas = [p[site] for p in other_prots]
+	res = None
+	# If no gaps and no amino-acid differences...
+	if (not ('-' in other_aas)) and (other_aas.count(master_prot[site]) == len(other_aas)):
+		# ...return True if all codons identical, False otherwise
+		res = other_codons.count(master_codon) == len(other_codons)
+	return res
+
+def conservedAA(site, master_prot, other_prots, master_codon, other_codons):
+	other_aas = [p[site] for p in other_prots]
+	res = None
+	# If no gaps...
+	if not '-' in other_aas:
+		# ...return True if all amino acids identical, False otherwise
+		res = other_aas.count(master_prot[site]) == len(other_aas)
+	return res
+
+def conservedCodon(site, master_prot, other_prots, master_codon, other_codons):
+	other_aas = [p[site] for p in other_prots]
+	res = None
+	# If no gaps...
+	if not ('-' in other_aas):
+		# ...return True if all codons identical, False otherwise
+		# Note that this cannot be true unless all the amino acids are also identical.
+		res = other_codons.count(master_codon) == len(other_codons)
+	return res
+
+def notVariableAA(site, master_prot, other_prots, master_codon, other_codons):
+	other_aas = [p[site] for p in other_prots]
+	res = None
+	# If no gaps...
+	if not '-' in other_aas:
+		# ...return False if all amino acids are different, True otherwise
+		res = not (len(set([master_prot[site]] + other_aas)) == len(other_aas)+1)
+	return res
+
+def allConservedAllVariableAA(site, master_prot, other_prots, master_codon, other_codons):
+	other_aas = [p[site] for p in other_prots]
+	res = None
+	# If no gaps...
+	if not '-' in other_aas:
+		# ...return True if all amino acids identical, False if all different, None otherwise
+		s = set([master_prot[site]] + other_aas)
+		n = len(s)
+		if n == 1:
+			res = True
+		elif n == (len(other_aas)+1):
+			res = False
+	return res
+
+def conservedAAunconservedCodon(site, master_prot, other_prots, master_codon, other_codons):
+	other_aas = [p[site] for p in other_prots]
+	res = None
+	# If no gaps, and no amino-acid differences, but at least one codon difference...
+	if (not ('-' in other_aas)) and (other_aas.count(master_prot[site]) == len(other_aas)):
+		# ...return False if all codons identical, True otherwise
+		res = other_codons.count(master_codon) < len(other_codons)
+	return res
 
 def splitByConservation(conservationFxn, master_cdna, master_prot, other_cdnas, other_prots, n_terminal_start=0):
 	""" Divide cDNA into conserved and variable portions based on conservationFxn.
@@ -117,7 +266,7 @@ def splitByConservation(conservationFxn, master_cdna, master_prot, other_cdnas, 
 	gapped_n_terminal_start = i
 	# Can't be any closer to the beginning than n_terminal_start
 	assert gapped_n_terminal_start >= n_terminal_start
-	
+
 	cons_cdna = ""
 	var_cdna = ""
 
@@ -145,8 +294,19 @@ def splitByConservation(conservationFxn, master_cdna, master_prot, other_cdnas, 
 def test_splitByConservation():
 	gene = 'ATGGATTATACCTAC'
 	prot = 'MDYTY'
-	other_genes = ['ATGGATTATACCTAC','ATGGATTATACCTAC']
+	other_genes = ['ATGGATTATACCTAC','ATGGACTATACCTAT']
 	other_prots = [translate.translate(g) for g in other_genes]
+	(cons_cdna, var_cdna) = splitByConservation(conservedAAconservedCodon, gene, prot, other_genes, other_prots, 0)
+	assert cons_cdna == 'TATACC'
+	assert var_cdna == 'GATTAC'
+
+	gene = 'TGGGATTATACCTAC'
+	prot = translate.translate(gene) # 'WDYTY'
+	other_genes = ['TGGGATTATAGCTAC','TGGGATTATACCTAC']
+	other_prots = [translate.translate(g) for g in other_genes]
+	(cons_cdna, var_cdna) = splitByConservation(conservedAA, gene, prot, other_genes, other_prots, 0)
+	assert cons_cdna == 'GATTATTAC'
+	assert var_cdna == 'ACC'
 	print "# test_splitByConservation passed"
 
 
@@ -1001,3 +1161,6 @@ def getOptimalCodons(master_species):
 if __name__=='__main__':
 	test_getEmpiricalFrequencies()
 	test_splitByConservation()
+	test_randomizeConservationCategory()
+	test_estimateSelectionCoefficients()
+
