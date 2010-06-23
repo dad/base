@@ -5,7 +5,7 @@ Original version by Jesse Bloom, 2004.
 Augmented by D. Allan Drummond, 2004-2010."""
 
 import re, os, sys, string, math, random
-import translate
+import translate, stats
 
 class BioUtilsError(Exception):
 	"""Error using one of the bio utils."""
@@ -70,21 +70,26 @@ class CodingFrequencies:
 	def getAACount(self, aa):
 		return self.aa_counts[aa]
 
+def estimateSelectionCoefficientForCodon(codon, cons_cf, var_cf):
+	aa = translate.translate(codon)
+	ln_p_I_cons = math.log(cons_cf.getCodonProportion(codon))
+	ln_p_I_var = math.log(var_cf.getCodonProportion(codon))
+	ln_p_i_sum = 0.0
+	for i in range(3):
+		ln_p_i_cons = math.log(cons_cf.getNucleotideProportion(codon[i]))
+		ln_p_i_var = math.log(var_cf.getNucleotideProportion(codon[i]))
+		ln_p_i_sum += ln_p_i_cons - ln_p_i_var
+	scaled_s = ln_p_I_cons - ln_p_I_var - ln_p_i_sum
+	n_aas = cons_cf.getAACount(aa) + var_cf.getAACount(aa)
+	return scaled_s, n_aas
+	
 def estimateSelectionCoefficients(cons_cf, var_cf):
 	"""Takes two cai.CodonFrequencies objects; returns estimated selection coefficients for each codon."""
 	# 2Ns_var-->cons = ln p_I(cons)/p_I(var) - sum_i ln [p_i(cons)/p_i(var)]
 	codon_sc_dict = {}
 	for aa in translate.degenerateAAs():
 		for codon in translate.getCodonsForAA(aa, rna=False):
-			ln_p_I_cons = math.log(cons_cf.getCodonProportion(codon))
-			ln_p_I_var = math.log(var_cf.getCodonProportion(codon))
-			ln_p_i_sum = 0.0
-			for i in range(3):
-				ln_p_i_cons = math.log(cons_cf.getNucleotideProportion(codon[i]))
-				ln_p_i_var = math.log(var_cf.getNucleotideProportion(codon[i]))
-				ln_p_i_sum += ln_p_i_cons - ln_p_i_var
-			scaled_s = ln_p_I_cons - ln_p_I_var - ln_p_i_sum
-			n_aas = cons_cf.getAACount(aa) + var_cf.getAACount(aa)
+			(scaled_s, n_aas) = estimateSelectionCoefficientForCodon(codon, cons_cf, var_cf)
 			codon_sc_dict[codon] = (scaled_s, n_aas)
 	return codon_sc_dict
 
@@ -108,6 +113,20 @@ def test_estimateSelectionCoefficients():
 		(rev_sc, rev_n) = rev_sc_dict[codon]
 		assert fwd_sc == -rev_sc
 	print "# test_estimateSelectionCoefficients passed"
+
+def randomizeConservationCategoryForCodon(codon, cons_cf, var_cf):
+	cons_pseudo = cons_cf.getPseudocount()
+	var_pseudo = var_cf.getPseudocount()
+	codons = []
+	n_cons = cons_cf.getCodonCount(codon)
+	n_var = var_cf.getCodonCount(codon)
+	codons += [codon]*(n_cons + n_var - cons_pseudo - var_pseudo)
+	total_n_cons += n_cons - cons_pseudo
+	total_n_var += n_var - var_pseudo
+	random.shuffle(codons)
+	# Now portion them out
+	rand_cons_cf.addCodons(codons[0:total_n_cons])
+	rand_var_cf.addCodons(codons[total_n_cons:])	
 
 def randomizeConservationCategory(cons_cf, var_cf):
 	"""Takes two cai.CodonFrequencies objects; returns two objects in which the codon counts are preserved but the category of each codon is randomized."""
@@ -138,24 +157,33 @@ def randomizeConservationCategory(cons_cf, var_cf):
 	return rand_cons_cf, rand_var_cf
 
 def test_randomizeConservationCategory():
-	gene = 'ATGGATTATACCTACGACTACACTTATGATTATACCTAC'
+	gene = 'ATGGATTATACCTACGACTACACTTATGATTATACCTACGATTATACCTACGACTACACTTATGATTATACCTAC'
 	prot = translate.translate(gene)
-	other_genes = ['ATGGATTATACCTACGACTACACTTATGACTACACTTAT']
+	other_genes = ['ATGGATTATACCTACGACTACACTTATGACTACACTTATGATTATACCTACGACTACACTTATGACTACACTTAC']
 	other_prots = [translate.translate(g) for g in other_genes]
 	(cons_cdna, var_cdna) = splitByConservation(conservedAAconservedCodon, gene, prot, other_genes, other_prots, 0)
-	assert cons_cdna == 'GATTATACCTACGACTACACTTAT'
-	assert var_cdna == 'GATTATACCTAC'
+	assert cons_cdna == 'GATTATACCTACGACTACACTTATGATTATACCTACGACTACACTTATTAC'
+	assert var_cdna == 'GATTATACCTACGATTATACC'
 	# MDYTYDYTYDYTY
 	cons_cf = CodingFrequencies(pseudocount=1)
 	var_cf = CodingFrequencies(pseudocount=1)
 	cons_cf.addCodons(split(cons_cdna))
 	var_cf.addCodons(split(var_cdna))
-	fwd_sc_dict = estimateSelectionCoefficients(cons_cf, var_cf)
-	rev_sc_dict = estimateSelectionCoefficients(var_cf, cons_cf)
-	for codon in split(var_cdna):
-		(fwd_sc, fwd_n) = fwd_sc_dict[codon]
-		(rev_sc, rev_n) = rev_sc_dict[codon]
-		assert fwd_sc == -rev_sc
+	sc_dict = estimateSelectionCoefficients(cons_cf, var_cf)
+	target_codon = 'TAC'
+	rscs = []
+	(sc, nc) = sc_dict[target_codon]
+	for n in range(10):
+		(rc, rv) = randomizeConservationCategory(cons_cf, var_cf)
+		r_sc = estimateSelectionCoefficients(rc,rv)
+		(rsc, nc) = r_sc[target_codon]
+		rscs.append(rsc)
+	rscs.sort()
+	#print rscs[0], sc, rscs[-1]
+	assert rscs[0] <= sc
+	assert rscs[-1] >= sc
+	#(n, m, sd, se) = stats.statsSummary(rscs)
+	#print (sc - m)/sd
 	print "# test_randomizeConservationCategory passed"
 
 # Goal: compute p_I and p_i for i=A
