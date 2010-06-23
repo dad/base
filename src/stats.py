@@ -172,7 +172,7 @@ class Accumulator:
 		return s
 
 #---------
-def StatsSummary(numlist):
+def statsSummary(numlist):
 	n = len(numlist)
 	if n < 1:
 		return None
@@ -193,6 +193,10 @@ def StatsSummary(numlist):
 	sd = math.sqrt(var)
 	se = sd/math.sqrt(n)
 	return (n, m, sd, se)
+
+def StatsSummary(numlist):
+	return statsSummary(numlist)
+	
 #----------------------------------------------------------------------------
 def StatsSummary2(numlist):
     """Returns summary one-variable statistics for a list of numbers.
