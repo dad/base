@@ -52,14 +52,14 @@ class CodingFrequencies:
 		nt_count = self.nucleotide_counts
 		res = 0.0
 		if nt_count > 0:
-			res = (self.getNucleotideCount(nucleotide) + self.pseudocount)/float(nt_count)
+			res = (self.getNucleotideCount(nucleotide) + self.pseudocount)/(float(nt_count) + self.pseudocount)
 		return res
 
 	def estimateNucleotideProportion(self, nucleotide):
 		nt_count = self.nucleotide_counts
 		res = 0.0
 		if nt_count > 0:
-			res = (self.getNucleotideCount(nucleotide) + self.pseudocount)/float(nt_count)
+			res = (self.getNucleotideCount(nucleotide) + self.pseudocount)/(float(nt_count) + self.pseudocount)
 		return res
 
 	def getCodonProportion(self, codon):
@@ -67,15 +67,15 @@ class CodingFrequencies:
 		aa_count = self.aa_counts[aa]
 		res = 0.0
 		if aa_count > 0:
-			res = (self.codon_freqs[codon] + self.pseudocount)/float(aa_count)
+			res = (self.codon_freqs[codon] + self.pseudocount)/(float(aa_count) + self.pseudocount)
 		return res
 
 	def estimateCodonProportion(self, codon):
 		aa = self.gc[codon]
 		aa_count = self.aa_counts[aa]
-		res = 0.0
+		res = 1.0/self.total_aa_count # If we've never seen this aa before
 		if aa_count > 0:
-			res = (self.codon_freqs[codon] + self.pseudocount)/float(aa_count)
+			res = (self.codon_freqs[codon] + self.pseudocount)/(float(aa_count) + self.pseudocount)
 		return res
 
 	def getNucleotideCount(self, nt):
@@ -89,17 +89,17 @@ class CodingFrequencies:
 
 def estimateSelectionCoefficientForCodon(codon, cons_cf, var_cf):
 	aa = translate.translate(codon)
-	ln_p_I_cons = math.log(cons_cf.getCodonProportion(codon))
-	ln_p_I_var = math.log(var_cf.getCodonProportion(codon))
+	ln_p_I_cons = math.log(cons_cf.estimateCodonProportion(codon))
+	ln_p_I_var = math.log(var_cf.estimateCodonProportion(codon))
 	ln_p_i_sum = 0.0
 	for i in range(3):
-		ln_p_i_cons = math.log(cons_cf.getNucleotideProportion(codon[i]))
-		ln_p_i_var = math.log(var_cf.getNucleotideProportion(codon[i]))
+		ln_p_i_cons = math.log(cons_cf.estimateNucleotideProportion(codon[i]))
+		ln_p_i_var = math.log(var_cf.estimateNucleotideProportion(codon[i]))
 		ln_p_i_sum += ln_p_i_cons - ln_p_i_var
 	scaled_s = ln_p_I_cons - ln_p_I_var - ln_p_i_sum
 	n_aas = cons_cf.getAACount(aa) + var_cf.getAACount(aa)
 	return scaled_s, n_aas
-	
+
 def estimateSelectionCoefficients(cons_cf, var_cf):
 	"""Takes two cai.CodonFrequencies objects; returns estimated selection coefficients for each codon."""
 	# 2Ns_var-->cons = ln p_I(cons)/p_I(var) - sum_i ln [p_i(cons)/p_i(var)]
@@ -144,7 +144,7 @@ def randomizeConservationCategoryForAA(aa, cons_cf, var_cf):
 		random.shuffle(codons)
 		# Now portion them out
 		rand_cons_cf.addCodons(codons[0:total_n_cons])
-		rand_var_cf.addCodons(codons[total_n_cons:])	
+		rand_var_cf.addCodons(codons[total_n_cons:])
 
 def randomizeConservationCategoryForCodon(codon, cons_cf, var_cf):
 	cons_pseudo = cons_cf.getPseudocount()
@@ -158,7 +158,7 @@ def randomizeConservationCategoryForCodon(codon, cons_cf, var_cf):
 	random.shuffle(codons)
 	# Now portion them out
 	rand_cons_cf.addCodons(codons[0:total_n_cons])
-	rand_var_cf.addCodons(codons[total_n_cons:])	
+	rand_var_cf.addCodons(codons[total_n_cons:])
 
 def randomizeConservationCategory(cons_cf, var_cf):
 	"""Takes two cai.CodonFrequencies objects; returns two objects in which the codon counts are preserved but the category of each codon is randomized."""
@@ -176,9 +176,9 @@ def randomizeConservationCategory(cons_cf, var_cf):
 		for codon in translate.getCodonsForAA(aa, rna=False):
 			n_cons = cons_cf.getCodonCount(codon)
 			n_var = var_cf.getCodonCount(codon)
-			codons += [codon]*(n_cons + n_var - cons_pseudo - var_pseudo)
-			total_n_cons += n_cons - cons_pseudo
-			total_n_var += n_var - var_pseudo
+			codons += [codon]*(n_cons + n_var) # - cons_pseudo - var_pseudo)
+			total_n_cons += n_cons #- cons_pseudo
+			total_n_var += n_var #- var_pseudo
 		random.shuffle(codons)
 		# Now portion them out
 		rand_cons_cf.addCodons(codons[0:total_n_cons])
@@ -236,7 +236,7 @@ def test_getEmpiricalFrequencies():
 	cf = getEmpiricalFrequencies(gene, 1)
 	assert cf.getNucleotideProportion('A') == 6.0/16
 	assert cf.getCodonProportion('TAC') == 2.0/3
-	assert cf.getCodonProportion('GGG') == 1.0
+	assert cf.getCodonProportion('GGG') == 0.0
 	print "# test_getEmpiricalFrequencies passed"
 
 # Conservation functions...
