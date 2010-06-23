@@ -15,19 +15,20 @@ class CodingFrequencies:
 		# Track the frequency of each codon relative to its synonyms
 		self.codon_freqs = {}
 		self.aa_counts = {}
+		self.total_aa_count = 0
 		# Track the frequency of each nucleotide relative to all nucleotides
 		self.nucleotide_freqs = {}
-		self.nucleotide_counts = pseudocount
+		self.nucleotide_counts = 0
 		self.gc = translate.geneticCode()
 		self.pseudocount = pseudocount
 
 		for nt in 'ACGT':
-			self.nucleotide_freqs[nt] = pseudocount
+			self.nucleotide_freqs[nt] = 0
 		for aa in translate.AAs():
 			codons = translate.getCodonsForAA(aa, rna=False)
 			for codon in codons:
-				self.codon_freqs[codon] = pseudocount
-				self.aa_counts[aa] = pseudocount
+				self.codon_freqs[codon] = 0
+				self.aa_counts[aa] = 0
 
 	def getPseudocount(self):
 		return self.pseudocount
@@ -35,6 +36,7 @@ class CodingFrequencies:
 	def countCodon(self, codon):
 		self.codon_freqs[codon] += 1
 		self.aa_counts[self.gc[codon]] += 1
+		self.total_aa_count += 1
 		for i in range(3):
 			self.countNucleotide(codon[i])
 
@@ -50,7 +52,14 @@ class CodingFrequencies:
 		nt_count = self.nucleotide_counts
 		res = 0.0
 		if nt_count > 0:
-			res = self.getNucleotideCount(nucleotide)/float(nt_count)
+			res = (self.getNucleotideCount(nucleotide) + self.pseudocount)/float(nt_count)
+		return res
+
+	def estimateNucleotideProportion(self, nucleotide):
+		nt_count = self.nucleotide_counts
+		res = 0.0
+		if nt_count > 0:
+			res = (self.getNucleotideCount(nucleotide) + self.pseudocount)/float(nt_count)
 		return res
 
 	def getCodonProportion(self, codon):
@@ -58,7 +67,15 @@ class CodingFrequencies:
 		aa_count = self.aa_counts[aa]
 		res = 0.0
 		if aa_count > 0:
-			res = self.codon_freqs[codon]/float(aa_count)
+			res = (self.codon_freqs[codon] + self.pseudocount)/float(aa_count)
+		return res
+
+	def estimateCodonProportion(self, codon):
+		aa = self.gc[codon]
+		aa_count = self.aa_counts[aa]
+		res = 0.0
+		if aa_count > 0:
+			res = (self.codon_freqs[codon] + self.pseudocount)/float(aa_count)
 		return res
 
 	def getNucleotideCount(self, nt):
