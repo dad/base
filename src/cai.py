@@ -114,6 +114,21 @@ def test_estimateSelectionCoefficients():
 		assert fwd_sc == -rev_sc
 	print "# test_estimateSelectionCoefficients passed"
 
+def randomizeConservationCategoryForAA(aa, cons_cf, var_cf):
+	cons_pseudo = cons_cf.getPseudocount()
+	var_pseudo = var_cf.getPseudocount()
+	codons = []
+	for codon in translate.getCodonsForAA(aa, rna=False):
+		n_cons = cons_cf.getCodonCount(codon)
+		n_var = var_cf.getCodonCount(codon)
+		codons += [codon]*(n_cons + n_var - cons_pseudo - var_pseudo)
+		total_n_cons += n_cons - cons_pseudo
+		total_n_var += n_var - var_pseudo
+		random.shuffle(codons)
+		# Now portion them out
+		rand_cons_cf.addCodons(codons[0:total_n_cons])
+		rand_var_cf.addCodons(codons[total_n_cons:])	
+
 def randomizeConservationCategoryForCodon(codon, cons_cf, var_cf):
 	cons_pseudo = cons_cf.getPseudocount()
 	var_pseudo = var_cf.getPseudocount()
