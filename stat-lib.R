@@ -35,27 +35,27 @@ barplot.ci <- function(x, param.name, ylim=NULL, ...) {
 }
 
 # DAD: may wish to combine these two functions.
-#barplot.err <- function(x, x.lower, x.upper=NULL, ylim, ...) {
-#	if (is.null(ylim)) {
-#		ylim <- c(min(x.lower,na.rm=T),max(x.upper,na.rm=T))
-#	}
-#	if (is.null(x.upper)) {
-#		## Interpret x.lower as delta.
-#		x.upper <- x + (x-x.lower)
-#	}
-#	bp <- barplot(x, ylim=ylim, ...)
-#	segments(bp, x.lower, bp, x.upper)
-#}
-
-barplot.err <- function(x, x.err, ...) {
-	f.args <- list(...)
-	if (is.null(f.args$ylim)) {
-		f.args$ylim <- c(min(x-x.err,na.rm=T),max(x+x.err,na.rm=T))
-		##print(f.args$ylim)
+barplot.err <- function(x, x.lower, x.upper=NULL, ylim, ...) {
+	if (is.null(ylim)) {
+		ylim <- c(min(x.lower,na.rm=T),max(x.upper,na.rm=T))
 	}
-	bp <- barplot(x, ylim=f.args$ylim, ...)
-	segments(bp, x-x.err, bp, x+x.err)
+	if (is.null(x.upper)) {
+		## Interpret x.lower as delta.
+		x.upper <- x + (x-x.lower)
+	}
+	bp <- barplot(x, ylim=ylim, ...)
+	segments(bp, x.lower, bp, x.upper)
 }
+
+#barplot.err <- function(x, x.err, ...) {
+#	f.args <- list(...)
+#	if (is.null(f.args$ylim)) {
+#		f.args$ylim <- c(min(x-x.err,na.rm=T),max(x+x.err,na.rm=T))
+#		##print(f.args$ylim)
+#	}
+#	bp <- barplot(x, ylim=f.args$ylim, ...)
+#	segments(bp, x-x.err, bp, x+x.err)
+#}
 
 my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, ...) {
   if (log) {

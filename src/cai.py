@@ -34,11 +34,15 @@ class CodingFrequencies:
 		return self.pseudocount
 
 	def countCodon(self, codon):
-		self.codon_freqs[codon] += 1
-		self.aa_counts[self.gc[codon]] += 1
-		self.total_aa_count += 1
-		for i in range(3):
-			self.countNucleotide(codon[i])
+		try:
+			self.codon_freqs[codon] += 1
+			self.aa_counts[self.gc[codon]] += 1
+			self.total_aa_count += 1
+			for i in range(3):
+				self.countNucleotide(codon[i])
+		except KeyError:
+			# Couldn't find the codon...continue
+			pass
 
 	def countNucleotide(self, nucleotide):
 		self.nucleotide_freqs[nucleotide] += 1
