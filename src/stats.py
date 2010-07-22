@@ -94,6 +94,7 @@ class Summary:
 		self.se = None
 		self.variance = None
 		self.n = None
+		self.sum = None
 
 	def __str__(self):
 		if self.n == 0:
@@ -138,6 +139,9 @@ class Accumulator:
 		mu = self.getMean()
 		return (1.0/(self.n-1.0))*(self.sum_sq - self.n*mu*mu)
 
+	def getSum(self):
+		return self.sum
+
 	def getN(self):
 		return self.n
 
@@ -169,6 +173,7 @@ class Accumulator:
 		if not s.variance is None:
 			s.sd = math.sqrt(s.variance)
 			s.se = s.sd/math.sqrt(s.n)
+		s.sum = self.getSum()
 		return s
 
 #---------
@@ -196,7 +201,7 @@ def statsSummary(numlist):
 
 def StatsSummary(numlist):
 	return statsSummary(numlist)
-	
+
 #----------------------------------------------------------------------------
 def StatsSummary2(numlist):
     """Returns summary one-variable statistics for a list of numbers.
