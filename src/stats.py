@@ -90,6 +90,7 @@ class Histogram:
 class Summary:
 	def __init__(self):
 		self.mean = None
+		self.median = None
 		self.sd = None
 		self.se = None
 		self.variance = None
@@ -128,7 +129,7 @@ class Accumulator:
 	def getMedian(self):
 		res = None
 		if self.store:
-			res = stats.Median(self.data)
+			res = Median(self.data)
 		return res
 
 	def getVariance(self):
@@ -174,7 +175,22 @@ class Accumulator:
 			s.sd = math.sqrt(s.variance)
 			s.se = s.sd/math.sqrt(s.n)
 		s.sum = self.getSum()
+		s.median = self.getMedian()
 		return s
+
+def correctPValue(p_values, method="BH"):
+	# DAD: implement
+	adjusted_p_values = p_values[:]
+	'''
+	if method == "BH":
+		p_values.sort(decreasing=True)
+
+		#i <- n:1
+		#o <- order(p, decreasing = TRUE)
+		#ro <- order(o)
+		#pmin(1, cummin(n/i * p[o]))[ro]
+	'''
+	return adjusted_p_values
 
 #---------
 def statsSummary(numlist):
