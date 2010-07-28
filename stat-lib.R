@@ -1027,10 +1027,10 @@ test.pcr.covmat <- function(method=c("pearson","spearman")) {
 
     xform <- switch(method, pearson=scalecols, spearman=rankcols)
     g.svd <- pcr(form, data=xform(d))
-    rc <- rcormat(d, meth=method)
-    g.cov <- pcr.covmat(form, covmat=rc$r, n=rc$n)
-    cor.X <- rc$r[pred.f,pred.f]
-    cor.Xy <- rc$r[pred.f,resp.f]
+    r <- cor(d, meth=method)
+    g.cov <- pcr.covmat(form, covmat=r, n=nrow(d))
+    cor.X <- r[pred.f,pred.f]
+    cor.Xy <- r[pred.f,resp.f]
     e <- eigen(cor.X)
     u <- e$vectors
     b.svd <- coef(g.svd) #t(u) %*% solve(cor.X) %*% cor.Xy
@@ -1039,11 +1039,11 @@ test.pcr.covmat <- function(method=c("pearson","spearman")) {
   }
   sq.diff <- function(n, method) {
     x <- f(n, method)
-    (x$svd-x$cov)^2
+    ((x$svd-x$cov)/x$svd)^2
   }
   method <- match.arg(method, c("pearson","spearman"))
   diffs <- replicate(10, sq.diff(1000, method))
-  cat("Cumulative RMS deviation between SVD and Cov methods (", method, ") = ", sqrt(mean(diffs)), "\n", sep='')
+  cat("Cumulative RMS % deviation between SVD and Cov methods (", method, ") = ", sqrt(mean(diffs)), "\n", sep='')
 }
 
 print.mvr <- function (x, ...) {
