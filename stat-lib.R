@@ -57,6 +57,24 @@ barplot.err <- function(x, x.lower, x.upper=NULL, ylim, ...) {
 #	segments(bp, x-x.err, bp, x+x.err)
 #}
 
+
+plot.err <- function(x, y, x.lower, x.upper=NULL, y.lower, y.upper, ...) {
+	f.args <- list(...)
+	if (is.null(f.args$ylim)) {
+		ylim <- c(min(x.lower,na.rm=T),max(x.upper,na.rm=T))
+	}
+	else {
+		ylim <- f.args$ylim
+	}
+	if (is.null(x.upper)) {
+		## Interpret x.lower as delta.
+		x.upper <- x + (x-x.lower)
+	}
+	plot(x, ylim=ylim, ...)
+	segments(x, x.lower, x, x.upper)
+	segments(y, y.lower, y, y.upper)
+}
+
 my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, ...) {
   if (log) {
   	at <- unlist(at)
