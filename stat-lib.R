@@ -1,6 +1,6 @@
 # For rcorr functions
 library(Hmisc)
-# For pcr functions
+# For principal component regression functions
 library(pls)
 source("~/research/lib/pcr-lib.R")
 # For pcor functions
@@ -59,21 +59,40 @@ barplot.err <- function(x, x.lower, x.upper=NULL, ylim, ...) {
 #}
 
 
-plot.err <- function(x, y, x.lower, x.upper=NULL, y.lower, y.upper, ...) {
+plot.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, add=FALSE, ...) {
 	f.args <- list(...)
-	if (is.null(f.args$ylim)) {
-		ylim <- c(min(x.lower,na.rm=T),max(x.upper,na.rm=T))
-	}
-	else {
-		ylim <- f.args$ylim
-	}
+	#print(f.args)
+	xlim <- NULL #c(min(x.lower,na.rm=T),max(x.upper,na.rm=T))
+	#print(xlim)
+	#print(f.args$xlim)
+	#if (!is.null(f.args$xlim)) {
+	#	xlim <- f.args$xlim
+	#}
+	#ylim <- NULL #c(min(y.lower,na.rm=T),max(y.upper,na.rm=T))
+	#if (!is.null(f.args$ylim)) {
+	#	ylim <- f.args$ylim
+	#}
 	if (is.null(x.upper)) {
 		## Interpret x.lower as delta.
 		x.upper <- x + (x-x.lower)
 	}
-	plot(x, ylim=ylim, ...)
-	segments(x, x.lower, x, x.upper)
-	segments(y, y.lower, y, y.upper)
+	#print(f.args$xlim)
+	if (add) {
+		#cat("Adding\n")
+		#print(x)
+		#print(y)
+		points(x, y, ...)
+	}
+	else {
+		#cat("New plot\n")
+		plot(x, y, ...)
+	}
+	segments(x.lower, y, x.upper, y)
+	segments(x, y.lower, x, y.upper)
+}
+
+points.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, ...) {
+	plot.err(x,y,x.lower,x.upper,y.lower,y.upper,plot.fxn=points)
 }
 
 my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, ...) {
