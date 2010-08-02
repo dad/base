@@ -60,31 +60,10 @@ barplot.err <- function(x, x.lower, x.upper=NULL, ylim, ...) {
 
 
 plot.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, add=FALSE, ...) {
-	f.args <- list(...)
-	#print(f.args)
-	xlim <- NULL #c(min(x.lower,na.rm=T),max(x.upper,na.rm=T))
-	#print(xlim)
-	#print(f.args$xlim)
-	#if (!is.null(f.args$xlim)) {
-	#	xlim <- f.args$xlim
-	#}
-	#ylim <- NULL #c(min(y.lower,na.rm=T),max(y.upper,na.rm=T))
-	#if (!is.null(f.args$ylim)) {
-	#	ylim <- f.args$ylim
-	#}
-	if (is.null(x.upper)) {
-		## Interpret x.lower as delta.
-		x.upper <- x + (x-x.lower)
-	}
-	#print(f.args$xlim)
 	if (add) {
-		#cat("Adding\n")
-		#print(x)
-		#print(y)
 		points(x, y, ...)
 	}
 	else {
-		#cat("New plot\n")
 		plot(x, y, ...)
 	}
 	segments(x.lower, y, x.upper, y)
@@ -92,7 +71,7 @@ plot.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, add=FALSE, ...) {
 }
 
 points.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, ...) {
-	plot.err(x,y,x.lower,x.upper,y.lower,y.upper,plot.fxn=points)
+	plot.err(x,y,x.lower,x.upper,y.lower,y.upper,add=TRUE, ...)
 }
 
 my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, ...) {
