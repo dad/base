@@ -128,7 +128,7 @@ class Accumulator:
 
 	def getMedian(self):
 		res = None
-		if self.store:
+		if self.store and self.n>0:
 			res = Median(self.data)
 		return res
 

@@ -46,6 +46,7 @@ barplot.err <- function(x, x.lower, x.upper=NULL, ylim, ...) {
 	}
 	bp <- barplot(x, ylim=ylim, ...)
 	segments(bp, x.lower, bp, x.upper)
+	bp
 }
 
 #barplot.err <- function(x, x.err, ...) {
