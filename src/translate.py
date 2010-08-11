@@ -3,7 +3,7 @@
 """Module for performing various basic biology operations.
 
 Original version by Jesse Bloom, 2004.
-Expanded by D. Allan Drummond, 2004-2007."""
+Expanded by D. Allan Drummond, 2004-2010."""
 #
 import re, os, sys, string, math, random
 #-----------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ def translate(seq):
 	corresponding to the protein sequence.  If the translation
 	fails, returns 'None'."""
 	if len(seq) % 3 != 0:
-		return # gene length not a multiple of three
+		return None # gene length not a multiple of three
 	prot_length = len(seq) / 3
 	prot = ""
 	for i in range(prot_length - 1):

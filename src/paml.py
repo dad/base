@@ -456,6 +456,9 @@ class CodeML:
 		for ni in range(len(seq_labels)):
 			id_node_map["%d"%(ni+1,)] = leaf_dict[seq_labels[ni]]
 
+		print id_node_map.keys()
+		print leaf_dict.keys()
+		print seq_labels
 		# Sort branch rates by the numerical value of the second (child) integer identifier
 		branch_rate_list = []
 		for (branch_id, rate_result) in branch_rates.items():
@@ -471,6 +474,8 @@ class CodeML:
 			child_id = ids[1]
 			parent_id = ids[0]
 			# Should already have the child in our name map
+			# DAD: No, we don't have them already.  Somewhere above we need to fill in the whole tree!
+			# DAD: implement.
 			child_node = id_node_map[child_id]
 			if not id_node_map.has_key(parent_id):
 				# Get the parent node

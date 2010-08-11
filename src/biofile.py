@@ -8,9 +8,9 @@ class BioFileError:
 def writeFASTA(seq_list, outfile, headers=None):
 	n_written = 0
 	if headers is None:
-		headers = ["%d"%(j+1,) for j in range(len(seq_list))]
+		headers = ["{0}".format(j+1) for j in range(len(seq_list))]
 	for (hdr,seq) in zip(headers,seq_list):
-		line = ">%s\n%s\n" % (hdr, seq)
+		line = ">{0}\n{1}\n".format(hdr, seq)
 		outfile.write(line)
 		n_written += 1
 	return n_written
