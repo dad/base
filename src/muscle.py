@@ -6,10 +6,7 @@ import biofile
 class MuscleError(Exception):
 	"""MUSCLE alignment error"""
 
-def align_sequences(seq_list, max_iters=16, exepath="~/develop/muscle3.6_src/muscle"):
-	return alignSequences(seq_list, max_iters, exepath)
-
-def alignSequences(seq_list, max_iters=16, exepath="~/develop/muscle3.6_src/muscle"):
+def alignSequences(seq_list, max_iters=16, exepath="~/develop/muscle3.8.31/muscle"):
 	tmp_fasta_file = "tmp-muscle-in-%s.txt" % ''.join(random.sample(string.ascii_letters, 20))
 	tmpfile = file(tmp_fasta_file, 'w')
 	# Write out the sequences
@@ -30,10 +27,10 @@ def alignSequences(seq_list, max_iters=16, exepath="~/develop/muscle3.6_src/musc
 		os.remove(tmp_fasta_file)
 		return seqs
 	else:
-		raise MuscleError, "Muscle error code %d" % error
-
-def align_gene_from_protein(gene, prot_align):
-	return alignGeneFromProtein(gene, prot_align)
+		if not os.path.isfile(os.path.expanduser(exepath)):
+			raise MuscleError, "Can't find muscle executable at %s" % os.path.expanduser(exepath)
+		else:
+			raise MuscleError, "Muscle error code %d" % error
 
 def alignGeneFromProtein(gene, prot_align):
 	j = 0
