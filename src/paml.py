@@ -113,6 +113,7 @@ def getCodonSelectionCoefficients(seqs, seq_labels=None, tree_string=None, optio
 
 # Decorate tree with branch rates.  Each non-root node gets a
 # RateResult annotation showing the rates from that node to its parent.
+'''
 def getBranchRates(seqs, seq_labels, tree_string, options={}):
 	options_dict = options
 	# Ensure user tree; won't work with runmode=-2
@@ -146,7 +147,7 @@ def getBranchRates(seqs, seq_labels, tree_string, options={}):
 	branch_rate_list.sort()
 
 	branch_rate_dict = {}
-	for (k,v) in [y for (x,y) in branch_rate_list]:
+	for (branch_id,res) in [y for (x,y) in branch_rate_list]:
 		ids = k.split("..")
 		# These are integer IDs
 		child_id = ids[1]
@@ -158,17 +159,15 @@ def getBranchRates(seqs, seq_labels, tree_string, options={}):
 			parent_node = child_node.parent
 			id_node_map[parent_id] = parent_node
 		# Now assign the branch rate entry to the child
-		child_node.branch_rate = v
+		child_node.branch_rate = res
 	return tree
-
+'''
 
 def osremove(fname):
 	try:
 		os.remove(fname)
 	except OSError, ose:
 		pass
-
-
 
 
 ##-------------------------------------------------------
@@ -267,9 +266,9 @@ class CodeML:
 		'clock':'0',       # 0=no clock, rates free to vary from branch to branch
 		'getSE':'0',	   # 0=don't get standard errors on estimates, 1=get standard errors
 		# PAML file options
-		'seqfile':  'codeml-seqfile-tmp.txt',
-		'treefile': 'codeml-treefile-tmp.txt',
-		'outfile':  'codeml-outfile-tmp.txt'
+		'seqfile':  'tmp-codeml-seqfile.txt',
+		'treefile': 'tmp-codeml-treefile.txt',
+		'outfile':  'tmp-codeml-outfile.txt'
 	}
 	FMutSel_F_options = {'CodonFreq':'7', 'estFreq':'0', 'model':'0', 'runmode':'0', 'NSsites':'0'}
 	FMutSel_options = {'CodonFreq':'7', 'estFreq':'1', 'model':'0', 'runmode':'0', 'NSsites':'0'}
@@ -294,11 +293,10 @@ class CodeML:
 			raise PAMLError, "Sequence type of %s is invalid; valid options are 'codon' or 'protein'." % self.seq_type
 		# Temporary directory into which all files will be written
 		if tmpdir is None:
-			self.tmpdir = 'tmp-paml-%s' % ''.join(random.sample(string.letters, 10))
+			self.tmpdir = 'tmp-paml-%s' % ''.join(random.sample(string.ascii_letters, 10))
 		else:
 			self.tmpdir = tmpdir
-		if not os.path.isdir(self.tmpdir):
-			os.makedirs(self.tmpdir)
+
 		# The program we'll run
 		self.prog = prog
 		#if !os.path.isfile(self.prog):
@@ -317,15 +315,10 @@ class CodeML:
 			self.options[k] = v
 
 		# Files
-		#self.controlfile = 'codeml-controlfile-tmp.txt'
-		self.tmpfile = 'codeml-tmpfile-tmp.txt'
-		#self.treefile = self.options['treefile']
+		self.tmpfile = 'tmp-codeml-tmpfile.txt'
 		self.outfile = self.options['outfile']
-		#self.seqfile = self.options['seqfile']
-		self.controlfile = self.getFullPath('codeml-controlfile-tmp.txt')
-		#self.tmpfile = self.getFullPath('codeml-tmpfile-tmp.txt')
+		self.controlfile = self.getFullPath('tmp-codeml-controlfile.txt')
 		self.treefile = self.getFullPath(self.options['treefile'])
-		#self.outfile = self.getFullPath(self.options['outfile'])
 		self.seqfile = self.getFullPath(self.options['seqfile'])
 
 		# Sequence information
@@ -344,10 +337,14 @@ class CodeML:
 
 	def getFullPath(self, fname):
 		return os.path.join(self.tmpdir, fname)
-
+	
+	def makeTempDirectory(self):
+		if not os.path.isdir(self.tmpdir):
+			os.makedirs(self.tmpdir)
+		
 	#-----------------------------------------------------------------------
-
 	def loadSequences(self, seqs, seq_labels=None, tree_string=None):
+		self.makeTempDirectory()
 		if not seq_labels:
 			seq_labels = ['seq_%d' % (i+1,) for i in range(len(seqs))]
 		if not tree_string:
@@ -364,7 +361,8 @@ class CodeML:
 	def run(self):
 		"""Runs PAML program CodeML.
 		"""
-
+		# Make temp directory, if necessary
+		self.makeTempDirectory()
 		# Create control file
 		ctrl_file = file(self.controlfile,'w')
 
@@ -456,23 +454,17 @@ class CodeML:
 		for ni in range(len(seq_labels)):
 			id_node_map["%d"%(ni+1,)] = leaf_dict[seq_labels[ni]]
 
-		print id_node_map.keys()
-		print leaf_dict.keys()
-		print seq_labels
 		# Sort branch rates by the numerical value of the second (child) integer identifier
 		branch_rate_list = []
 		for (branch_id, rate_result) in branch_rates.items():
 			# branch ID is m..n where m > n
-			child_id = branch_id.split('..')[1]
+			(parent_id, child_id) = branch_id
 			branch_rate_list.append((child_id, (branch_id,rate_result)))
-		branch_rate_list.sort()
+		branch_rate_list.sort(key=lambda x: int(x[0]))
 
 		# Now map the branch rates onto the nodes of rate_tree
 		for (branch_id,rate_result) in [y for (x,y) in branch_rate_list]:
-			ids = branch_id.split("..")
-			# These are integer IDs
-			child_id = ids[1]
-			parent_id = ids[0]
+			(parent_id, child_id) = branch_id
 			# Should already have the child in our name map
 			# DAD: No, we don't have them already.  Somewhere above we need to fill in the whole tree!
 			# DAD: implement.
@@ -515,7 +507,7 @@ class CodeML:
 			# Go until we hit a blank line
 			while line.strip() != '':
 				flds = line.strip().split()
-				(branch_id, t, N, S, omega, dN, dS, NxdN, SxdS) = \
+				(branch_id_str, t, N, S, omega, dN, dS, NxdN, SxdS) = \
 					(flds[0], float(flds[1]), float(flds[2]), float(flds[3]), float(flds[4]), float(flds[5]), float(flds[6]), float(flds[7]), float(flds[8]))
 				res = RateResult()
 				res.dn = dN
@@ -524,6 +516,8 @@ class CodeML:
 				res.tree_length = t
 				res.num_syn_sites = S
 				res.num_ns_sites = N
+				# PAML makes branch IDs look like 7..1 if node 7 is the ancestor of node 1.
+				branch_id = tuple(branch_id_str.split('..'))
 				branch_entries[branch_id] = res
 				li = li+1
 				line = lines[li]
