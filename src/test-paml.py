@@ -149,12 +149,24 @@ def test004():
 	assert translate.translate(node_dict["s1_s2_s3_s4"].properties["sequence"]) == anc_seq
 	shutil.rmtree(cm.tmpdir)
 
+def test005():
+	print "** Test 005 **"
+	(headers,seqs) = biofile.readFASTA("test-paml/paml-test-seqfile-0001.txt")
+	tree = newick.tree.parseTree(file("test-paml/paml-test-treefile-0001.txt", 'r').readlines()[1])
+	cm = paml.CodeML("codon", paml.CodeML.FMutSel_F_options)
+	cm.loadSequences(seqs, headers, str(tree))
+	cm.run()
+	cm.putBranchRatesOnTree(headers, tree)
+	cm.cleanUp()
+	
+
 
 if __name__=="__main__":
 	test001()
 	test002()
 	test003()
 	test004()
+	test005()
 	print "** All tests passed **"
 
 

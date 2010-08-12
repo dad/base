@@ -341,6 +341,10 @@ class CodeML:
 	def makeTempDirectory(self):
 		if not os.path.isdir(self.tmpdir):
 			os.makedirs(self.tmpdir)
+	
+	def cleanUp(self):
+		if os.path.isdir(self.tmpdir):
+			shutil.rmtree(self.tmpdir)
 		
 	#-----------------------------------------------------------------------
 	def loadSequences(self, seqs, seq_labels=None, tree_string=None):
@@ -621,8 +625,7 @@ class CodeML:
 					for i in range(num_branches):
 						dd_sum += float(flds[i])
 					# get the distance
-					#print dd_sum, ds_sum, dn_sum
-			#		osremove(file_name)
+					osremove(file_name)
 			return dd_sum, ds_sum, dn_sum
 		else:
 			raise PAMLError, "Type of %s is invalid." % self.seq_type
@@ -663,8 +666,7 @@ class CodeML:
 					for i in range(num_branches):
 						dd_sum += float(flds[i])
 					# get the distance
-					#print dd_sum, ds_sum, dn_sum
-			#		osremove(file_name)
+					osremove(file_name)
 			return dd_sum, ds_sum, dn_sum
 		else:
 			raise PAMLError, "Type of %s is invalid." % self.seq_type
