@@ -1,0 +1,2 @@
+6 1
+((((scer,spar),smik),sbay),cgla,scas);
