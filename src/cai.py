@@ -10,6 +10,77 @@ import translate, stats
 class BioUtilsError(Exception):
 	"""Error using one of the bio utils."""
 
+
+# Goal: use Yang and Nielsen 2008 to infer selection coefficients for codons
+# Want to get both the mutation rates -- to get the stationary frequencies for each codon,
+# and the 2NS_ij = F_i - F_j for each codon pair.
+# Ultimate objective is to get
+
+def frequencyToProbability(codon_freq, nucleotide_freq):
+	# Turn frequencies into probabilities
+	total_codons = float(sum(codon_freq.values()))
+	codon_prob = dict([(codon, codon_freq[codon]/total_codons) for codon in codon_freq.keys()])
+	total_nucleotides = float(sum(nucleotide_freq.values()))
+	codon_prob_from_nucleotide = {}
+	for codon in codon_freq.keys():
+		cprob = math.exp(sum([math.log(nucleotide_freq[nt]/total_nucleotides) for nt in codon]))
+		codon_prob_from_nucleotide[codon] = cprob
+	return (codon_prob, codon_prob_from_nucleotide)
+
+def getCodonProbabilities(seq, pseudocount):
+	codon_freq = dict([(c,pseudocount) for c in translate.AADNACodons()])
+	nucleotide_freq = dict([(nt,pseudocount) for nt in 'ATGC'])
+	_accumulateCodonFrequencies(seq, codon_freq, nucleotide_freq)
+	(codon_prob, codon_prob_from_nucleotide) = frequencyToProbability(codon_freq, nucleotide_freq)
+	return (codon_prob, codon_prob_from_nucleotide, codon_freq, nucleotide_freq)
+
+def _accumulateCodonFrequencies(seq, codon_freq, nucleotide_freq):
+	codons = split(seq)
+	for codon in codons:
+		try:
+			codon_freq[codon]+=1.0
+		except KeyError,ke:
+			pass
+	for nt in seq:
+		try:
+			nucleotide_freq[nt] += 1.0
+		except KeyError,ke:
+			pass
+
+def getCodonProbabilitiesForMultipleSequences(seqs, pseudocount):
+	codon_freq = dict([(c,pseudocount) for c in translate.AADNACodons()])
+	nucleotide_freq = dict([(nt,pseudocount) for nt in 'ATGC'])
+	# The only reason to do this, versus just _accumulateCodonFrequencies(''.join(seqs)...), is a hedge against
+	# the possibility that some sequences have bad lengths, and we want to keep everything in frame; this method
+	# resets the reading frame every gene.
+	for seq in seqs:
+		_accumulateCodonFrequencies(seq, codon_freq, nucleotide_freq)
+	(codon_prob, codon_prob_from_nucleotide) = frequencyToProbability(codon_freq, nucleotide_freq)
+	return (codon_prob, codon_prob_from_nucleotide, codon_freq, nucleotide_freq)
+
+def getSYangNielsen(seq, codon_prob, codon_prob_from_nt, pseudocount):
+	gc = translate.geneticCode()
+	# Compute normalizations for conditional probabilities of a codon given an amino acid
+	alt_codons = {}
+	cond_normalization = {}
+	for aa in translate.AAs():
+		codons = translate.getCodonsForAA(aa, rna=False)
+		alt_codons[aa] = codons
+		cond_normalization[aa] = sum([codon_prob[c] for c in codons])
+	sum_sc = 0.0
+	gene_codons = split(seq)
+	for to_codon in gene_codons:
+		aa = gc[to_codon]
+		if not aa == '*':
+			sum_sc_i = 0.0
+			# Go over all alternative codons and compute the average selection coefficient for moving from that codon to this one
+			for from_codon in alt_codons[aa]:
+				p_fcod_given_aa = codon_prob[from_codon]/cond_normalization[aa]
+				s_from_to = math.log(codon_prob[to_codon]/codon_prob[from_codon]) - math.log(codon_prob_from_nt[to_codon]/codon_prob_from_nt[from_codon])
+				sum_sc_i += p_fcod_given_aa*s_from_to
+			sum_sc += sum_sc_i
+	return sum_sc/len(gene_codons)
+
 class CodingFrequencies:
 	def __init__(self, pseudocount=0):
 		# Track the frequency of each codon relative to its synonyms
