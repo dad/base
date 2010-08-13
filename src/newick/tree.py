@@ -6,7 +6,7 @@ Copyright (C) 2003-2006, Thomas Mailund <mailund@birc.au.dk>
 This module contains the representation of trees and a parser for
 creating trees from a Newick string or file.
 
-Updated, extended and maintained by D. Allan Drummond <dadrummond@gmail.com>
+Updated, extended and maintained by D. Allan Drummond <dadrummond@gmail.com> 2006-2010
 '''
 
 import copy
@@ -14,7 +14,6 @@ import lexer, parser
 
 class TreeError(Exception):
 	"""Error manipulating a newick.tree object."""
-
 
 class Tree(object):
 	'''
