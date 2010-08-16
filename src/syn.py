@@ -3,7 +3,7 @@
 # and the 2NS_ij = F_i - F_j for each codon pair.
 # Ultimate objective is to get
 
-class SYNCalculator:
+class Calculator:
 	def __init__(self):
 		self.codon_prob = None
 		self.codon_prob_from_nucleotide = None
@@ -94,7 +94,12 @@ class SYNCalculator:
 				sum_sc += sum_sc_i
 		return sum_sc/len(gene_codons)
 		
+def test001():
+	return True
 
 if __name__=='__main__':
-	
+	res = True
+	res = res and test001()
+	if res:
+		print "** All tests passed."
 	

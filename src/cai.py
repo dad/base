@@ -10,12 +10,6 @@ import translate, stats
 class BioUtilsError(Exception):
 	"""Error using one of the bio utils."""
 
-
-# Goal: use Yang and Nielsen 2008 to infer selection coefficients for codons
-# Want to get both the mutation rates -- to get the stationary frequencies for each codon,
-# and the 2NS_ij = F_i - F_j for each codon pair.
-# Ultimate objective is to get
-
 def frequencyToProbability(codon_freq, nucleotide_freq):
 	# Turn frequencies into probabilities
 	total_codons = float(sum(codon_freq.values()))
@@ -77,6 +71,30 @@ def getSYangNielsen(seq, codon_prob, codon_prob_from_nt, pseudocount):
 			for from_codon in alt_codons[aa]:
 				p_fcod_given_aa = codon_prob[from_codon]/cond_normalization[aa]
 				s_from_to = math.log(codon_prob[to_codon]/codon_prob[from_codon]) - math.log(codon_prob_from_nt[to_codon]/codon_prob_from_nt[from_codon])
+				sum_sc_i += p_fcod_given_aa*s_from_to
+			sum_sc += sum_sc_i
+	return sum_sc/len(gene_codons)
+
+def getSYangNielsenNoMutBias(seq, codon_prob, codon_prob_from_nt, pseudocount):
+	gc = translate.geneticCode()
+	# Compute normalizations for conditional probabilities of a codon given an amino acid
+	alt_codons = {}
+	cond_normalization = {}
+	for aa in translate.AAs():
+		codons = translate.getCodonsForAA(aa, rna=False)
+		alt_codons[aa] = codons
+		cond_normalization[aa] = sum([codon_prob[c] for c in codons])
+	sum_sc = 0.0
+	gene_codons = split(seq)
+	for to_codon in gene_codons:
+		aa = gc[to_codon]
+		if not aa == '*':
+			sum_sc_i = 0.0
+			# Go over all alternative codons and compute the average selection coefficient for moving from that codon to this one
+			for from_codon in alt_codons[aa]:
+				p_fcod_given_aa = codon_prob[from_codon]/cond_normalization[aa]
+				# Eliminate the mutational bias term
+				s_from_to = math.log(codon_prob[to_codon]/codon_prob[from_codon]) # - math.log(codon_prob_from_nt[to_codon]/codon_prob_from_nt[from_codon])
 				sum_sc_i += p_fcod_given_aa*s_from_to
 			sum_sc += sum_sc_i
 	return sum_sc/len(gene_codons)
@@ -1096,8 +1114,13 @@ _c_elegans_rscu = {
      'AGT' : 0.13, 'AGC' : 0.35, 'AGA' : 1.08, 'AGG' : 0.07,
      'GGT' : 0.45, 'GGC' : 0.13, 'GGA' : 3.40, 'GGG' : 0.02}
 
+
 _c_elegans_relative_adaptiveness = getRelativeAdaptivenessFromRSCUs(_c_elegans_rscu)
 _ln_c_elegans_relative_adaptiveness = logRelativeAdaptiveness(_c_elegans_relative_adaptiveness)
+
+# Drummond unpub 2010, top 5% of genes by expr (geometric mean expression, 727 high-expression genes by Hill et al. Science 2001.)
+_c_elegans_relative_adaptiveness = {'AAA':0.3996, 'AAC':1.0000, 'AAG':1.0000, 'AAT':0.6049, 'ACA':0.5189, 'ACC':1.0000, 'ACG':0.1680, 'ACT':0.9139, 'AGA':0.6655, 'AGC':0.4014, 'AGG':0.0524, 'AGT':0.2839, 'ATA':0.0350, 'ATC':1.0000, 'ATT':0.7588, 'CAA':1.0000, 'CAC':1.0000, 'CAG':0.4923, 'CAT':0.7774, 'CCA':1.0000, 'CCC':0.0393, 'CCG':0.0951, 'CCT':0.0869, 'CGA':0.2080, 'CGC':0.5413, 'CGG':0.0629, 'CGT':1.0000, 'CTA':0.0786, 'CTC':0.9564, 'CTG':0.2577, 'CTT':1.0000, 'GAA':0.8727, 'GAC':0.7583, 'GAG':1.0000, 'GAT':1.0000, 'GCA':0.3478, 'GCC':0.7917, 'GCG':0.0989, 'GCT':1.0000, 'GGA':1.0000, 'GGC':0.0824, 'GGG':0.0324, 'GGT':0.1718, 'GTA':0.1736, 'GTC':0.9209, 'GTG':0.3524, 'GTT':1.0000, 'TAC':1.0000, 'TAT':0.5316, 'TCA':0.6633, 'TCC':0.9184, 'TCG':0.5068, 'TCT':1.0000, 'TGC':1.0000, 'TGT':0.5119, 'TTA':0.0771, 'TTC':1.0000, 'TTG':0.5896, 'TTT':0.2780, 'ATG':1.0000, 'TGG':1.0000}
+_ln_c_elegans_relative_adaptiveness = dict([(codon, math.log(ra)) for (codon,ra) in _c_elegans_relative_adaptiveness.items()])
 
 
 ## From Drummond 2009 unpublished.
@@ -1173,6 +1196,9 @@ _h_pylori_rscu = {
 _h_pylori_relative_adaptiveness = getRelativeAdaptivenessFromRSCUs(_h_pylori_rscu)
 _ln_h_pylori_relative_adaptiveness = logRelativeAdaptiveness(_h_pylori_relative_adaptiveness)
 
+_d_melanogaster_relative_adaptiveness = {'AAA':0.2734, 'AAC':1.0000, 'AAG':1.0000, 'AAT':0.5066, 'ACA':0.2820, 'ACC':1.0000, 'ACG':0.3460, 'ACT':0.3851, 'AGA':0.1277, 'AGC':0.6741, 'AGG':0.2028, 'AGT':0.2759, 'ATA':0.1695, 'ATC':1.0000, 'ATT':0.5920, 'CAA':0.3418, 'CAC':1.0000, 'CAG':1.0000, 'CAT':0.5262, 'CCA':0.5105, 'CCC':1.0000, 'CCG':0.4876, 'CCT':0.3101, 'CGA':0.2186, 'CGC':1.0000, 'CGG':0.1722, 'CGT':0.6485, 'CTA':0.1212, 'CTC':0.2980, 'CTG':1.0000, 'CTT':0.1960, 'GAA':0.3675, 'GAC':0.9898, 'GAG':1.0000, 'GAT':1.0000, 'GCA':0.2253, 'GCC':1.0000, 'GCG':0.2091, 'GCT':0.4556, 'GGA':0.6337, 'GGC':1.0000, 'GGG':0.0839, 'GGT':0.5962, 'GTA':0.1826, 'GTC':0.5982, 'GTG':1.0000, 'GTT':0.4320, 'TAC':1.0000, 'TAT':0.3843, 'TCA':0.2609, 'TCC':1.0000, 'TCG':0.6577, 'TCT':0.4154, 'TGC':1.0000, 'TGT':0.2955, 'TTA':0.0853, 'TTC':1.0000, 'TTG':0.3514, 'TTT':0.3370, 'ATG':1.0000, 'TGG':1.0000}
+_ln_d_melanogaster_relative_adaptiveness = dict([(codon, math.log(ra)) for (codon,ra) in _d_melanogaster_relative_adaptiveness.items()])
+
 def E_coli_CAI(gene):
 	return getCAI(gene, _ln_e_coli_relative_adaptiveness)
 def Yeast_CAI(gene):
@@ -1183,6 +1209,8 @@ def H_pylori_CAI(gene):
 	return getCAI(gene, _ln_h_pylori_relative_adaptiveness)
 def C_elegans_CAI(gene):
 	return getCAI(gene, _ln_c_elegans_relative_adaptiveness)
+def D_melanogaster_CAI(gene):
+	return getCAI(gene, _ln_d_melanogaster_relative_adaptiveness)
 
 def E_coli_Fop(gene):
 	return getFop(gene, _e_coli_optimal_codons)
@@ -1239,6 +1267,8 @@ def getCAIFunction(master_species):
 		fxn = C_elegans_CAI
 	elif master_species == 'ecoli':
 		fxn = E_coli_CAI
+	elif master_species == 'dmel':
+		fxn = D_melanogaster_CAI
 	elif master_species == 'hpylori':
 		fxn = H_pylori_CAI
 	elif master_species == 'bsubtilis':
