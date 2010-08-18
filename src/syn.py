@@ -109,6 +109,9 @@ class Calculator:
 		scores = [self.codon_syn_scores[to_codon] for to_codon in cai.split(seq)]
 		return sum(scores)/len(scores)
 
+	def getSYN(self, seq):
+		return self.getSYangNielsen(seq)
+
 	def getCodonSYNScores(self):
 		return self.codon_syn_scores
 
