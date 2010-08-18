@@ -30,26 +30,13 @@ def test002():
 		res = True
 	return res
 
-def test003():
-	'''Give informative error if muscle not found.'''
-	s1 = ''.join(util.sample_wr(translate.AAs(), 100))
-	others = [''.join([mut(x, 0.2,0.1) for x in s1]) for i in range(9)]
-	seqs = [s1]+others
-	res = False
-	try:
-		als = muscle.alignSequences(seqs, exepath="~/develop/muscle3.8.13/muscle")
-	except muscle.MuscleError, me:
-		res = True
-	return res
-
-
 if __name__=='__main__':
-	res = True
-	res1 = test001()
-	res = res and res1
-	res2 = test002()
-	res = res and res2
-	res3 = test003()
-	res = res and res3
-	if res:
+	tests = [test001, test002]
+	test_results = [t() for t in tests]
+	all_passed = reduce(lambda x,y: x and y, test_results)
+	if all_passed:
 		print "# All tests passed."
+	else:
+		for i in range(len(tests)):
+			if not test_results[i]:
+				print "# Test {0} failed".format(tests[i])
