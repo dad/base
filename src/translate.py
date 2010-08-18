@@ -149,7 +149,7 @@ def geneticCode():
 	return _genetic_code
 
 def DNACodons():
-	return [x for x in _genetic_code.keys() if not 'U' in x]
+	return _dna_codons
 
 def RNACodons():
 	return _rna_codons
@@ -233,10 +233,30 @@ def getCodonsForAA(aa, rna=True):
 		aa_codons = [c for c in gc.keys() if gc[c] == aa and not 'U' in c]
 	return aa_codons
 
+def getCodons(aa_or_stop, rna=True):
+	gc = _genetic_code
+	codons = []
+	if rna:
+		codons = [c for c in gc.keys() if gc[c] == aa_or_stop and not 'T' in c]
+	else:
+		codons = [c for c in gc.keys() if gc[c] == aa_or_stop and not 'U' in c]
+	return codons
+
+def getSynonyms(codon, rna=True):
+	gc = _genetic_code
+	if rna:
+		synonyms = [c for c in gc.keys() if gc[c] == gc[codon] and not 'T' in c]
+	else:
+		synonyms = [c for c in gc.keys() if gc[c] == gc[codon] and not 'U' in c]
+	return synonyms
+
 def degenerateAAs():
 	return "ACDEFGHIKLNPQRSTVY"
 
 def AAs():
 	return "ACDEFGHIKLMNPQRSTVWY"
+
+def AAsAndStop():
+	return AAs()+'*'
 
 # End translate.py

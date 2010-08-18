@@ -1,5 +1,5 @@
-import sys, os, math, string
-import biofile, translate, cai
+import sys, os, math, string, pickle
+import biofile, translate, cai, util
 from optparse import OptionParser
 
 # Goal: use Yang and Nielsen 2008 to infer selection coefficients for codons
@@ -21,7 +21,7 @@ class Calculator:
 	def initializeFromSequences(self, seqs, pseudocount):
 		self.pseudocount = pseudocount
 
-		self.codon_freq = dict([(c,self.pseudocount) for c in translate.AADNACodons()])
+		self.codon_freq = dict([(c,self.pseudocount) for c in translate.DNACodons()])
 		self.nucleotide_freq = dict([(nt,self.pseudocount) for nt in 'ATGC'])
 		# The only reason to do this, versus just _accumulateCodonFrequencies(''.join(seqs)...), is a hedge against
 		# the possibility that some sequences have bad lengths, and we want to keep everything in frame; this method
@@ -54,8 +54,8 @@ class Calculator:
 			self.codon_prob_from_nucleotide[codon] = cprob
 
 		self.codon_prob_given_aa = {}
-		for aa in translate.AAs():
-			codons = translate.getCodonsForAA(aa, rna=False)
+		for aa in translate.AAsAndStop():
+			codons = translate.getCodons(aa, rna=False)
 			#alt_codons[aa] = codons
 			marginal_prob = sum([self.codon_prob[c] for c in codons])
 			for codon in codons:
@@ -80,13 +80,12 @@ class Calculator:
 		self.codon_syn_scores = {}
 		for to_codon in self.codon_prob.keys():
 			aa = gc[to_codon]
-			if aa != '*':
-				sum_sc_i = 0.0
-				# Go over all alternative codons and compute the average selection coefficient for moving from that codon to this one
-				for from_codon in translate.getCodonsForAA(aa, rna=False):
-					s_from_to = math.log(self.codon_prob[to_codon]/self.codon_prob[from_codon]) - math.log(self.codon_prob_from_nucleotide[to_codon]/self.codon_prob_from_nucleotide[from_codon])
-					sum_sc_i += self.codon_prob_given_aa[from_codon]*s_from_to
-				self.codon_syn_scores[to_codon] = sum_sc_i
+			sum_sc_i = 0.0
+			# Go over all alternative codons and compute the average selection coefficient for moving from that codon to this one
+			for from_codon in translate.getSynonyms(to_codon, rna=False):
+				s_from_to = math.log(self.codon_prob[to_codon]/self.codon_prob[from_codon]) - math.log(self.codon_prob_from_nucleotide[to_codon]/self.codon_prob_from_nucleotide[from_codon])
+				sum_sc_i += self.codon_prob_given_aa[from_codon]*s_from_to
+			self.codon_syn_scores[to_codon] = sum_sc_i
 
 	def getCodonProbabilitiesForMultipleSequences(self, seqs, pseudocount):
 		return (codon_prob, codon_prob_from_nucleotide, codon_freq, nucleotide_freq)
@@ -126,8 +125,8 @@ class Calculator:
 			if self.codon_syn_scores is None:
 				self._generateScoresFromProbabilities()
 			s += 'aa\tcodon\tcodon.freq\tcodon.prob\tcodon.prob.from.nt\tcodon.cond.prob.given.aa\tsyn\n'
-			for aa in translate.AAs():
-				codons = translate.getCodonsForAA(aa, rna=False)
+			for aa in translate.AAsAndStop():
+				codons = translate.getCodons(aa, rna=False)
 				for codon in codons:
 					s += '{0}\t{1}\t{2:d}\t{3:.5f}\t{4:.5f}\t{4:.5f}\t{5:.5f}\n'.format(aa, codon, int(self.codon_freq[codon]), self.codon_prob[codon], self.codon_prob_from_nucleotide[codon], self.codon_prob_given_aa[codon], self.codon_syn_scores[codon])
 			s += '\n'
@@ -141,7 +140,7 @@ if __name__=='__main__':
 	parser = OptionParser(usage="%prog <genome filename> <genome dir> <format> <alignment filename> <tree or tree filename> [options]")
 	parser.add_option("-o", "--out", dest="out_fname", type="string", default=None, help="output filename")
 	parser.add_option("-d", "--dict-out", dest="score_dict_fname", type="string", default=None, help="score dictionary output filename")
-	parser.add_option("-f", "--format", dest="format", type="string", default="vanilla", help="format of ID in FASTA entry")
+	parser.add_option("-s", "--scores-out", dest="score_fname", type="string", default="vanilla", help="format of ID in FASTA entry")
 	parser.add_option("-p", "--pseudocount", dest="pseudocount", type="float", default=0.0, help="pseudocount to be added to all frequencies")
 	(options, args) = parser.parse_args()
 
@@ -158,9 +157,24 @@ if __name__=='__main__':
 	cdna_dict = biofile.readFASTADict(in_fname)
 	calc = Calculator()
 	calc.initializeFromSequences(cdna_dict.values(), options.pseudocount)
+	syn_dict = calc.getCodonSYNScores()
 	data_outs.write("# Read {0}\n{1:d} sequences, {2:d} codons, {3:d} nucleotides\n".format(in_fname, len(cdna_dict.keys()), int(sum(calc.codon_freq.values())), int(sum(calc.nucleotide_freq.values()))))
-	data_outs.write("# syn_scores = {0!s}\n".format(calc.getCodonSYNScores()))
+	data_outs.write("# syn_scores = {0!s}\n".format(syn_dict))
 	data_outs.write("{0!s}".format(calc))
 
 	if not options.score_dict_fname is None:
-		pickle.dump(calc.getCodonSYNScores(), file(options.score_dict_fname,'w'))
+		pickle.dump(syn_dict, file(options.score_dict_fname,'w'))
+
+	if not options.score_fname is None:
+		outf = file(options.score_fname, 'w')
+		outf.write("orf\tsyn\n")
+		orfs = cdna_dict.keys()
+		n_written = 0
+		for orf in sorted(orfs):
+			seq = cdna_dict[orf]
+			score = getSYN(seq, syn_dict)
+			outf.write("{0}\t{1:.5f}\n".format(orf, score))
+			n_written += 1
+		info_outs.write("# Wrote {0} lines to {1}\n".format(n_written, options.score_fname))
+
+
