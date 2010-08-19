@@ -3,9 +3,11 @@
 """Module for statistics.
 
 Originally written by Jesse Bloom, 2004.
-Expanded and maintained by D. Allan Drummond, 2004-2007."""
+Expanded and maintained by D. Allan Drummond, 2004-2010."""
 #
-import re, math, os, string, listrank, random
+import re, math, os, string, random
+import listrank
+
 #---------------------------------------------------------------------------------
 class StatsError(Exception):
     """Statistics error."""
