@@ -24,6 +24,23 @@ p.0 <- function(...) {
 	paste(..., sep='.')
 }
 
+stack.df <- function(dfs) {
+	if (length(dfs) <= 1) {
+		stacked <- dfs
+	} else {
+		common.cols <- names(dfs[[1]])
+		for (di in 2:length(dfs)) {
+			common.cols <- intersect(common.cols, names(dfs[[di]]))
+		}
+		print(common.cols)
+		stacked <- dfs[[1]][,common.cols]
+		for (di in 2:length(dfs)) {
+			stacked <- rbind(stacked, dfs[[di]][,common.cols])
+		}
+	}
+	stacked
+}
+
 barplot.ci <- function(x, param.name, ylim=NULL, ...) {
   params <- sapply(x, function(m) {coef(m)[[param.name]]})
   lower.cis <- sapply(1:length(x), function(m) {confint(x[[m]], param.name)[[1]]})
@@ -1395,6 +1412,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 		legend.cols <- col[1:min(length(x), length(col))]
 		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys)
 	}
+	densities
 }
 
 ## Takes a list of variables, plots kernel densities
