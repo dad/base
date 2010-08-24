@@ -24,7 +24,7 @@ class OutStreams:
 
 	def removeStream(self, stream):
 		self.streams.remove(stream)
-	
+
 	def flush(self):
 		for outs in self.streams:
 			outs.flush()
@@ -56,7 +56,7 @@ def strNA(x):
 	else:
 		return str(x)
 
-def formatNA(x, format, sep=None):
+def formatNAOld(x, format, sep=None):
 	if isinstance(x, list):
 		flds = format.split(sep)
 		if sep is None:
@@ -74,6 +74,25 @@ def formatNA(x, format, sep=None):
 			return "NA"
 		else:
 			return format % x
+
+def formatNA(x, format, sep=None):
+	if isinstance(x, list):
+		flds = format.split(sep)
+		if sep is None:
+			sep = '\t'
+		assert len(flds) == len(x)
+		res = []
+		for i in range(len(x)):
+			if isNA(x[i]):
+				res.append("NA")
+			else:
+				res.append(flds[i].format(x[i]))
+		return sep.join(res)
+	else:
+		if isNA(x):
+			return "NA"
+		else:
+			return format.format(x)
 
 def looseIntParser(x):
 	v = None

@@ -60,7 +60,10 @@ class Calculator:
 			marginal_prob = sum([self.codon_prob[c] for c in codons])
 			for codon in codons:
 				# Compute the conditional probability of a codon, given that the amino acid is specified
-				self.codon_prob_given_aa[codon] = self.codon_prob[codon]/marginal_prob
+				if marginal_prob > 0.0:
+					self.codon_prob_given_aa[codon] = self.codon_prob[codon]/marginal_prob
+				else:
+					self.codon_prob_given_aa[codon] = 0.0
 
 	def _accumulateCodonFrequencies(self, seq, codon_freq, nucleotide_freq):
 		codons = cai.split(seq)
@@ -124,14 +127,16 @@ class Calculator:
 			s += '\n'
 		if not self.codon_freq is None:
 			if self.codon_prob is None:
+				print "# generating probs from freqs"
 				self._generateProbabilitiesFromFrequencies()
 			if self.codon_syn_scores is None:
+				print "# generating scores from probs"
 				self._generateScoresFromProbabilities()
 			s += 'aa\tcodon\tcodon.freq\tcodon.prob\tcodon.prob.from.nt\tcodon.cond.prob.given.aa\tsyn\n'
 			for aa in translate.AAsAndStop():
 				codons = translate.getCodons(aa, rna=False)
 				for codon in codons:
-					s += '{0}\t{1}\t{2:d}\t{3:.5f}\t{4:.5f}\t{4:.5f}\t{5:.5f}\n'.format(aa, codon, int(self.codon_freq[codon]), self.codon_prob[codon], self.codon_prob_from_nucleotide[codon], self.codon_prob_given_aa[codon], self.codon_syn_scores[codon])
+					s += '{0}\t{1}\t{2:d}\t{3:.5f}\t{4:.5f}\t{5:.5f}\t{6:.5f}\n'.format(aa, codon, int(self.codon_freq[codon]), self.codon_prob[codon], self.codon_prob_from_nucleotide[codon], self.codon_prob_given_aa[codon], self.codon_syn_scores[codon])
 			s += '\n'
 		return s
 
@@ -142,7 +147,11 @@ def getSYN(seq, syn_scores):
 			scores.append(syn_scores[to_codon])
 		except KeyError:
 			continue
-	return sum(scores)/len(scores)
+	if len(scores) > 0:
+		res = sum(scores)/len(scores)
+	else:
+		res = None
+	return res
 
 if __name__=='__main__':
 	parser = OptionParser(usage="%prog <genome filename> <genome dir> <format> <alignment filename> <tree or tree filename> [options]")
@@ -165,8 +174,6 @@ if __name__=='__main__':
 		data_outs.addStream(sys.stdout)
 	formatFxn = biofile.getIDFunction(options.format)
 	cdna_dict = biofile.readFASTADict(in_fname, formatFxn)
-	print cdna_dict.keys()[0:100]
-	sys.exit()
 	calc = Calculator()
 	calc.initializeFromSequences(cdna_dict.values(), options.pseudocount)
 	syn_dict = calc.getCodonSYNScores()
@@ -185,7 +192,7 @@ if __name__=='__main__':
 		for orf in sorted(orfs):
 			seq = cdna_dict[orf]
 			score = getSYN(seq, syn_dict)
-			outf.write("{0}\t{1:.5f}\n".format(orf, score))
+			outf.write("{0}\t{1}\n".format(orf, util.formatNA(score,'{0:.5f}')))
 			n_written += 1
 		info_outs.write("# Wrote {0} lines to {1}\n".format(n_written, options.score_fname))
 
