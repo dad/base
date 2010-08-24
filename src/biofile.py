@@ -84,6 +84,21 @@ def getTranscriptID(header):
 		h = firstField(header)
 	return h
 
+def getFlybaseGeneID(header):
+	flds = header.split()
+	id = flds[0]
+	flybase_dict = dict([tuple(x[:-1].split('=')) for x in flds[1:]])
+	#print flybase_dict
+	gene_ids = [x for x in flybase_dict["parent"].split(',') if x.startswith('FBgn')]
+	return gene_ids[0]
+
+def getFlybaseTranscriptID(header):
+	flds = header.split()
+	id = flds[0]
+	flybase_dict = dict([tuple(x[:-1].split('=')) for x in flds[1:]])
+	gene_ids = [x for x in flybase_dict["parent"].split(',') if x.startswith('FBtr')]
+	return gene_ids[0]
+
 def getIDFunction(s):
 	if s == 'pep' or s == 'peptide':
 		return getPeptideID
@@ -91,6 +106,10 @@ def getIDFunction(s):
 		return getTranscriptID
 	elif s == 'gene':
 		return getGeneID
+	elif s == 'flybase-gene':
+		return getFlybaseGeneID
+	elif s == 'flybase-transcript':
+		return getFlybaseTranscriptID
 	return firstField
 
 def readFASTADict(infile_name, key_fxn = firstField):

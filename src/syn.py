@@ -136,16 +136,23 @@ class Calculator:
 		return s
 
 def getSYN(seq, syn_scores):
-	scores = [syn_scores[to_codon] for to_codon in cai.split(seq)]
+	scores = []
+	for to_codon in cai.split(seq):
+		try:
+			scores.append(syn_scores[to_codon])
+		except KeyError:
+			continue
 	return sum(scores)/len(scores)
 
 if __name__=='__main__':
 	parser = OptionParser(usage="%prog <genome filename> <genome dir> <format> <alignment filename> <tree or tree filename> [options]")
 	parser.add_option("-o", "--out", dest="out_fname", type="string", default=None, help="output filename")
+	parser.add_option("-f", "--format", dest="format", type="string", default="vanilla", help="format of ID in FASTA entry")
 	parser.add_option("-d", "--dict-out", dest="score_dict_fname", type="string", default=None, help="score dictionary output filename")
 	parser.add_option("-s", "--scores-out", dest="score_fname", type="string", default="vanilla", help="format of ID in FASTA entry")
 	parser.add_option("-p", "--pseudocount", dest="pseudocount", type="float", default=0.0, help="pseudocount to be added to all frequencies")
 	(options, args) = parser.parse_args()
+	in_fname = args[0]
 
 	info_outs = util.OutStreams(sys.stdout)
 	data_outs = util.OutStreams()
@@ -156,8 +163,10 @@ if __name__=='__main__':
 		data_outs.addStream(outf)
 	else:
 		data_outs.addStream(sys.stdout)
-	in_fname = sys.argv[1]
-	cdna_dict = biofile.readFASTADict(in_fname)
+	formatFxn = biofile.getIDFunction(options.format)
+	cdna_dict = biofile.readFASTADict(in_fname, formatFxn)
+	print cdna_dict.keys()[0:100]
+	sys.exit()
 	calc = Calculator()
 	calc.initializeFromSequences(cdna_dict.values(), options.pseudocount)
 	syn_dict = calc.getCodonSYNScores()
