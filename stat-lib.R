@@ -1412,6 +1412,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 		legend.cols <- col[1:min(length(x), length(col))]
 		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys)
 	}
+	densities
 }
 
 ## Takes a list of variables, plots kernel densities
