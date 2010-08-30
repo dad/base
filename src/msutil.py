@@ -45,7 +45,7 @@ class MSConstants:
 		'P' : 30.9737612, # light
 		'S' : 32.0655 # light
 		}
-	
+
 	# FIX: selenocysteine (U), etc
 	# residue -> formula
 	residue_formula = {
@@ -103,3 +103,8 @@ def formulaMass(formula, atomic_mass=MSConstants.monoisotopic_atomic_mass):
 def getPeptideMass(peptide):
 	mass = sum([formulaMass(MSConstants.residue_formula[x]) for x in peptide])
 	return mass
+
+if __name__=="__main__":
+	peps = sys.argv[1:]
+	for pep in peps:
+		print "{0} = {1:.5f}".format(pep, getPeptideMass(pep))
