@@ -53,7 +53,7 @@ barplot.ci <- function(x, param.name, ylim=NULL, ...) {
 }
 
 # DAD: may wish to combine these two functions.
-barplot.err <- function(x, x.lower, x.upper=NULL, ylim, ...) {
+barplot.err <- function(x, x.lower=x, x.upper=x, ylim=NULL, ...) {
 	if (is.null(ylim)) {
 		ylim <- c(min(x.lower,na.rm=T),max(x.upper,na.rm=T))
 	}

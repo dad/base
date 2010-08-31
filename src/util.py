@@ -464,7 +464,6 @@ class DelimitedLineReader:
 		except IndexError:
 			raise ReaderError, "Bad handler index %d" % handler_index
 
-
 def test001():
 	# Normal
 	n_lines = 100
@@ -744,6 +743,64 @@ def makeFile(fname, headers, fld_types, n_lines, sep, na_prob, first_lines=None,
 			outf.write(line)
 	outf.close()
 	return fname
+
+# Read
+
+class LightDataFrame:
+	def __init__(self, headers, data):
+		self._headers = basicHeaderFixer(headers)
+		# Data must be a list of lists, each list is a column.
+		self._data = data
+		self._header_lookup = dict([(h, self._headers.index(h)) for h in self._headers])
+
+	def getRow(self, row_index):
+		return [d[row_index] for d in self._data]
+
+	def getRowDict(self, row_index):
+		return dict(zip(self._headers,self.getRow(row_index)))
+
+	def getCol(self, col_index):
+		"""Index by column, given by column_key"""
+		col_index = self._header_lookup[column_key]
+		return [d[col_index] for d in self._data]
+
+	def __getitem__(self, column_key):
+		"""Index by column, given by column_key"""
+		col_index = self._header_lookup[column_key]
+		return self._data[col_index]
+
+	def getNumRows(self):
+		return len(self._data[0])
+
+	def getNumCols(self):
+		return len(self._data)
+
+	def getHeaders(self):
+		return self._headers
+
+	nrow = property(getNumRows)
+	ncol = property(getNumCols)
+	headers = property(getHeaders)
+
+
+def readTable(fname, headers):
+	inf = file(fname,'r')
+	dlr = DelimitedLineReader(inf, headers)
+	header_flds = dlr.getHeader()
+	data_dict = {}
+	initialized = False
+	while not dlr.atEnd():
+		flds = dlr.nextDict()
+		if not initialized:
+			for h in header_flds:
+				data_dict[h] = [flds[h]]
+			initialized = True
+		else:
+			for h in header_flds:
+				data_dict[h].append(flds[h])
+	print data_dict
+	return LightDataFrame(header_flds, [data_dict[h] for h in header_flds])
+
 
 
 
