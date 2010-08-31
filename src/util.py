@@ -75,7 +75,7 @@ def formatNAOld(x, format, sep=None):
 		else:
 			return format % x
 
-def formatNA(x, format, sep=None):
+def formatNA(x, format="{0}", sep=None):
 	if isinstance(x, list):
 		flds = format.split(sep)
 		if sep is None:
@@ -783,9 +783,9 @@ class LightDataFrame:
 	headers = property(getHeaders)
 
 
-def readTable(fname, headers):
+def readTable(fname, header=True, sep='\t'):
 	inf = file(fname,'r')
-	dlr = DelimitedLineReader(inf, headers)
+	dlr = DelimitedLineReader(inf, header=header, sep=sep)
 	header_flds = dlr.getHeader()
 	data_dict = {}
 	initialized = False
@@ -798,7 +798,6 @@ def readTable(fname, headers):
 		else:
 			for h in header_flds:
 				data_dict[h].append(flds[h])
-	print data_dict
 	return LightDataFrame(header_flds, [data_dict[h] for h in header_flds])
 
 
