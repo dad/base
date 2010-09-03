@@ -114,8 +114,8 @@ my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, ...) {
   }
 }
 
-charlist <- function(x) {
-	t(sapply(x, function(m) {unlist(strsplit(m,''))}))
+charlist <- function(x,sep='') {
+	t(sapply(x, function(m) {unlist(strsplit(m,sep))}))
 }
 
 ## Lower triangle
