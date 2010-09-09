@@ -162,6 +162,9 @@ class Accumulator:
 			return None
 		return self.getSD()/math.sqrt(self.n)
 
+	def getSEConfidenceInterval(self, alpha):
+		assert False, "Not implemented yet"
+
 	def getData(self):
 		res = None
 		if self.store:
@@ -192,6 +195,7 @@ def correctPValue(p_values, method="BH"):
 		#ro <- order(o)
 		#pmin(1, cummin(n/i * p[o]))[ro]
 	'''
+	assert False, "Not implemented yet"
 	return adjusted_p_values
 
 #---------
