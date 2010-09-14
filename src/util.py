@@ -403,10 +403,11 @@ class DelimitedLineReader:
 		# DAD: run through fields until we've seen at least one non-NA for each.
 		handlers_identified = False
 		li = 0
+		max_lines = 100
 		self.cur_line = self.cache.getLine(li)
 		self.handlers = None
 		inferred_string = []
-		while not handlers_identified and self.isValid():
+		while not handlers_identified and li < max_lines and self.isValid():
 			if not self.isComment():
 				# Not a comment line -- parse it.
 				if self.strip:
@@ -441,6 +442,7 @@ class DelimitedLineReader:
 				handlers_identified = len([h for h in self.handlers if h is None]) == 0
 			if not handlers_identified:
 				#print "cache:", self.cache.cache
+				
 				li += 1
 				try:
 					self.cur_line = self.cache.getLine(li)
@@ -452,6 +454,11 @@ class DelimitedLineReader:
 						if self.handlers[hi] is None:
 							self.handlers[hi] = self.handler_dict["s"]
 					handlers_identified = True
+		if not handlers_identified and li >= max_lines:
+			# Went past the allowed number of lines to look ahead; set all unset handlers to strings
+			for hi in range(len(self.handlers)):
+				if self.handlers[hi] is None:
+					self.handlers[hi] = self.handler_dict["s"]
 		#print inferred_string
 		inferred_string = ''.join(inferred_string)
 		return inferred_string
