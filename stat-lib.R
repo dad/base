@@ -92,7 +92,7 @@ points.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, ...) {
 	plot.err(x,y,x.lower,x.upper,y.lower,y.upper,add=TRUE, ...)
 }
 
-my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, ...) {
+my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, labels=T, ...) {
   if (log) {
   	at <- unlist(at)
   	at <- at[at>0]
@@ -101,16 +101,19 @@ my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, ...) {
     range.expansion.factor <- (range[2]-range[1])*expand.range
     range.expanded <- floor(c(range[1]-range.expansion.factor, range[2]+range.expansion.factor))
     latseq <- seq(range.expanded[1], range.expanded[2],1)
-    labs <- lapply(latseq, function(m){substitute(10^i ,list(i=m))})
+    labs <- F
+    if (labels) {
+    	labs <- as.expression(lapply(latseq, function(m){substitute(10^i ,list(i=m))}))
+    }
 	place.at <- 10^latseq
     if (log.at) {
     	# Put labels at log-transformed locations.
     	place.at <- latseq
     }
-    axis(side, at=place.at, labels=as.expression(labs), ...)
+    axis(side, at=place.at, labels=labs, ...)
   }
   else {
-    axis(side, at, ...)
+    axis(side, at, labels, ...)
   }
 }
 
@@ -1417,7 +1420,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 
 ## Takes a list of variables, plots kernel densities
 multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
-	equal.height=F, relative.heights=NULL, xlab="x", ylab="Density", weight.list=NULL, cex.legend=1, ...) {
+	equal.height=F, relative.heights=NULL, xlab="x", ylab="Density", weight.list=NULL, cex.legend=1, points=FALSE, points.pch=NA, ...) {
 	extra.args <- list(...)
 	if (is.data.frame(x) || is.matrix(x)) {
 		col.names <- colnames(x)
@@ -1525,6 +1528,14 @@ multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALS
 			lines(inv.trans(d$x), relative.heights[[i]]*d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
 		}
 	}
+	
+	## Plot points if requested
+	#if (points) {
+	#	if (length(points.pch)
+	#	for (i in 1:length(x)) {
+	##	}
+	#	points(
+	#}
 
 	## cat("h6\n")
 	## Legend

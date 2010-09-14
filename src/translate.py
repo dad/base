@@ -240,7 +240,7 @@ def getCodons(aa_or_stop, rna=True):
 		codons = [c for c in gc.keys() if gc[c] == aa_or_stop and not 'T' in c]
 	else:
 		codons = [c for c in gc.keys() if gc[c] == aa_or_stop and not 'U' in c]
-	return codons
+	return sorted(codons)
 
 def getSynonyms(codon, rna=True):
 	gc = _genetic_code
