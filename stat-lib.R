@@ -1522,7 +1522,8 @@ multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALS
 			height.div <- max.heights[[i]]
 		}
 		if (fill) {
-			polygon(inv.trans(d$x), relative.heights[[i]]*d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+			# Put tails on either side so that density goes to zero and polygon has a flat bottom.
+			polygon(inv.trans(c(min(d$x),d$x,max(d$x))), relative.heights[[i]]*c(0,d$y,0)/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
 		}
 		else {
 			lines(inv.trans(d$x), relative.heights[[i]]*d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
