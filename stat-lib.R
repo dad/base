@@ -41,6 +41,21 @@ stack.df <- function(dfs) {
 	stacked
 }
 
+xyz.to.matrix <- function(x) {
+	x <- x[,1:3]
+	colnames(x) <- c('x','y','z')
+	x.vals <- unique(x[,1])
+	y.vals <- unique(x[,2])
+	mat <- matrix(data=NA, nrow=length(y.vals), ncol=length(x.vals))
+	dimnames(mat) <- list(sort(y.vals), sort(x.vals))
+	for (xv in x.vals) {
+		for (yv in y.vals) {
+			mat[yv,xv] <- sum(subset(x, x==xv & y==yv)$z)
+		}
+	}
+	mat
+}
+
 barplot.ci <- function(x, param.name, ylim=NULL, ...) {
   params <- sapply(x, function(m) {coef(m)[[param.name]]})
   lower.cis <- sapply(1:length(x), function(m) {confint(x[[m]], param.name)[[1]]})
