@@ -41,19 +41,28 @@ stack.df <- function(dfs) {
 	stacked
 }
 
-xyz.to.matrix <- function(x) {
+xyz.to.matrix <- function(x, rows=NA, cols=NA) {
+	# DAD: dangerous -- x~col, y~row
 	x <- x[,1:3]
-	colnames(x) <- c('x','y','z')
-	x.vals <- unique(x[,1])
-	y.vals <- unique(x[,2])
+	colnames(x) <- c('col','row','val')
+	if (length(rows)==1 & any(is.na(rows))) {
+		x.vals <- unique(x[,1])
+	} else {
+		x.vals <- as.vector(rows)
+	}
+	if (length(cols)==1 & any(is.na(cols))) {
+		y.vals <- unique(x[,2])
+	} else {
+		y.vals <- as.vector(cols)
+	}
 	mat <- matrix(data=NA, nrow=length(y.vals), ncol=length(x.vals))
-	dimnames(mat) <- list(sort(y.vals), sort(x.vals))
+	dimnames(mat) <- list(y.vals, x.vals)
 	for (xv in x.vals) {
 		for (yv in y.vals) {
-			mat[yv,xv] <- sum(subset(x, x==xv & y==yv)$z)
+			mat[yv,xv] <- sum(subset(x, col==xv & row==yv)$val)
 		}
 	}
-	mat
+	t(mat)
 }
 
 barplot.ci <- function(x, param.name, ylim=NULL, ...) {
