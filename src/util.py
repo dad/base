@@ -790,7 +790,7 @@ class LightDataFrame:
 	headers = property(getHeaders)
 
 
-def readTable(fname, header=True, sep='\t'):
+def readTable(fname, header=True, sep='\t', header_name_processor):
 	inf = file(fname,'r')
 	dlr = DelimitedLineReader(inf, header=header, sep=sep)
 	header_flds = dlr.getHeader()
@@ -805,6 +805,7 @@ def readTable(fname, header=True, sep='\t'):
 		else:
 			for h in header_flds:
 				data_dict[h].append(flds[h])
+	inf.close()
 	return LightDataFrame(header_flds, [data_dict[h] for h in header_flds])
 
 
