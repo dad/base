@@ -107,7 +107,7 @@ class Summary:
 
 
 class Accumulator:
-	def __init__(self, store=False):
+	def __init__(self, store=True):
 		self.sum = 0.0
 		self.sum_sq = 0.0
 		self.n = 0
@@ -121,6 +121,10 @@ class Accumulator:
 		self.n += 1
 		if self.store:
 			self.data.append(x)
+	
+	def addAll(self, x_list):
+		for x in x_list:
+			self.add(x)
 
 	def getMean(self):
 		mean = 0.0
@@ -140,6 +144,7 @@ class Accumulator:
 		if self.n < 1:
 			return None
 		mu = self.getMean()
+		# Sample variance
 		return (1.0/(self.n-1.0))*(self.sum_sq - self.n*mu*mu)
 
 	def getSum(self):
@@ -149,10 +154,11 @@ class Accumulator:
 		return self.n
 
 	def getSD(self):
+		res = None
 		if self.n == 1:
-			return 0.0
-		if self.n < 1:
-			return None
+			res = 0.0
+		if self.n > 1:
+			res = math.sqrt(self.getVariance())
 		return math.sqrt(self.getVariance())
 
 	def getSE(self):
@@ -202,17 +208,20 @@ def correctPValue(p_values, method="BH"):
 def statsSummary(numlist):
 	n = len(numlist)
 	if n < 1:
-		return None
+		return (None,None,None,None)
 	if n == 1:
 		return (1, numlist[0], 0.0, 0.0)
+	# n > 1 from here on
 	sum1 = sum2 = 0.0
-	n = 0.0
+	n = 0
 	for x in numlist:
 		assert isinstance(x, int) or isinstance(x, float)
 		sum1 += x
 		sum2 += x * x
-		n += 1.0
-	var = (1.0/(n-1.0))*(sum2 - (1/n)*sum1*sum1)
+		n += 1
+	assert n == len(numlist)
+	# sample variance
+	var = (1.0/(n-1.0))*(sum2 - (1.0/n)*sum1*sum1)
 	if var < 0.0:
 		var = 0.0 # Can happen, but only due to numerical problems
 	m = sum1/n
@@ -222,6 +231,9 @@ def statsSummary(numlist):
 	return (n, m, sd, se)
 
 def StatsSummary(numlist):
+	return statsSummary(numlist)
+
+def summary(numlist):
 	return statsSummary(numlist)
 
 #----------------------------------------------------------------------------
@@ -239,7 +251,7 @@ def StatsSummary2(numlist):
 		return n
     return (Mean(numlist), Median(numlist), StandardDeviation(numlist), n)
 #---------------------------------------------------------------------------------
-def Median(numlist):
+def median(numlist):
     """Returns the median of a list of numbers.
 
     If any entries of the list are 'None' or '-', they are removed first."""
@@ -262,8 +274,11 @@ def Median(numlist):
 		return med
     else: # odd length list, get middle entry
 		return xlist[n / 2]
+
+def Median(numlist):
+	return median(numlist)
 #----------------------------------------------------------------------------------
-def Mean(numlist):
+def mean(numlist):
 	"""Returns the mean of a list of numbers.
 
 	If any entries of the list are 'None' or '-', they are removed
@@ -277,6 +292,9 @@ def Mean(numlist):
 	if n <= 0:
 		return 0.0
 	return mean / float(n)
+
+def Mean(numlist):
+	return mean(numlist)
 #----------------------------------------------------------------------------------
 def geometricMean(numlist):
 	"""Returns the geometric mean of a list of numbers.
