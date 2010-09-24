@@ -138,6 +138,29 @@ def dictParser(x, entry_sep=';', key_sep='='):
 	entries = x.split(entry_sep)
 	return dict([entry.split(key_sep) for entry in entries])
 
+def maxQuantHeader(header_flds):
+	# Header line
+	header_line = '\t'.join(header_flds)
+	header_line = header_line.lower()
+	header_line = header_line.replace("h/l", "hl")
+	header_line = header_line.replace(" ", ".")
+	header_line = header_line.replace("(", ".")
+	header_line = header_line.replace(".[%]", "")
+	header_line = header_line.replace("[", ".")
+	header_line = header_line.replace("]", "")
+	header_line = header_line.replace(")", "")
+	header_line = header_line.replace("/", '.')
+	header_line = header_line.replace("+", "plus")
+	header_line = header_line.replace(".\t", '\t')
+	header_line = header_line.replace(".\n", '\n')
+	header_line = header_line.replace("..", '.')
+	header_flds = header_line.strip().split('\t')
+	return header_flds
+
+def defaultHeader(header_flds):
+	return header_flds
+
+
 class LineCache:
 	"""Class for caching lines read by DelimitedLineReader."""
 	def __init__(self, instream, comment_str='#'):
@@ -442,7 +465,7 @@ class DelimitedLineReader:
 				handlers_identified = len([h for h in self.handlers if h is None]) == 0
 			if not handlers_identified:
 				#print "cache:", self.cache.cache
-				
+
 				li += 1
 				try:
 					self.cur_line = self.cache.getLine(li)
@@ -625,25 +648,6 @@ def test008():
 	os.remove(fname)
 	print "** 008 infer header types with NA's in one full column"
 
-def maxQuantHeader(header_flds):
-	# Header line
-	header_line = '\t'.join(header_flds)
-	header_line = header_line.lower()
-	header_line = header_line.replace("h/l", "hl")
-	header_line = header_line.replace(" ", ".")
-	header_line = header_line.replace("(", ".")
-	header_line = header_line.replace(".[%]", "")
-	header_line = header_line.replace("[", ".")
-	header_line = header_line.replace("]", "")
-	header_line = header_line.replace(")", "")
-	header_line = header_line.replace("/", '.')
-	header_line = header_line.replace("+", "plus")
-	header_line = header_line.replace(".\t", '\t')
-	header_line = header_line.replace(".\n", '\n')
-	header_line = header_line.replace("..", '.')
-	header_flds = header_line.strip().split('\t')
-	return header_flds
-
 def test009():
 	# Header processing
 	n_lines = 100
@@ -790,9 +794,9 @@ class LightDataFrame:
 	headers = property(getHeaders)
 
 
-def readTable(fname, header=True, sep='\t', header_name_processor):
+def readTable(fname, header=True, sep='\t', header_name_processor=defaultHeader):
 	inf = file(fname,'r')
-	dlr = DelimitedLineReader(inf, header=header, sep=sep)
+	dlr = DelimitedLineReader(inf, header=header, sep=sep, header_name_processor=header_name_processor)
 	header_flds = dlr.getHeader()
 	data_dict = {}
 	initialized = False
