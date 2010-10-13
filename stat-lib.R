@@ -1488,12 +1488,13 @@ multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALS
 	#cat("h4\n")
 	max.heights <- lapply(densities, function(d) {max(d$y, na.rm=T)})
 	max.height <- max(unlist(max.heights), na.rm=T)
-	if (!is.null(relative.heights)) {
+	set.rel.heights <- !is.null(relative.heights)
+	if (set.rel.heights) {
 		relative.heights <- relative.heights/max(relative.heights, na.rm=T)
 		equal.height=T
 	}
 	else {
-		relative.heights <- seq(1,1,length.out=length(x))
+		relative.heights <- rep(1,length(x))
 	}
 	if (is.null(ylim)) {
 		if (equal.height) {
@@ -1515,9 +1516,6 @@ multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALS
 		xlim <- c(xmin, max(sapply(x,max,na.rm=T),na.rm=T))
 	}
 
-	## Plot the first dataset
-	if (log) {log.str <- "x"} else {log.str <- ""}
-	if (equal.height) {height.div <- max.height} else {height.div <- 1.0}
 	## Infer X and Y labels, if not passed in
 	if (missing(xlab) | is.null(xlab)) {
 		if (!is.null(names(x)[1])) {
@@ -1536,9 +1534,13 @@ multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALS
 		}
 	}
 
+	## Plot the first dataset
+	if (log) {log.str <- "x"} else {log.str <- ""}
+	if (equal.height) {height.div <- max.height} else {height.div <- 1.0}
+
 	## Actually plot the data
 	d <- densities[[1]]
-	plot(inv.trans(d$x), d$y/height.div, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, ...)
+	plot(inv.trans(d$x), d$y*relative.heights[[1]]/height.div, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, ...)
 	for (i in 1:length(x)) {
 		d <- densities[[i]]
 		height.div <- 1.0
@@ -1553,7 +1555,7 @@ multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALS
 			lines(inv.trans(d$x), relative.heights[[i]]*d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
 		}
 	}
-	
+
 	## Plot points if requested
 	#if (points) {
 	#	if (length(points.pch)
