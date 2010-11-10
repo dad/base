@@ -1287,7 +1287,7 @@ def getRelativeAdaptivenessValues(master_species):
 	return vals
 
 def getOptimalCodons(master_species):
-	if master_species == 'human':
+	if master_species == 'human' or master_species == 'hsapiens':
 		opt_codons = _h_sapiens_optimal_codons
 	elif master_species == 'mouse':
 		opt_codons = _m_musculus_optimal_codons

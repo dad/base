@@ -121,7 +121,7 @@ class Accumulator:
 		self.n += 1
 		if self.store:
 			self.data.append(x)
-	
+
 	def addAll(self, x_list):
 		for x in x_list:
 			self.add(x)
@@ -999,12 +999,33 @@ def MantelHaenszelOddsRatio(tables):
 
 class MHVarResult:
 	"""Class for storing results of Mantel-Haenszel variance computation"""
-	odds_ratio = None
-	var_odds_ratio = None
-	ln_odds_ratio = None
-	var_ln_odds_ratio = None
-	n_tables = None
-	n_counts = None
+
+	def __init__(self, odds_ratio, var_odds_ratio, n_tables, n_counts):
+		self.odds_ratio = odds_ratio
+		self.var_odds_ratio = var_odds_ratio
+		self.ln_odds_ratio = math.log(odds_ratio)
+		# From Robins et al. 1986, bottom p.312
+		self.var_ln_odds_ratio = self.var_odds_ratio/(self.odds_ratio**2.0)
+		self.n_tables = n_tables
+		self.n_counts = n_counts
+
+	def getStdDev(self):
+		return math.sqrt(self.var_odds_ratio)
+
+	# Get confidence interval (CI)
+	# Currently only returns 95% CI
+	def getConfidenceInterval(self, log=False):
+		fn = math.exp
+		if log:
+			fn = lambda x: x
+		sd_ln95 = math.sqrt(self.var_ln_odds_ratio)*1.96
+		mh_lower_95 = fn(self.ln_odds_ratio - sd_ln95)
+		mh_upper_95 = fn(self.ln_odds_ratio + sd_ln95)
+		return (mh_lower_95, mh_upper_95)
+
+	stdev = property(getStdDev, None, None, None)
+
+
 
 def MantelHaenszelOddsRatioVariance(tables):
 	"""Returns the Robins et al. variance phi_US(W) for Mantel-Haenszel odds ratio W, per
@@ -1066,14 +1087,7 @@ def MantelHaenszelOddsRatioVariance(tables):
 		raise StatsError, "Denominator R_t <= 0; can't compute M-H odds ratio variance."
 	var_odds_ratio = (sum_PR/(2*R_t**2.0) + (sum_PS + sum_QR)/(2*R_t*S_t) + sum_QS/(2*S_t**2.0)) * odds_ratio**2.0
 
-	res = MHVarResult()
-	res.odds_ratio = odds_ratio
-	res.ln_odds_ratio = math.log(odds_ratio)
-	res.var_odds_ratio = var_odds_ratio
-	# From Robins et al. 1986, bottom p.312
-	res.var_ln_odds_ratio = var_odds_ratio/odds_ratio**2.0
-	res.n_tables = n_tables
-	res.n_counts = N_t
+	res = MHVarResult(odds_ratio, var_odds_ratio, n_tables, N_t)
 	return res
 
 if __name__ == "__main__":
