@@ -179,6 +179,20 @@ class CodingFrequencies:
 
 	def getAACount(self, aa):
 		return self.aa_counts[aa]
+	
+	def getSelectionCoefficient(self, from_codon, to_codon):
+		sc = None
+		gc = translate.geneticCode()
+		if gc[from_codon] == gc[to_codon]:
+			# Y = to, X = from
+			# s_X->Y = ln p_X/p_Y - sum_i ln p_X_i/p_Y_i
+			cp = self.estimateCodonProportion
+			np = self.estimateNucleotideProportion
+			from_p = cp(from_codon)
+			to_p = cp(to_codon)
+			assert to_p > 0.0
+			sc = math.log(to_p/from_p) - sum([math.log(np(to_codon[i])/np(from_codon[i])) for i in range(3)])
+		return sc
 
 def estimateSelectionCoefficientForCodon(codon, cons_cf, var_cf):
 	aa = translate.translate(codon)

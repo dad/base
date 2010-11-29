@@ -147,3 +147,12 @@ def getMolecularWeight(prot_seq):
 def getAAFraction(seq, aa, pseudocount=0.0):
 	return (seq.count(aa) + pseudocount)/len(seq)
 
+if __name__=='__main__':
+	cdna_dict = biofile.readFASTADict(sys.argv[1])
+	keys = cdna_dict.keys()
+	for i in range(len(keys)-1):
+		for j in range(i+1, len(keys)):
+			s1 = cdna_dict[keys[i]]
+			s2 = cdna_dict[keys[j]]
+			print keys[i], keys[j]
+			print translate.sequenceIdentity(s1,s2)

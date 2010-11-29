@@ -1,6 +1,6 @@
 #! python
 
-import sys, os, math, string, random
+import sys, os, random, string
 import biofile
 
 class MuscleError(Exception):
