@@ -1003,14 +1003,13 @@ class MHVarResult:
 	def __init__(self, odds_ratio, var_odds_ratio, n_tables, n_counts):
 		self.odds_ratio = odds_ratio
 		self.var_odds_ratio = var_odds_ratio
+		self.sd_odds_ratio = math.sqrt(var_odds_ratio)
 		self.ln_odds_ratio = math.log(odds_ratio)
 		# From Robins et al. 1986, bottom p.312
 		self.var_ln_odds_ratio = self.var_odds_ratio/(self.odds_ratio**2.0)
+		self.sd_ln_odds_ratio = math.sqrt(self.var_ln_odds_ratio)
 		self.n_tables = n_tables
 		self.n_counts = n_counts
-
-	def getStdDev(self):
-		return math.sqrt(self.var_odds_ratio)
 
 	# Get confidence interval (CI)
 	# Currently only returns 95% CI
@@ -1022,9 +1021,6 @@ class MHVarResult:
 		mh_lower_95 = fn(self.ln_odds_ratio - sd_ln95)
 		mh_upper_95 = fn(self.ln_odds_ratio + sd_ln95)
 		return (mh_lower_95, mh_upper_95)
-
-	stdev = property(getStdDev, None, None, None)
-
 
 
 def MantelHaenszelOddsRatioVariance(tables):

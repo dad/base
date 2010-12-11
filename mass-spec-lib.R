@@ -1,13 +1,58 @@
+
+label.gene.ratios <- function(x, target.genes, r='ratio.hl.normalized.mean', a=abund.f, cex.pt=1, cex.gene.lab=0.6, ...) {
+  y <- subset(x, gene %in% target.genes)
+  if (nrow(y)>0) {
+  	points(y[,abund.f], y[,r], cex=cex.pt, ...)
+  	text(y[,abund.f], y[,r], y$gene, pos=4, cex=cex.gene.lab, ...)
+  }
+}
+
+plot.gene.ratios <- function(x, target.genes, abund.f='ratio.hl.count', err=TRUE, ...) {
+  y <- subset(x, gene %in% target.genes)
+  if (nrow(y)>0) {
+  	if (err) {
+		points.err(y[,abund.f], y$ratio.hl.normalized.mean, x.lower=y[,abund.f], x.upper=y[,abund.f], y.lower=y$ratio.hl.normalized.lower.95, y.upper=y$ratio.hl.normalized.upper.95, ...)
+	} else {
+		points(y[,abund.f], y$ratio.hl.normalized.mean, ...)
+	}
+  }
+}
+
+load.ms.data <- function(fname, invert=FALSE) {
+	# Light = KG071, YFP-WT; Heavy = KG079, YFP-C4
+	d.raw <- read.table(fname, header=T,stringsAsFactors=F)
+	#desc <- read.delim("~/research/data/scerevisiae/scer-descs.txt", header=T)
+	z <- match(d.raw$orf, yeast$avg$orf)
+	#z.desc <- match(d.raw$orf, desc$orf)
+	d <- data.frame(d.raw, yeast$avg[z,], yeast$raw[z,yeast$fields$abund], yeast$bg[z,c('gene','desc')])
+	y <- yeast$raw
+	intensity.fld <- 'intensity'
+	abund.fld <- 'abund.1'
+	d$ratio.significance.corrected <- p.adjust(d$ratio.significance, "fdr")
+	d$intensity.proportion <- d[,intensity.fld]/sum(as.numeric(d[,intensity.fld]), na.rm=T)
+	tot.abund <- colSums(na.omit(d[,c(abund.fld,intensity.fld)]))
+	d$estimated.abundance <- d[,intensity.fld]*tot.abund[1]/tot.abund[2]
+	d$est.abund.proportion <- d$estimated.abundance/sum(yeast$raw[,abund.fld],na.rm=T)
+	d[is.na(d$gene),'gene'] <- d[is.na(d$gene),'orf']
+	d <- d[order(d$est.abund.proportion, decreasing=T),]
+	d$order <- 1:nrow(d)
+	if (invert) {
+		invert.flds <- c('ratio.hl','ratio.hl.normalized','ratio.hl.mean','ratio.hl.normalized.mean')
+		d[,invert.flds] <- 1/d[,invert.flds]
+	}
+	d
+}
+
 sampling.error <- function(n, log.sd.cutoff) {
 	log.sd.cutoff/sqrt(n)
 }
 
-plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld, abund.f="intensity", sd.envelope=0.995, cex.pt=1, cex.gene.lab=0.6, ...) {
+plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld="gene", abund.f="ratio.hl.count", sd.envelope=0.995, cex.pt=1, cex.gene.lab=0.6, xlim=NULL, ...) {
 	ms.sub <- subset(x, ratio.hl.count>=count.cutoff)
 	sig.sub <- subset(ms.sub, orf %in% c(up.orfs,down.orfs))
 	up.sig.sub <- subset(ms.sub, orf %in% up.orfs)
 	down.sig.sub <- subset(ms.sub, orf %in% down.orfs)
-	plot(ms.sub[,abund.f], ms.sub$ratio.hl.normalized.mean, type='n', log='xy', xaxt='n', pch=16, las=1, ...)
+	plot(ms.sub[,abund.f], ms.sub$ratio.hl.normalized.mean, type='n', log='xy', xaxt='n', pch=16, las=1, xlim, ...)
 	abline(h=1, col='lightgray')
 	# Error limits
 	f <- function(n, log.sd.cutoff) {
@@ -16,7 +61,10 @@ plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld, abun
 	sd.logs <- subset(x, ratio.hl.count>2)$ratio.hl.normalized.sd
 	sd.log.prop <- sd.envelope
 	sd.log.cutoff <- sd.logs[order(sd.logs)][ceiling(length(sd.logs)*sd.log.prop)]
-	env.lims <- exp(seq(log(abund.xlim[1]/2),log(abund.xlim[2]*2), length.out=100))
+	if (is.null(xlim)) {
+		xlim <- c(min(x[,abund.f], na.rm=T),max(x[,abund.f], na.rm=T))
+	}
+	env.lims <- exp(seq(log(xlim[1]/2),log(xlim[2]*2), length.out=100))
 	lines(env.lims, exp(sampling.error(env.lims, sd.log.cutoff)), col='gray75', ...)
 	lines(env.lims, exp(-sampling.error(env.lims, sd.log.cutoff)), col='gray75', ...)
 	# Points
@@ -38,3 +86,4 @@ plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld, abun
 	}
 	list(all=ms.sub, up=up.sig.sub, down=down.sig.sub)
 }
+
