@@ -1188,7 +1188,7 @@ matrix.prcomp <- function(covmat, select.flds=NULL, raw.data=NULL, scores=FALSE,
       #res$scores <- as.data.frame(as.matrix(raw.data[,select.flds]) %*% as.matrix(e$vectors))
       # Preserve NAs if possible.
       x <- as.matrix(raw.data[,select.flds])
-      res$scores <- mmult(x, as.matrix(e$vectors))
+      res$scores <- as.data.frame(mmult(x, as.matrix(e$vectors)))
 		names(res$scores) <- colnames(loadings)
 		# This is inefficient, as we're computing many more correlations than are needed.
 		df <- data.frame(raw.data[,select.flds], res$scores)
