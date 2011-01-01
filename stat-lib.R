@@ -25,9 +25,20 @@ p.0 <- function(...) {
 }
 
 # Matrix multiplication that is gentler with NAs.
-mmult <- function(x, y) {
+raw.mmult <- function(x,y) {
   ints <- lapply(1:ncol(y), function(v) {x * matrix(rep(y[,v], each=nrow(x)), nrow=nrow(x), ncol=ncol(x))})
   sapply(ints, rowSums, na.rm=T)
+}
+
+mmult <- function(x, y) {
+  res <- raw.mmult(x,y)
+  # Deal with NAs.  Create a result that is > 0 for all entries, and identify NAs as those where rowSums(...na.rm=T) = 0.
+  # If any rows of x are all NA, then the corresponding row of res should be NA
+  # If any columns of Y are all NA, then the corresponding column of res should be NA
+  # If there are cases where the missing data in x and y create a product that is all NA, the result should be NA.
+  res.pos <- raw.mmult(abs(x)+1, abs(y)+1)
+  res[res.pos<=0] <- NA
+  res
 }
 
 # Test function for mmult
