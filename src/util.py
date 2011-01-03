@@ -1,5 +1,9 @@
 import time, os, random, string, sys
 
+# Float equality.  On my system (WinXP, Python 2.6), smallest distinguishable float difference is 7.45e-9.
+def feq(f1,f2,eps=1e-8):
+	return abs(f1-f2)<eps
+
 def printTiming(func):
 	def wrapper(*arg):
 		t1 = time.time()

@@ -25,6 +25,40 @@ p.0 <- function(...) {
 	paste(..., sep='.')
 }
 
+# Matrix multiplication that is gentler with NAs.
+raw.mmult <- function(x,y) {
+  ints <- lapply(1:ncol(y), function(v) {x * matrix(rep(y[,v], each=nrow(x)), nrow=nrow(x), ncol=ncol(x))})
+  sapply(ints, rowSums, na.rm=T)
+}
+
+mmult <- function(x, y) {
+  res <- raw.mmult(x,y)
+  # Deal with NAs.  Create a result that is > 0 for all entries, and identify NAs as those where rowSums(...na.rm=T) = 0.
+  # If any rows of x are all NA, then the corresponding row of res should be NA
+  # If any columns of Y are all NA, then the corresponding column of res should be NA
+  # If there are cases where the missing data in x and y create a product that is all NA, the result should be NA.
+  res.pos <- raw.mmult(abs(x)+1, abs(y)+1)
+  res[res.pos<=0] <- NA
+  res
+}
+
+# Test function for mmult
+test.mmult <- function() {
+  for (i in 1:100) {
+    r <- sample(1:20, 3)
+    p1 <- prod(r[1:2])
+    p2 <- prod(r[2:3])
+    x <- matrix(rnorm(p1), nrow=r[1], ncol=r[2])
+    na.ind <- rep(1,p1)
+    na.ind[sample(1:p1, sample(1:p1,1))] <- NA
+    na.ind <- matrix(na.ind, nrow=r[1], ncol=r[2])
+    x.na <- x * na.ind
+    y <- matrix(rnorm(p2), nrow=r[2], ncol=r[3])
+    z <- mmult(x.na,y)
+    stopifnot(sum(z - x.na %*% y, na.rm=T) < 1e-6)
+  }
+}
+
 stack.df <- function(dfs) {
 	if (length(dfs) <= 1) {
 		stacked <- dfs
@@ -1163,7 +1197,10 @@ matrix.prcomp <- function(covmat, select.flds=NULL, raw.data=NULL, scores=FALSE,
 	names(prop.var) <- colnames(loadings)
 	res <- list(eig=e, loadings=loadings, prop.var=prop.var)
 	if (scores) {
-		res$scores <- as.data.frame(as.matrix(raw.data[,select.flds]) %*% as.matrix(e$vectors))
+      #res$scores <- as.data.frame(as.matrix(raw.data[,select.flds]) %*% as.matrix(e$vectors))
+      # Preserve NAs if possible.
+      x <- as.matrix(raw.data[,select.flds])
+      res$scores <- as.data.frame(mmult(x, as.matrix(e$vectors)))
 		names(res$scores) <- colnames(loadings)
 		# This is inefficient, as we're computing many more correlations than are needed.
 		df <- data.frame(raw.data[,select.flds], res$scores)
