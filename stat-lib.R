@@ -8,8 +8,9 @@ source("~/research/lib/pcor.R")
 
 dev.out <- function(fname, fdir="../figures/", width=7, height=7, pdf.figures=T) {
 	if (pdf.figures) ext = ".pdf" else ext = ".png"
-	if (pdf.figures) pdf(paste(fdir,fname,ext,sep=""), width=width, height=height, family="Helvetica")
-	else png(paste(fdir,fname,ext,sep=""), width=width*(480/7), height=height*(480/7))
+	full.fname = paste(fdir,fname,ext,sep="")
+	if (pdf.figures) pdf(full.fname, width=width, height=height, family="Helvetica")
+	else png(full.fname, width=width*(480/7), height=height*(480/7))
 }
 
 ep <- function(x) {

@@ -788,6 +788,9 @@ class LightDataFrame:
 
 	def getHeaders(self):
 		return self._headers
+		
+	def __str__(self):
+		return "** not implemented **"
 
 	nrow = property(getNumRows)
 	ncol = property(getNumCols)
