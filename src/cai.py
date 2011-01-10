@@ -884,8 +884,12 @@ _c_elegans_optimal_codons = _c_elegans_optimal_codons_sharp
 # cerevisiae," Yeast 7:657-678 (1991)
 _s_cerevisiae_optimal_codons_sharp = \
 ['AAC','AAG','ACC','ACT','AGA','ATC','ATT','CAA','CAC','CCA','GAA','GAC','GCT','GGT','GTC','GTT','TAC','TCC','TCT','TGT','TTC','TTG']
-_s_cerevisiae_optimal_codons_drummond = \
-['AAC','AAG','ACA','ATC','ATT','CAA','CAT','CCA','CGT','GAA','GAT','GCT','GGT','GTG','TAC','TCC','TCT','TGT','TTA','TTC']
+# Only lowest-expression genes from S. cer.
+_s_cerevisiae_optimal_codons_drummond_ia = \
+['AAC','AAG','ACA','AGA','ATT','CAG','CAT','CCC','GAG','GAT','GCT','GGT','GTC','TAC','TCT','TGT','TTC','TTG']
+# Best codons by SYN analysis, Drummond unpublished 2011.
+_s_cerevisiae_optimal_codons_drummond_syn = \
+['AAG','AAT','ACT','AGA','ATT','CAA','CAT','CCA','GAA','GAT','GCT','GGT','GTT','TAC','TCT','TGT','TTG','TTT']
 # From Kliman et al. "Selection conflicts, gene expression, and codon usage trends in yeast," J Mol Evol 57:98-109 (2003) Table 1, "pref" designation
 _s_cerevisiae_optimal_codons_kliman = \
 ['AAC','AAG','ACC','ACT','AGA','ATC','ATT','CAA','CAC','CCA','CGT','GAA','GAC','GCC','GCT','GGT','GTC','GTT','TAC','TCC','TCT','TGT','TTC','TTG']
@@ -1106,6 +1110,7 @@ _yeast_relative_adaptiveness_sharp_cowe = {
 ## From Drummond unpublished 2009
 ## Top 1% of genes by expression according to Holstege et al. Mol Cell 1998
 _s_cerevisiae_relative_adaptiveness = {'AAA':0.1427, 'AAC':1.0000, 'AAG':1.0000, 'AAT':0.0871, 'ACA':0.0398, 'ACC':0.9480, 'ACG':0.0061, 'ACT':1.0000, 'AGA':1.0000, 'AGC':0.0557, 'AGG':0.0018, 'AGT':0.0186, 'ATA':0.0082, 'ATC':1.0000, 'ATT':0.7766, 'CAA':1.0000, 'CAC':1.0000, 'CAG':0.0027, 'CAT':0.2646, 'CCA':1.0000, 'CCC':0.0116, 'CCG':0.0000, 'CCT':0.0882, 'CGA':0.0000, 'CGC':0.0018, 'CGG':0.0000, 'CGT':0.1774, 'CTA':0.0654, 'CTC':0.0014, 'CTG':0.0028, 'CTT':0.0057, 'GAA':1.0000, 'GAC':1.0000, 'GAG':0.0145, 'GAT':0.6601, 'GCA':0.0130, 'GCC':0.3136, 'GCG':0.0024, 'GCT':1.0000, 'GGA':0.0065, 'GGC':0.0239, 'GGG':0.0065, 'GGT':1.0000, 'GTA':0.0000, 'GTC':0.8040, 'GTG':0.0108, 'GTT':1.0000, 'TAC':1.0000, 'TAT':0.0660, 'TCA':0.0557, 'TCC':0.6288, 'TCG':0.0000, 'TCT':1.0000, 'TGC':0.2621, 'TGT':1.0000, 'TTA':0.1892, 'TTC':1.0000, 'TTG':1.0000, 'TTT':0.1624, 'ATG':1.0000, 'TGG':1.0000}
+
 
 # compute natural logs of relative adaptivenesses
 _ln_s_cerevisiae_relative_adaptiveness = logRelativeAdaptiveness(_s_cerevisiae_relative_adaptiveness)

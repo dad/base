@@ -177,8 +177,14 @@ if __name__=='__main__':
 	calc = Calculator()
 	calc.initializeFromSequences(cdna_dict.values(), options.pseudocount)
 	syn_dict = calc.getCodonSYNScores()
-	data_outs.write("# Read {0}\n{1:d} sequences, {2:d} codons, {3:d} nucleotides\n".format(in_fname, len(cdna_dict.keys()), int(sum(calc.codon_freq.values())), int(sum(calc.nucleotide_freq.values()))))
+	syn_opt_codons = []
+	for aa in translate.degenerateAAs():
+		codons = translate.getCodonsForAA(aa, rna=False)
+		best_syn_codon = sorted([(syn_dict[c],c) for c in codons])[-1][1]
+		syn_opt_codons.append(best_syn_codon)
+	data_outs.write("# Read {0}\n#{1:d} sequences, {2:d} codons, {3:d} nucleotides\n".format(in_fname, len(cdna_dict.keys()), int(sum(calc.codon_freq.values())), int(sum(calc.nucleotide_freq.values()))))
 	data_outs.write("# syn_scores = {0!s}\n".format(syn_dict))
+	data_outs.write("# SYN opt codons = {0!s}\n".format(sorted(syn_opt_codons)))
 	data_outs.write("{0!s}".format(calc))
 
 	if not options.score_dict_fname is None:
