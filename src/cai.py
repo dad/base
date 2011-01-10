@@ -884,7 +884,7 @@ _c_elegans_optimal_codons = _c_elegans_optimal_codons_sharp
 # cerevisiae," Yeast 7:657-678 (1991)
 _s_cerevisiae_optimal_codons_sharp = \
 ['AAC','AAG','ACC','ACT','AGA','ATC','ATT','CAA','CAC','CCA','GAA','GAC','GCT','GGT','GTC','GTT','TAC','TCC','TCT','TGT','TTC','TTG']
-# Only lowest-expression genes from S. cer.
+# Only lowest-expression genes from S. cer., inverse-Akashi analysis
 _s_cerevisiae_optimal_codons_drummond_ia = \
 ['AAC','AAG','ACA','AGA','ATT','CAG','CAT','CCC','GAG','GAT','GCT','GGT','GTC','TAC','TCT','TGT','TTC','TTG']
 # Best codons by SYN analysis, Drummond unpublished 2011.
