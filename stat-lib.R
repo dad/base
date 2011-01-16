@@ -1489,7 +1489,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 }
 
 ## Takes a list of variables, plots kernel densities
-multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
+multi.density <- function(x, log=F, kernel="r", bw='nrd0', col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
 	equal.height=F, relative.heights=NULL, xlab="x", ylab="Density", weight.list=NULL, cex.legend=1, points=FALSE, points.pch=NA, ...) {
 	extra.args <- list(...)
 	if (is.data.frame(x) || is.matrix(x)) {
@@ -1522,12 +1522,12 @@ multi.density <- function(x, log=F, kernel="r", col=NULL, lty="solid", fill=FALS
 		if (is.null(weight.list)) {
 			y <- x[[n]]
 			ny <- na.omit(y)
-			d <- density(trans(ny), na.rm=T, kern=kernel)
+			d <- density(trans(ny), na.rm=T, bw=bw, kern=kernel)
 		}
 		else {
 			y <- data.frame(x=x[[n]], w=weight.list[[n]])
 			ny <- na.omit(y)
-			d <- density(trans(ny$x), na.rm=T, kern=kernel, weights=ny$w/sum(ny$w,na.rm=T))
+			d <- density(trans(ny$x), na.rm=T, bw=bw, kern=kernel, weights=ny$w/sum(ny$w,na.rm=T))
 		}
 		d
 		})

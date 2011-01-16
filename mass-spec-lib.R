@@ -7,16 +7,18 @@ label.gene.ratios <- function(x, target.genes, r='ratio.hl.normalized.mean', a=a
   }
 }
 
-plot.gene.ratios <- function(x, target.genes, abund.f='ratio.hl.count', err=TRUE, ...) {
+plot.gene.ratios <- function(x, target.genes, ratio.f='ratio.hl.normalized', abund.f='ratio.hl.count', err=TRUE, labels=target.genes, ...) {
   y <- subset(x, gene %in% target.genes)
   if (nrow(y)>0) {
   	if (err) {
-		points.err(y[,abund.f], y$ratio.hl.normalized.mean, x.lower=y[,abund.f], x.upper=y[,abund.f], y.lower=y$ratio.hl.normalized.lower.95, y.upper=y$ratio.hl.normalized.upper.95, ...)
+		points.err(y[,abund.f], y[,ratio.f], x.lower=y[,abund.f], x.upper=y[,abund.f], y.lower=y[,p.0(ratio.f,"lower.95")], y.upper=y[,p.0(ratio.f,"upper.95")], ...)
 	} else {
-		points(y[,abund.f], y$ratio.hl.normalized.mean, ...)
+		points(y[,abund.f], y[,ratio.f], ...)
 	}
+	text(y[,abund.f], y[,ratio.f], labels, pos=2)
   }
 }
+p.gene <- plot.gene.ratios
 
 load.ms.data <- function(fname, invert=FALSE) {
 	# Light = KG071, YFP-WT; Heavy = KG079, YFP-C4
@@ -52,6 +54,10 @@ plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld="gene
 	sig.sub <- subset(ms.sub, orf %in% c(up.orfs,down.orfs))
 	up.sig.sub <- subset(ms.sub, orf %in% up.orfs)
 	down.sig.sub <- subset(ms.sub, orf %in% down.orfs)
+	if (is.null(xlim)) {
+		xlim <- c(min(x[,abund.f], na.rm=T)+1,max(x[,abund.f], na.rm=T)*1.1)
+		print(xlim)
+	}
 	plot(ms.sub[,abund.f], ms.sub$ratio.hl.normalized.mean, type='n', log='xy', xaxt='n', pch=16, las=1, xlim, ...)
 	abline(h=1, col='lightgray')
 	# Error limits
@@ -61,9 +67,6 @@ plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld="gene
 	sd.logs <- subset(x, ratio.hl.count>2)$ratio.hl.normalized.sd
 	sd.log.prop <- sd.envelope
 	sd.log.cutoff <- sd.logs[order(sd.logs)][ceiling(length(sd.logs)*sd.log.prop)]
-	if (is.null(xlim)) {
-		xlim <- c(min(x[,abund.f], na.rm=T),max(x[,abund.f], na.rm=T))
-	}
 	env.lims <- exp(seq(log(xlim[1]/2),log(xlim[2]*2), length.out=100))
 	lines(env.lims, exp(sampling.error(env.lims, sd.log.cutoff)), col='gray75', ...)
 	lines(env.lims, exp(-sampling.error(env.lims, sd.log.cutoff)), col='gray75', ...)
