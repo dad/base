@@ -25,6 +25,14 @@ p.0 <- function(...) {
 	paste(..., sep='.')
 }
 
+# Make log-zeros into NA's
+log.nozero <- function(x, log.fxn=log){
+	x[x<=0] <- NA
+	log.fxn(x)
+}
+
+log.nz <- log.nozero
+
 # Matrix multiplication that is gentler with NAs.
 raw.mmult <- function(x,y) {
   ints <- lapply(1:ncol(y), function(v) {x * matrix(rep(y[,v], each=nrow(x)), nrow=nrow(x), ncol=ncol(x))})
