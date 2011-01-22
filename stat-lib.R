@@ -144,15 +144,16 @@ barplot.err <- function(x, x.lower=x, x.upper=x, ylim=NULL, ...) {
 #}
 
 
-plot.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, add=FALSE, ...) {
-	if (add) {
-		points(x, y, ...)
+plot.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, add=FALSE, log='', bar.col=NULL, ...) {
+  if (is.null(bar.col)) {
+    bar.col <- par("col")
+  }
+	if (!add) {
+		plot(c(x.lower,x.upper), c(y.lower,y.upper), type='n', log=log, ...)
 	}
-	else {
-		plot(x, y, ...)
-	}
-	segments(x.lower, y, x.upper, y)
-	segments(x, y.lower, x, y.upper)
+	segments(x.lower, y, x.upper, y, col=bar.col)
+	segments(x, y.lower, x, y.upper, col=bar.col)
+    points(x, y, ...)
 }
 
 points.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, ...) {

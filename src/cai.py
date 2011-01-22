@@ -921,7 +921,8 @@ _d_melanogaster_optimal_codons_drummond = \
 _d_melanogaster_optimal_codons = _d_melanogaster_optimal_codons_duret99 #drummond
 
 # From Drummond and Wilke Cell 2008
-_sim_optimal_codons = _s_cerevisiae_optimal_codons #['AAC','AAG','ACC','ACT','AGA','ATC','ATT','CAA','CAC','CCA','GAA','GAC','GCT','GGT','GTC','GTT','TAC','TCC','TCT','TGT','TTC','TTG']
+#_sim_optimal_codons = _s_cerevisiae_optimal_codons #['AAC','AAG','ACC','ACT','AGA','ATC','ATT','CAA','CAC','CCA','GAA','GAC','GCT','GGT','GTC','GTT','TAC','TCC','TCT','TGT','TTC','TTG']
+_sim_optimal_codons = ['AAC','AAG','ACC','ACT','AGA','ATC','ATT','CAA','CAC','CCA','GAA','GAC','GCT','GGT','GTC','GTT','TAC','TCC','TCT','TGT','TTC','TTG']
 
 # From Comeron Genetics 2004
 _h_sapiens_optimal_codons_comeron = ['AAC','AAG','ACC','ATC','CAC','CAG','CCC','CGC','CTG','GAC','GAG','GCC','GGC','GTG','TAC','TGC','TTC']
