@@ -34,7 +34,7 @@ def readFASTA(infile_name):
 	if not os.path.isfile(infile_name):
 		raise BioFileError, "Cannot find the FASTA file %s." % infile_name
 	infile = file(infile_name, 'r')
-	seq = []
+	seq = None
 	headers = []
 	sequences = []
 	lines = infile.readlines()
@@ -47,11 +47,14 @@ def readFASTA(infile_name):
 				if seq:
 					frag = ''.join(seq)
 					sequences.append(frag.upper())
-					seq = []
+				seq = []
 				# Strip off leading '>'
-				headers.append(line[1:].rstrip())
+				h = line[1:].strip()
+				headers.append(h)
+				#print h
+				#print line
 			else:
-				frag = line.rstrip().upper()
+				frag = line.strip()
 				seq.append(frag)
 		frag = ''.join(seq)
 		sequences.append(frag.upper())
@@ -113,33 +116,10 @@ def getIDFunction(s):
 	return firstField
 
 def readFASTADict(infile_name, key_fxn = firstField):
-	#(headers, sequences) = readFASTADict(infile)
-	infile_name = os.path.expanduser(infile_name)
 	fdict = {}
-	if not os.path.isfile(infile_name):
-		raise BioFileError, "Cannot find the FASTA file %s." % infile_name
-	f = file(infile_name, 'r')
-	seq = []
-	currHeader = ''
-	for line in f:  # read the lines from the file
-		if line[0] == '#':
-			# Skip comment
-			continue
-		if line[0] == '>':  # a new header
-			if seq:
-				frag = ''.join(seq)
-				fdict[currHeader] = frag.upper()
-				seq = []
-			try:
-				s = line[1:].strip()
-				currHeader = key_fxn(s)
-			except Exception, e:
-				#print line[1:].rstrip()
-				continue
-		else:
-			frag = line.rstrip()
-			seq.append(frag.upper())
-			frag = ''.join(seq)
-	fdict[currHeader] = frag.upper()
-	f.close()
+	(headers, sequences) = readFASTA(infile_name)
+	for (i,h) in enumerate(headers):
+		h_key = key_fxn(h)
+		s = sequences[i]
+		fdict[h_key] = s
 	return fdict
