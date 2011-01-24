@@ -10,6 +10,60 @@ import re, os, sys, string, math, random
 class BioUtilsError(Exception):
     """Error using one of the bio utils."""
 
+#---------------------------------------------------------------------------
+# The universal genetic code
+_genetic_code = {
+		'TTT':'F', 'TTC':'F', 'TTA':'L', 'TTG':'L', 'CTT':'L', 'CTC':'L',
+		'CTA':'L', 'CTG':'L', 'ATT':'I', 'ATC':'I', 'ATA':'I', 'ATG':'M', 'GTT':'V',
+		'GTC':'V', 'GTA':'V', 'GTG':'V', 'TCT':'S', 'TCC':'S', 'TCA':'S',
+		'TCG':'S', 'CCT':'P', 'CCC':'P', 'CCA':'P', 'CCG':'P', 'ACT':'T',
+		'ACC':'T', 'ACA':'T', 'ACG':'T', 'GCT':'A', 'GCC':'A', 'GCA':'A',
+		'GCG':'A', 'TAT':'Y', 'TAC':'Y', 'TAA':'*', 'TAG':'*',
+		'CAT':'H', 'CAC':'H', 'CAA':'Q', 'CAG':'Q', 'AAT':'N', 'AAC':'N',
+		'AAA':'K', 'AAG':'K', 'GAT':'D', 'GAC':'D', 'GAA':'E', 'GAG':'E',
+		'TGT':'C', 'TGC':'C', 'TGA':'*', 'TGG':'W', 'CGT':'R',
+		'CGC':'R', 'CGA':'R', 'CGG':'R', 'AGT':'S', 'AGC':'S', 'AGA':'R',
+		'AGG':'R', 'GGT':'G', 'GGC':'G', 'GGA':'G', 'GGG':'G',
+		'UUU':'F', 'UUC':'F', 'UUA':'L', 'UUG':'L', 'CUU':'L', 'CUC':'L',
+		'CUA':'L', 'CUG':'L', 'AUU':'I', 'AUC':'I', 'AUA':'I', 'AUG':'M', 'GUU':'V',
+		'GUC':'V', 'GUA':'V', 'GUG':'V', 'UCU':'S', 'UCC':'S', 'UCA':'S',
+		'UCG':'S', 'CCU':'P', 'CCC':'P', 'CCA':'P', 'CCG':'P', 'ACU':'T',
+		'ACC':'T', 'ACA':'T', 'ACG':'T', 'GCU':'A', 'GCC':'A', 'GCA':'A',
+		'GCG':'A', 'UAU':'Y', 'UAC':'Y', 'UAA':'*', 'UAG':'*',
+		'CAU':'H', 'CAC':'H', 'CAA':'Q', 'CAG':'Q', 'AAU':'N', 'AAC':'N',
+		'AAA':'K', 'AAG':'K', 'GAU':'D', 'GAC':'D', 'GAA':'E', 'GAG':'E',
+		'UGU':'C', 'UGC':'C', 'UGA':'*', 'UGG':'W', 'CGU':'R',
+		'CGC':'R', 'CGA':'R', 'CGG':'R', 'AGU':'S', 'AGC':'S', 'AGA':'R',
+		'AGG':'R', 'GGU':'G', 'GGC':'G', 'GGA':'G', 'GGG':'G'}
+
+_rna_codons = [x for x in _genetic_code.keys() if not 'T' in x]
+_dna_codons = [x for x in _genetic_code.keys() if not 'U' in x]
+_aa_dna_codons = [x for x in _dna_codons if not _genetic_code[x] == '*']
+_aa_rna_codons = [x for x in _rna_codons if not _genetic_code[x] == '*']
+
+# Yeast mitochondrial code, from http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi#SG3
+# AUA    Met  M          Ile  I
+# CUU    Thr  T          Leu  L
+# CUC    Thr  T          Leu  L
+# CUA    Thr  T          Leu  L
+# CUG    Thr  T          Leu  L
+# UGA    Trp  W          Ter  *
+#
+# CGA    absent          Arg  R
+# CGC    absent          Arg  R
+_scer_mito_code = dict(_genetic_code.items())
+_scer_mito_code_alts = {'AUA':'M', 'CUU':'T', 'CUC':'T', 'CUA':'T', 'CUG':'T', 'UGA':'W'}
+for (cod,aa) in _scer_mito_code_alts.items():
+	_scer_mito_code[cod] = aa
+	_scer_mito_code[cod.replace('U','T')] = aa
+
+def geneticCode(code=None):
+	res = _genetic_code
+	if not code is None:
+		if code == 'scer-mito':
+			res = _scer_mito_code
+	return res
+
 #--------------------------------------------------------------------------------
 def translate(seq):
 	"""Translates a gene sequence to a protein sequence.
@@ -45,7 +99,7 @@ def translate(seq):
 def Translate(seq):
 	return translate(seq)
 
-def translateRaw(seq, bad_aa = 'x'):
+def translateRaw(seq, genetic_code=_genetic_code, bad_aa = 'x'):
 	"""Translates a nucleotide sequence to a protein sequence.
 
 	'seq' is the gene sequence to be translated. It can begin with any codon
@@ -57,13 +111,9 @@ def translateRaw(seq, bad_aa = 'x'):
 	protein sequence plus stop codons and ."""
 	prot = ""
 	max_aas = int(math.floor(len(seq)/3))
-	codon = seq[0:3]
 	for i in range(max_aas):
 		codon = seq[3 * i : 3 * (i + 1)]
-		try:
-			aa = codonToAA(codon)
-		except BioUtilsError: # unrecognized codon
-			aa = bad_aa
+		aa = genetic_code.get(codon,bad_aa)
 		prot += aa
 	return prot
 
@@ -113,40 +163,6 @@ def randomReverseTranslate(prot, rna=False):
 		gene += codon
 	#print sequenceDiffs(prot, translate.TranslateRaw(gene))
 	return gene
-
-#---------------------------------------------------------------------------
-# The universal genetic code
-_genetic_code = {
-		'TTT':'F', 'TTC':'F', 'TTA':'L', 'TTG':'L', 'CTT':'L', 'CTC':'L',
-		'CTA':'L', 'CTG':'L', 'ATT':'I', 'ATC':'I', 'ATA':'I', 'ATG':'M', 'GTT':'V',
-		'GTC':'V', 'GTA':'V', 'GTG':'V', 'TCT':'S', 'TCC':'S', 'TCA':'S',
-		'TCG':'S', 'CCT':'P', 'CCC':'P', 'CCA':'P', 'CCG':'P', 'ACT':'T',
-		'ACC':'T', 'ACA':'T', 'ACG':'T', 'GCT':'A', 'GCC':'A', 'GCA':'A',
-		'GCG':'A', 'TAT':'Y', 'TAC':'Y', 'TAA':'*', 'TAG':'*',
-		'CAT':'H', 'CAC':'H', 'CAA':'Q', 'CAG':'Q', 'AAT':'N', 'AAC':'N',
-		'AAA':'K', 'AAG':'K', 'GAT':'D', 'GAC':'D', 'GAA':'E', 'GAG':'E',
-		'TGT':'C', 'TGC':'C', 'TGA':'*', 'TGG':'W', 'CGT':'R',
-		'CGC':'R', 'CGA':'R', 'CGG':'R', 'AGT':'S', 'AGC':'S', 'AGA':'R',
-		'AGG':'R', 'GGT':'G', 'GGC':'G', 'GGA':'G', 'GGG':'G',
-		'UUU':'F', 'UUC':'F', 'UUA':'L', 'UUG':'L', 'CUU':'L', 'CUC':'L',
-		'CUA':'L', 'CUG':'L', 'AUU':'I', 'AUC':'I', 'AUA':'I', 'AUG':'M', 'GUU':'V',
-		'GUC':'V', 'GUA':'V', 'GUG':'V', 'UCU':'S', 'UCC':'S', 'UCA':'S',
-		'UCG':'S', 'CCU':'P', 'CCC':'P', 'CCA':'P', 'CCG':'P', 'ACU':'T',
-		'ACC':'T', 'ACA':'T', 'ACG':'T', 'GCU':'A', 'GCC':'A', 'GCA':'A',
-		'GCG':'A', 'UAU':'Y', 'UAC':'Y', 'UAA':'*', 'UAG':'*',
-		'CAU':'H', 'CAC':'H', 'CAA':'Q', 'CAG':'Q', 'AAU':'N', 'AAC':'N',
-		'AAA':'K', 'AAG':'K', 'GAU':'D', 'GAC':'D', 'GAA':'E', 'GAG':'E',
-		'UGU':'C', 'UGC':'C', 'UGA':'*', 'UGG':'W', 'CGU':'R',
-		'CGC':'R', 'CGA':'R', 'CGG':'R', 'AGU':'S', 'AGC':'S', 'AGA':'R',
-		'AGG':'R', 'GGU':'G', 'GGC':'G', 'GGA':'G', 'GGG':'G'}
-
-_rna_codons = [x for x in _genetic_code.keys() if not 'T' in x]
-_dna_codons = [x for x in _genetic_code.keys() if not 'U' in x]
-_aa_dna_codons = [x for x in _dna_codons if not _genetic_code[x] == '*']
-_aa_rna_codons = [x for x in _rna_codons if not _genetic_code[x] == '*']
-
-def geneticCode():
-	return _genetic_code
 
 def DNACodons():
 	return _dna_codons
