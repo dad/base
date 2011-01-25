@@ -221,12 +221,35 @@ class GFFRecord:
 			self.end = self._new_end
 			self.start = self._new_start
 		return at_end
+	
+	def contains(self, index):
+		# Does this record span this index, inclusive?
+		return index >= self.start and index <= self.end
 
 	def __str__(self):
 		return "{x.seqname}\t{x.source}\t{x.stype}\t{x.start}\t{x.end}\t{x.score}\t{x.strand}\t{x.phase}\t{x._attributes_str}\n".format(x=self)
 
 	def write(self, stream):
 		stream.write(str(self))
+
+class GFFRecordCollection:
+	def __init__(self):
+		self._collection = []
+	
+	def add(self, rec):
+		self._collection.append(rec)
+	
+	def hits(self, index):
+		hit_records = []
+		for r in self._collection:
+			if r.contains(index):
+				hit_records.append(r)
+		return hit_records
+	
+	def getCollection(self):
+		return self._collection[:]
+	
+	collection = property(getCollection, None, None, None)
 
 class GFFRecordTracker:
 	def __init__(self, gff_rec):
