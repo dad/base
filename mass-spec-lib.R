@@ -24,9 +24,11 @@ load.ms.data <- function(fname, invert=FALSE) {
 	# Light = KG071, YFP-WT; Heavy = KG079, YFP-C4
 	d.raw <- read.table(fname, header=T,stringsAsFactors=F)
 	#desc <- read.delim("~/research/data/scerevisiae/scer-descs.txt", header=T)
-	z <- match(d.raw$orf, yeast$avg$orf)
+	all.orfs <- unique(as.vector(c(d.raw$orf, yeast$bg$orf)))
+	zd <- match(all.orfs, d.raw$orf)
+	zy <- match(all.orfs, yeast$avg$orf)
 	#z.desc <- match(d.raw$orf, desc$orf)
-	d <- data.frame(d.raw, yeast$avg[z,], yeast$raw[z,yeast$fields$abund], yeast$bg[z,c('gene','desc')])
+	d <- data.frame(d.raw[zd,], yeast$avg[zy,], yeast$raw[zy,yeast$fields$abund], yeast$bg[zy,c('gene','desc')])
 	y <- yeast$raw
 	intensity.fld <- 'intensity'
 	abund.fld <- 'abund.1'

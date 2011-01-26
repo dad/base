@@ -179,7 +179,7 @@ class CodingFrequencies:
 
 	def getAACount(self, aa):
 		return self.aa_counts[aa]
-	
+
 	def getSelectionCoefficient(self, from_codon, to_codon):
 		sc = None
 		gc = translate.geneticCode()
@@ -893,7 +893,7 @@ _s_cerevisiae_optimal_codons_drummond_syn = \
 # From Kliman et al. "Selection conflicts, gene expression, and codon usage trends in yeast," J Mol Evol 57:98-109 (2003) Table 1, "pref" designation
 _s_cerevisiae_optimal_codons_kliman = \
 ['AAC','AAG','ACC','ACT','AGA','ATC','ATT','CAA','CAC','CCA','CGT','GAA','GAC','GCC','GCT','GGT','GTC','GTT','TAC','TCC','TCT','TGT','TTC','TTG']
-_s_cerevisiae_optimal_codons = _s_cerevisiae_optimal_codons_drummond_syn
+_s_cerevisiae_optimal_codons = _s_cerevisiae_optimal_codons_kliman
 
 # Derived by taking the tRNA gene count for each anticodon.
 #_a_thaliana_optimal_codons = ['GCT', 'TGC', 'GAC', 'GAG','TTC','GGC',
