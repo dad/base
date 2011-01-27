@@ -144,10 +144,14 @@ barplot.err <- function(x, x.lower=x, x.upper=x, ylim=NULL, ...) {
 #}
 
 
-plot.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, add=FALSE, log='', bar.col=NULL, ...) {
-  if (is.null(bar.col)) {
-    bar.col <- par("col")
-  }
+plot.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, add=FALSE, log='', bar.col=NULL, ...) {
+	if (is.null(x.lower)) x.lower = x
+	if (is.null(x.upper)) x.upper = x
+	if (is.null(y.lower)) y.lower = y
+	if (is.null(y.upper)) y.upper = y
+	if (is.null(bar.col)) {
+		bar.col <- par("col")
+	}
 	if (!add) {
 		plot(c(x.lower,x.upper), c(y.lower,y.upper), type='n', log=log, ...)
 	}
