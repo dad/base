@@ -160,8 +160,8 @@ plot.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NUL
     points(x, y, ...)
 }
 
-points.err <- function(x, y, x.lower, x.upper, y.lower, y.upper, ...) {
-	plot.err(x,y,x.lower,x.upper,y.lower,y.upper,add=TRUE, ...)
+points.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, bar.col=NULL...) {
+	plot.err(x,y,x.lower,x.upper,y.lower,y.upper,add=TRUE, bar.col=bar.col, ...)
 }
 
 my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, labels=T, ...) {
