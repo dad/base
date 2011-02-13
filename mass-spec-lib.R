@@ -51,6 +51,10 @@ sampling.error <- function(n, log.sd.cutoff) {
 	log.sd.cutoff/sqrt(n)
 }
 
+label.silac <- function(x, abund.f='ratio.hl.count', ratio.f="ratio.hl.normalized.mean", lab.f="gene", ...) {
+	text(x=x[,abund.f], y=x[,ratio.f], x[,lab.f], ...)
+}
+
 plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld="gene", abund.f="ratio.hl.count", sd.envelope=0.995, cex.pt=1, cex.gene.lab=0.6, xlim=NULL, ...) {
 	ms.sub <- subset(x, ratio.hl.count>=count.cutoff)
 	sig.sub <- ms.sub[match(c(up.orfs,down.orfs),ms.sub$orf),]
@@ -87,22 +91,90 @@ plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld="gene
 		my.axis(1, xlim, log=T, las=1, ...)
 	}
 	if (nrow(up.sig.sub) > 0 & !is.null(lab.fld)) {
-		text(x=up.sig.sub[,abund.f], y=up.sig.sub$ratio.hl.normalized.mean, up.sig.sub[,lab.fld], pos=4, cex=cex.gene.lab, col="gray5")
+		label.silac(up.sig.sub, pos=4, cex=cex.gene.lab, col="gray5")
+		#text(x=up.sig.sub[,abund.f], y=up.sig.sub$ratio.hl.normalized.mean, up.sig.sub[,lab.fld], pos=4, cex=cex.gene.lab, col="gray5")
 	}
 	if (nrow(down.sig.sub) > 0 & !is.null(lab.fld)) {
-		text(x=down.sig.sub[,abund.f], y=down.sig.sub$ratio.hl.normalized.mean, labels=down.sig.sub[,lab.fld], pos=4, cex=cex.gene.lab, col="gray5")
+		label.silac(down.sig.sub, pos=4, cex=cex.gene.lab, col="gray5")
+		#text(x=down.sig.sub[,abund.f], y=down.sig.sub$ratio.hl.normalized.mean, labels=down.sig.sub[,lab.fld], pos=4, cex=cex.gene.lab, col="gray5")
 	}
 	list(all=ms.sub, up=up.sig.sub, down=down.sig.sub)
 }
 
 get.silac.updown <- function(x, count.cutoff=2, sd.envelope=0.995) {
 	ms.sub <- subset(x, ratio.hl.count>=count.cutoff)
-	sd.logs <- subset(x, ratio.hl.count>max(2,count.cutoff))$ratio.hl.normalized.sd
+	sd.logs <- subset(x, ratio.hl.count>=max(2,count.cutoff))$ratio.hl.normalized.sd
 	sd.log.prop <- sd.envelope
 	sd.log.cutoff <- sd.logs[order(sd.logs)][ceiling(length(sd.logs)*sd.log.prop)]
 	
-	ms.up <- subset(ms.sub, ratio.hl.normalized>1 & ratio.hl.normalized.lower.95>exp(sd.log.cutoff/sqrt(ratio.hl.count)))
-	ms.down <- subset(ms.sub, ratio.hl.normalized<1 & ratio.hl.normalized.upper.95<exp(-sd.log.cutoff/sqrt(ratio.hl.count)))
-	list(up=ms.up[order(ms.up$ratio.hl.normalized, decreasing=TRUE),], down=ms.down[order(ms.down$ratio.hl.normalized, decreasing=FALSE),], sd.log.cutoff=sd.log.cutoff)
+	ms.up <- subset(ms.sub, ratio.hl.normalized.mean>1 & ratio.hl.normalized.lower.95>exp(sd.log.cutoff/sqrt(ratio.hl.count)))
+	ms.down <- subset(ms.sub, ratio.hl.normalized.mean<1 & ratio.hl.normalized.upper.95<exp(-sd.log.cutoff/sqrt(ratio.hl.count)))
+	list(up=ms.up[order(ms.up$ratio.hl.normalized.mean, decreasing=TRUE),], down=ms.down[order(ms.down$ratio.hl.normalized.mean, decreasing=FALSE),], sd.log.cutoff=sd.log.cutoff)
+}
+
+plot.silac <- function(x, up.orfs=NULL, down.orfs=NULL, lab.fld="gene", abund.f="ratio.hl.count", sd.log.cutoff=0.995, cex.pt=1, cex.gene.lab=0.6, xlim=NULL, ...) {
+	plot(x[,abund.f], x$ratio.hl.normalized.mean, type='n', log='xy', xaxt='n', pch=16, las=1, xlim, ...)
+	abline(h=1, col='lightgray')
+	# Error limits
+	env.lims <- exp(seq(log(xlim[1]/2),log(xlim[2]*2), length.out=100))
+	lines(env.lims, exp(sampling.error(env.lims, sd.log.cutoff)), col='gray75', ...)
+	lines(env.lims, exp(-sampling.error(env.lims, sd.log.cutoff)), col='gray75', ...)
+	# Points
+	points(ms.sub[,abund.f], ms.sub$ratio.hl.normalized.mean, pch=18, col="gray70", cex=0.5*cex.pt, ...)
+	points(sig.sub[,abund.f], sig.sub$ratio.hl.normalized.mean, col='gray10', pch=16, cex=cex.pt, ...)
+	segments(sig.sub[,abund.f], sig.sub$ratio.hl.normalized.lower.95, sig.sub[,abund.f], sig.sub$ratio.hl.normalized.upper.95, col='black', ...)
+	d <- list(...)
+	xlim <- d$xlim
+	if (is.null(xlim)) {
+		my.axis(1, ms.sub[,abund.f], log=T, las=1, ...)
+	} else {
+		my.axis(1, xlim, log=T, las=1, ...)
+	}
+}
+
+plot.silac.all <- function(x, count.cutoff=1, lab.fld="gene", abund.f="ratio.hl.count", sd.envelope=0.995, cex.pt=1, cex.gene.lab=0.6, xlim=NULL, xlab="Ratio count", ylab='Protein ratio', ...) {
+	ms.sub <- subset(x, ratio.hl.count>0)
+	diff.genes <- get.silac.updown(ms.sub, count.cutoff, sd.envelope)
+	sig.sub <- rbind(diff.genes$up, diff.genes$down)
+	# Limits
+	d <- list(...)
+	xlim <- d$xlim
+	if (is.null(xlim)) {
+		xlim <- c(1,max(ms.sub[,abund.f], na.rm=T)*1.1)
+	}
+	if (is.null(d$ylim)) {
+		# Set y limits so that we can always see the full envelope, and also encompass all significantly changed proteins and their error bars.
+		ylim <- c(min(exp(-diff.genes$sd.log.cutoff),min(sig.sub$ratio.hl.normalized.lower.95,na.rm=T)),
+			max(exp(diff.genes$sd.log.cutoff),max(sig.sub$ratio.hl.normalized.upper.95,na.rm=T)))
+	}
+	# Initial plot for labels and limits
+	plot(ms.sub[,abund.f], ms.sub$ratio.hl.normalized.mean, type='n', log='xy', xaxt='n', pch=18, las=1, xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
+	abline(h=1, col='lightgray')
+	# Error limits
+	sd.logs <- subset(x, ratio.hl.count>2)$ratio.hl.normalized.sd
+	sd.log.prop <- sd.envelope
+	sd.log.cutoff <- sd.logs[order(sd.logs)][ceiling(length(sd.logs)*sd.log.prop)]
+	env.lims <- exp(seq(log(xlim[1]/2),log(xlim[2]*2), length.out=100))
+	lines(env.lims, exp(sampling.error(env.lims, diff.genes$sd.log.cutoff)), col='gray75', ...)
+	lines(env.lims, exp(-sampling.error(env.lims, diff.genes$sd.log.cutoff)), col='gray75', ...)
+	# Points
+	points(ms.sub[,abund.f], ms.sub$ratio.hl.normalized.mean, pch=18, col="gray70", cex=0.5*cex.pt, ...)
+	points(sig.sub[,abund.f], sig.sub$ratio.hl.normalized.mean, col='gray10', pch=16, cex=cex.pt, ...)
+	segments(sig.sub[,abund.f], sig.sub$ratio.hl.normalized.lower.95, sig.sub[,abund.f], sig.sub$ratio.hl.normalized.upper.95, col='black', ...)
+	# Axes
+	if (is.null(xlim)) {
+		my.axis(1, ms.sub[,abund.f], log=T, las=1, ...)
+	} else {
+		my.axis(1, xlim, log=T, las=1, ...)
+	}
+	# Labels for proteins
+	if (nrow(diff.genes$up) > 0 & !is.null(lab.fld)) {
+		label.silac(diff.genes$up, pos=4, cex=cex.gene.lab, col="gray5")
+	}
+	if (nrow(diff.genes$down) > 0 & !is.null(lab.fld)) {
+		label.silac(diff.genes$down, pos=4, cex=cex.gene.lab, col="gray5")
+	}
+	# Return differentially affected proteins
+	diff.genes
 }
 
