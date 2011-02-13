@@ -53,9 +53,12 @@ sampling.error <- function(n, log.sd.cutoff) {
 
 plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld="gene", abund.f="ratio.hl.count", sd.envelope=0.995, cex.pt=1, cex.gene.lab=0.6, xlim=NULL, ...) {
 	ms.sub <- subset(x, ratio.hl.count>=count.cutoff)
-	sig.sub <- subset(ms.sub, orf %in% c(up.orfs,down.orfs))
-	up.sig.sub <- subset(ms.sub, orf %in% up.orfs)
-	down.sig.sub <- subset(ms.sub, orf %in% down.orfs)
+	sig.sub <- ms.sub[match(c(up.orfs,down.orfs),ms.sub$orf),]
+	up.sig.sub <- ms.sub[match(up.orfs,ms.sub$orf),]
+	down.sig.sub <- ms.sub[match(down.orfs,ms.sub$orf),]
+	#sig.sub <- subset(ms.sub, orf %in% c(up.orfs,down.orfs))
+	#up.sig.sub <- subset(ms.sub, orf %in% up.orfs)
+	#down.sig.sub <- subset(ms.sub, orf %in% down.orfs)
 	if (is.null(xlim)) {
 		xlim <- c(min(x[,abund.f], na.rm=T)+1,max(x[,abund.f], na.rm=T)*1.1)
 		print(xlim)
@@ -90,5 +93,16 @@ plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld="gene
 		text(x=down.sig.sub[,abund.f], y=down.sig.sub$ratio.hl.normalized.mean, labels=down.sig.sub[,lab.fld], pos=4, cex=cex.gene.lab, col="gray5")
 	}
 	list(all=ms.sub, up=up.sig.sub, down=down.sig.sub)
+}
+
+get.silac.updown <- function(x, count.cutoff=2, sd.envelope=0.995) {
+	ms.sub <- subset(x, ratio.hl.count>=count.cutoff)
+	sd.logs <- subset(x, ratio.hl.count>max(2,count.cutoff))$ratio.hl.normalized.sd
+	sd.log.prop <- sd.envelope
+	sd.log.cutoff <- sd.logs[order(sd.logs)][ceiling(length(sd.logs)*sd.log.prop)]
+	
+	ms.up <- subset(ms.sub, ratio.hl.normalized>1 & ratio.hl.normalized.lower.95>exp(sd.log.cutoff/sqrt(ratio.hl.count)))
+	ms.down <- subset(ms.sub, ratio.hl.normalized<1 & ratio.hl.normalized.upper.95<exp(-sd.log.cutoff/sqrt(ratio.hl.count)))
+	list(up=ms.up[order(ms.up$ratio.hl.normalized, decreasing=TRUE),], down=ms.down[order(ms.down$ratio.hl.normalized, decreasing=FALSE),], sd.log.cutoff=sd.log.cutoff)
 }
 
