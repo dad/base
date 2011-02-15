@@ -183,8 +183,8 @@ class Accumulator:
 		s.n = self.getN()
 		s.variance = self.getVariance()
 		if not s.variance is None:
-			s.sd = math.sqrt(s.variance)
-			s.se = s.sd/math.sqrt(s.n)
+			s.sd = self.getSD()
+			s.se = self.getSE()
 		s.sum = self.getSum()
 		s.median = self.getMedian()
 		return s

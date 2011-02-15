@@ -105,24 +105,24 @@ These tags have predefined meanings:
     Parent Indicates the parent of the feature.  A parent ID can be
 	   used to group exons into transcripts, transcripts into
 	   genes, an so forth.  A feature may have multiple parents.
-	   Parent can *only* be used to indicate a partof 
+	   Parent can *only* be used to indicate a partof
 	   relationship.
 
     Target Indicates the target of a nucleotide-to-nucleotide or
 	   protein-to-nucleotide alignment.  The format of the
 	   value is "target_id start end [strand]", where strand
-	   is optional and may be "+" or "-".  If the target_id 
+	   is optional and may be "+" or "-".  If the target_id
 	   contains spaces, they must be escaped as hex escape %20.
 
     Gap   The alignment of the feature to the target if the two are
           not collinear (e.g. contain gaps).  The alignment format is
-	  taken from the CIGAR format described in the 
+	  taken from the CIGAR format described in the
 	  Exonerate documentation.
 	  (http://cvsweb.sanger.ac.uk/cgi-bin/cvsweb.cgi/exonerate
           ?cvsroot=Ensembl).  See "THE GAP ATTRIBUTE" for a description
 	  of this format.
 
-    Derives_from  
+    Derives_from
           Used to disambiguate the relationship between one
           feature and another when the relationship is a temporal
           one rather than a purely structural "part of" one.  This
@@ -203,10 +203,10 @@ class GFFRecord:
 		self.phase = flds[7]
 		self._attributes_str = flds[8]
 		self.attributes = dict([(x.split('=')[0], x.split('=')[1]) for x in self._attributes_str.split(';')])
-	
+
 	def getAttribute(self, key):
 		return self.attributes.get(key,None)
-	
+
 	def getAttributesString(self):
 		return self._attributes_str
 
@@ -221,7 +221,7 @@ class GFFRecord:
 			self.end = self._new_end
 			self.start = self._new_start
 		return at_end
-	
+
 	def contains(self, index):
 		# Does this record span this index, inclusive?
 		return index >= self.start and index <= self.end
@@ -235,20 +235,20 @@ class GFFRecord:
 class GFFRecordCollection:
 	def __init__(self):
 		self._collection = []
-	
+
 	def add(self, rec):
 		self._collection.append(rec)
-	
+
 	def hits(self, index):
 		hit_records = []
 		for r in self._collection:
 			if r.contains(index):
 				hit_records.append(r)
 		return hit_records
-	
+
 	def getCollection(self):
 		return self._collection[:]
-	
+
 	collection = property(getCollection, None, None, None)
 
 class GFFRecordTracker:
@@ -257,10 +257,10 @@ class GFFRecordTracker:
 		self.new_start = gff_rec.start
 		self.new_end = gff_rec.end
 		self.cur_site = 0
-	
+
 	def startTracking(self, cur_site):
 		self.cur_site = cur_site
-	
+
 	def stopTracking(self):
 		self.rec.end = self.new_end
 		self.rec.start = self.new_start
@@ -300,7 +300,7 @@ class VCFRecord:
 		self.position = 0
 		self.id = ''
 		self.ref = 0
-		self.alt = 0
+		self.alt = None
 		self.qual = 0
 		self.filter = '+'
 		self.info = '.'
@@ -316,7 +316,7 @@ class VCFRecord:
 		self.position = int(flds[1])
 		self.id = flds[2]
 		self.ref = flds[3]
-		self.alt = flds[4]
+		self.alt = flds[4].split(',')
 		self.qual = float(flds[5])
 		self.filter = flds[6]
 		self.info = flds[7]

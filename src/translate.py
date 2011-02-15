@@ -42,6 +42,7 @@ _aa_dna_codons = [x for x in _dna_codons if not _genetic_code[x] == '*']
 _aa_rna_codons = [x for x in _rna_codons if not _genetic_code[x] == '*']
 
 # Yeast mitochondrial code, from http://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi#SG3
+#     MITO              NUCLEAR
 # AUA    Met  M          Ile  I
 # CUU    Thr  T          Leu  L
 # CUC    Thr  T          Leu  L
@@ -110,15 +111,12 @@ def translateRaw(seq, genetic_code=_genetic_code, bad_aa = 'x'):
 	If the translation is successful, returns a string corresponding to the
 	protein sequence plus stop codons and ."""
 	prot = ""
-	max_aas = int(math.floor(len(seq)/3))
+	max_aas = int(math.floor(len(seq)/3.0))
 	for i in range(max_aas):
 		codon = seq[3 * i : 3 * (i + 1)]
 		aa = genetic_code.get(codon,bad_aa)
 		prot += aa
 	return prot
-
-def TranslateRaw(seq, bad_aa = 'x'):
-	return translateRaw(seq, bad_aa)
 
 def reverseTranslate(prot, bad_codon ='xxx'):
 	gene = ""
