@@ -1,9 +1,185 @@
 import sys, os, math, string
+# DAD: right now, translate is only for CodingSequence's call to reverseTranslate.
+import translate
 
 class BioFileError:
 	"""Class for packaging errors reading biological data from files"""
 	def __init__(self, s):
 		return
+
+class CodingExonRecord:
+	def __init__( self ):
+		self.gene_ID = ''
+		self.transcript_ID = ''
+		self.peptide_ID = ''
+		self.exon_ID = ''
+		self.strand = ''
+		self.exon_start = 0
+		self.exon_end = 0
+		self.coding_start = 0
+		self.coding_end = 0
+		self.chromosome = ''
+		self.descriptors = None
+
+	def getKey( self ):
+		return "{0}-{1}".format(self.peptide_ID, self.coding_start)
+
+	def addDescriptors(self, desc_string):
+		desc_dict = dict([(x.split('=')[0].lower(), x.split('=')[1]) for x in desc_string.split(";")])
+		if self.descriptors is None:
+			self.descriptors = desc_dict
+		else:
+			self.descriptors = dict(self.descriptors.items() + desc_dict.items())
+
+	def getDescriptor(self, key):
+		return self.descriptors.get(key,None)
+
+	def pullCodingSequence(self, raw_seq, n_bases_upstream=0, n_bases_downstream=0):
+		# DAD: be careful with 0-based or 1-based indexing!
+		# coding_start/end are 1-based, and inclusive
+		start = max(0, self.coding_start-1-n_bases_upstream)
+		end = min(len(raw_seq), self.coding_end+n_bases_downstream)
+		return raw_seq[start:end]
+
+	def extend(self, n_bases_upstream, n_bases_downstream):
+		if self.strand == '-':
+			self.coding_start = max(0,self.coding_start-n_bases_downstream)
+			self.coding_end = self.coding_end+n_bases_upstream
+		else:
+			self.coding_start = max(0,self.coding_start-n_bases_upstream)
+			self.coding_end = self.coding_end+n_bases_downstream
+
+	def contains(self, pos):
+		return self.coding_start <= pos and self.coding_end >= pos
+
+	def getCodingLength(self):
+		return self.coding_end - self.coding_start + 1
+
+	def printAttributes( self ):
+		print self
+
+	def printRecord( self ):
+		print self
+
+	def __repr__(self):
+		return "%s %s %s %s %s %s %i %i %i %i" % ( self.chromosome, self.gene_ID, self.transcript_ID, self.peptide_ID,
+												   self.exon_ID, self.strand, self.exon_start, self.exon_end, self.coding_start, self.coding_end )
+
+class CodingSequence:
+	def __init__(self):
+		self.exons = []
+		#self.touched_sequence = True
+		self.sequence = None
+		self.strand = None
+		self.chromosome = None
+		self.id = None
+		self.gene = None
+
+	def add(self, rec):
+		self.exons.append(rec)
+		#self.touched_sequence = True
+		# Assume that CDS come from the same chromosome and strand always.
+		self.strand = rec.strand
+		self.chromosome = rec.chromosome
+		gene = rec.getDescriptor('gene')
+		if not gene is None:
+			self.gene = gene
+
+	def setID(self, id):
+		self.id = id
+		if self.gene is None:
+			self.gene = id
+
+	def getID(self):
+		return self.id
+
+	def getSequence(self, raw_seq, n_bases_upstream=0, n_bases_downstream=0):
+		# Sort exon records
+		self.exons.sort(key=lambda x: x.coding_start)
+		# Figure out which direction "upstream" is
+		if self.strand == '-':
+			# Swap -- downstream is really upstream on the negative strand
+			(n_bases_upstream, n_bases_downstream) = (n_bases_downstream, n_bases_upstream)
+		seq = ''
+		if len(self.exons) == 1:
+			seq += self.exons[0].pullCodingSequence(raw_seq, n_bases_upstream, n_bases_downstream)
+		else:
+			for (i,x) in enumerate(self.exons):
+				if i==0:
+					seq += x.pullCodingSequence(raw_seq, n_bases_upstream, 0)
+				elif i==(len(self.exons)-1):
+					seq += x.pullCodingSequence(raw_seq, 0, n_bases_downstream)
+				else:
+					seq += x.pullCodingSequence(raw_seq, 0, 0)
+		if self.strand == '-':
+			seq = translate.reverseComplement(seq)
+		return seq
+
+	#def truncate(self, length):
+	#	trunc_cds =
+	#	assert False, "truncate not implemented"
+	def extend(self, n_upstream, n_downstream):
+		self.exons.sort(key=lambda x: x.coding_start)
+		self.exons[0].extend(n_upstream,0)
+		self.exons[-1].extend(0,n_downstream)
+
+	def getStrand(self):
+		return self.strand
+
+	def getChromosome(self):
+		return self.chromosome
+
+	def getCodingStart(self):
+		res = None
+		self.exons.sort(key=lambda x: x.coding_start)
+		if self.strand == '-':
+			res = self.exons[-1].coding_end
+		else:
+			res = self.exons[0].coding_start
+		return res
+
+	def getCodingEnd(self):
+		res = None
+		self.exons.sort(key=lambda x: x.coding_start)
+		if self.strand == '-':
+			res = self.exons[0].coding_start
+		else:
+			res = self.exons[-1].coding_end
+		return res
+
+	def mapPosition(self, pos):
+		# Get the offset of pos from the coding start, in nucleotides
+		# First, find the containing exon
+		self.exons.sort(key=lambda x: x.coding_start)
+		ind = None
+		coding_length = 0
+		for i in range(len(self.exons)):
+			e = self.exons[i]
+			if e.contains(pos):
+				ind = i
+			if ind is None:
+				coding_length += e.getCodingLength()
+
+		res = None
+		if not ind is None:
+			# Get the total coding length of the previous exons, plus
+			# the displacement into the exon containing pos
+			res = coding_length + pos - self.exons[ind].coding_start + 1
+		return res
+
+	def getFASTAHeader(self):
+		res = '{0} {1} {2} from '.format(self.id, self.gene, self.chromosome)
+		ind_flds = ','.join(['{0}-{1}'.format(r.coding_start, r.coding_end) for r in self.exons])
+		res += ind_flds + ' ({0}) '.format(self.strand)
+		exclude_keys = ['note']
+		if len(self.exons)>0:
+			d = self.exons[0].descriptors
+			# DAD: Hack!  Use URL encoder from somewhere for this...
+			res += '"{0}" '.format(d['note'].replace("%20",' ').replace("%3B",';').replace("%2C",',').replace("%2F",'/').replace("%3A",':').replace("%2B",'+'))
+			ks = d.keys()
+			ks.sort()
+			res += ';'.join(["{0}={1}".format(k,d[k]) for k in ks if not k in exclude_keys])
+		return res
 
 '''
 http://song.sourceforge.net/gff3.shtml
@@ -185,8 +361,7 @@ class GFFRecord:
 		self.strand = '+'
 		self.phase = '.'
 		self._attributes_str = ''
-		self._new_start = None
-		self._new_end = None
+		self.attributes = None
 
 	def read(self, line):
 		flds = line.strip().split('\t')
@@ -204,23 +379,41 @@ class GFFRecord:
 		self._attributes_str = flds[8]
 		self.attributes = dict([(x.split('=')[0], x.split('=')[1]) for x in self._attributes_str.split(';')])
 
+	def copy(self):
+		n = GFFRecord()
+		n.seqname = self.seqname
+		n.source = self.source
+		n.stype = self.stype
+		n.start = self.start
+		n.end = self.end
+		n.score = self.score
+		n.strand = self.strand
+		n.phase = self.phase
+		n._attributes_str = self._attributes_str
+		n.attributes = dict([(x.split('=')[0], x.split('=')[1]) for x in self._attributes_str.split(';')])
+		return n
+
+	def toCodingExonRecord(self):
+		cer = CodingExonRecord()
+		cer.gene_ID = ''
+		cer.transcript_ID = ''
+		cer.peptide_ID = ''
+		cer.exon_ID = ''
+		cer.strand = self.strand
+		cer.exon_start = self.start
+		cer.exon_end = self.end
+		cer.coding_start = self.start
+		cer.coding_end = self.end
+		cer.chromosome = self.seqname
+		cer.addDescriptors(self._attributes_str)
+		cer.gene_ID = cer.descriptors.get("name",'')
+		return cer
+
 	def getAttribute(self, key):
 		return self.attributes.get(key,None)
 
 	def getAttributesString(self):
 		return self._attributes_str
-
-	def update(self, ref_site, net_difference):
-		at_end = False
-		# ref_site is 0-based index, start/end are 1-based indices
-		if self.start-1 <= ref_site and self._new_start is None:
-			self._new_start = self.start + net_difference
-		elif self.end-1 <= ref_site and self._new_end is None:
-			self._new_end = self.end + net_difference
-			at_end = True
-			self.end = self._new_end
-			self.start = self._new_start
-		return at_end
 
 	def contains(self, index):
 		# Does this record span this index, inclusive?
@@ -254,27 +447,38 @@ class GFFRecordCollection:
 class GFFRecordTracker:
 	def __init__(self, gff_rec):
 		self.rec = gff_rec
-		self.new_start = gff_rec.start
-		self.new_end = gff_rec.end
-		self.cur_site = 0
+		self.new_start = None
+		self.new_end = None
+		self._mutations = []
 
-	def startTracking(self, cur_site):
-		self.cur_site = cur_site
+	def getOriginal(self):
+		return self.rec
 
-	def stopTracking(self):
-		self.rec.end = self.new_end
-		self.rec.start = self.new_start
-		return rec
+	def getUpdated(self):
+		rec_copy = self.rec.copy()
+		rec_copy.end = self.new_end
+		rec_copy.start = self.new_start
+		return rec_copy
 
-	def update(self, ref_site, net_difference):
-		if self.start >= ref_site and self.new_start is None:
-			self._new_start = self.start + net_difference
-		elif self.end <= ref_site and self.new_end is None:
-			self.new_end = self.end + net_difference
-			at_end = True
-			self.end = self.new_end
-			self.start = self.new_start
-		return at_end
+	def atEnd(self, ref_site):
+		return (self.rec.end-1 <= ref_site) and not (self.new_end is None) and not (self.new_start is None)
+
+	def getMutations(self):
+		return self._mutations[:]
+
+	def update(self, ref_site, net_difference, mutation):
+		if not mutation is None:
+			self._mutations.append(mutation)
+		# ref_site is 0-based index, start/end are 1-based indices delimiting ends of record
+		# If ref_site is at or past the beginning of the record, and the start site hasn't been adjusted, adjust it
+		if self.rec.start-1 <= ref_site and self.new_start is None:
+			self.new_start = self.rec.start + net_difference
+		elif self.rec.end-1 <= ref_site and self.new_end is None:
+			# If ref_site is at or past the end of the record, and the end site hasn't been adjusted, adjust it
+			# and return that we're at the end.
+			self.new_end = self.rec.end + net_difference
+		# Otherwise, do nothing -- changes to the net difference are meaningless.
+
 '''
 Col	Field	Description
 1	CHROM	Chromosome name

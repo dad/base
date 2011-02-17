@@ -3,9 +3,9 @@
 """Module for performing various basic biology operations.
 
 Original version by Jesse Bloom, 2004.
-Expanded by D. Allan Drummond, 2004-2010."""
+Expanded by D. Allan Drummond, 2004-2011."""
 #
-import re, os, sys, string, math, random
+import os, sys, string, math, random
 #-----------------------------------------------------------------------------------
 class BioUtilsError(Exception):
     """Error using one of the bio utils."""
@@ -212,11 +212,15 @@ def sequenceIdentity(aligned_seq1, aligned_seq2):
 		seq_identity = float(num_identical)/num_aligned
 	return seq_identity, num_identical, num_aligned
 #---------------------------------------------------------------------------------
-def complement(a):
+def complement(a, rna=True):
+	if rna:
+		tu = 'U'
+	else:
+		tu = 'T'
 	a = a.upper()
 	if a == "A":
-		return "T"
-	elif a == "T" or a == "U":
+		return tu
+	elif a == 'T' or a == 'U':
 		return "A"
 	elif a == "C":
 		return "G"
@@ -229,10 +233,11 @@ def reverse_complement(seq):
 	return reverseComplement(seq)
 
 def reverseComplement(seq):
+	rna = 'U' in seq.upper()
 	rc = [x for x in seq]
 	rc.reverse()
 	for i in range(len(rc)):
-		rc[i] = complement(rc[i])
+		rc[i] = complement(rc[i], rna)
 	return ''.join(rc)
 
 def get_codons_for_aa(aa, rna=True):
