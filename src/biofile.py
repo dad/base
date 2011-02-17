@@ -148,23 +148,36 @@ class CodingSequence:
 		return res
 
 	def mapPosition(self, pos):
-		# Get the offset of pos from the coding start, in nucleotides
+		# Get the index of pos in nucleotides from the coding start (from the A of the ATG), 1-based.
 		# First, find the containing exon
 		self.exons.sort(key=lambda x: x.coding_start)
 		ind = None
-		coding_length = 0
-		for i in range(len(self.exons)):
-			e = self.exons[i]
-			if e.contains(pos):
-				ind = i
-			if ind is None:
-				coding_length += e.getCodingLength()
-
 		res = None
-		if not ind is None:
-			# Get the total coding length of the previous exons, plus
-			# the displacement into the exon containing pos
-			res = coding_length + pos - self.exons[ind].coding_start + 1
+		coding_length = 0
+		if self.strand == '-':
+			# Count from the back
+			for i in range(len(self.exons)-1,-1,-1):
+				e = self.exons[i]
+				if e.contains(pos):
+					ind = i
+				if ind is None:
+					coding_length += e.getCodingLength()
+			if not ind is None:
+				# Get the total coding length of the trailing exons, plus
+				# the displacement into the exon containing pos
+				res = coding_length + (self.exons[ind].coding_end - pos) + 1
+		else:
+			# Count from the front
+			for i in range(len(self.exons)):
+				e = self.exons[i]
+				if e.contains(pos):
+					ind = i
+				if ind is None:
+					coding_length += e.getCodingLength()
+			if not ind is None:
+				# Get the total coding length of the previous exons, plus
+				# the displacement into the exon containing pos
+				res = coding_length + pos - self.exons[ind].coding_start + 1
 		return res
 
 	def getFASTAHeader(self):
@@ -527,6 +540,18 @@ class VCFRecord:
 		self.format = flds[8]
 		if len(flds)>9:
 			self.other = '/'.join(flds[9:])
+	
+	def getStrandRef(self, strand):
+		res = self.ref
+		if strand == '-':
+			res = translate.reverseComplement(self.ref)
+		return res
+
+	def getStrandAlts(self, strand):
+		res = self.alt
+		if strand == '-':
+			res = [translate.reverseComplement(a) for a in self.alt]
+		return res
 
 	def __str__(self):
 		s = "{x.chromosome}\t{x.position}\t{x.id}\t{x.ref}\t{x.alt}\t{x.qual}\t{x.filter}\t{x.info}\t{x.format}".format(x=self)
@@ -545,6 +570,7 @@ class VCFRecord:
 
 	start = property(getReferenceStart, None, None, None)
 	end = property(getReferenceEnd, None, None, None)
+	
 
 #-----------------------------------
 
