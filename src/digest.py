@@ -37,29 +37,30 @@ def digest(seq, pattern, num_missed=0):
 	if len(cleavage_sites) > 0:
 		# Now, generate set of peptides
 		for miss in range(0,num_missed+1):
-			# Loop over pairs of beginning/end
-			beg_ind = -1
-			end_ind = beg_ind + miss + 1
-			beg = 0
-			end = cleavage_sites[end_ind]
-			done = False
-			while not done: #beg < len(seq) and end <= len(seq):
-				#print beg_ind, end_ind, beg, end, len(cleavage_sites), len(seq)
-				frag = seq[beg:end]
-				if num_missed == 0:
-					frags.append(frag)
-				else:
-					frags.add(frag)
-				beg_ind += 1
-				end_ind += 1
-				if end < len(seq):
-					beg = cleavage_sites[beg_ind]
-					if end_ind < len(cleavage_sites):
-						end = cleavage_sites[end_ind]
+			if miss < len(cleavage_sites):
+				# Loop over pairs of beginning/end
+				beg_ind = -1
+				end_ind = beg_ind + miss + 1
+				beg = 0
+				end = cleavage_sites[end_ind]
+				done = False
+				while not done: #beg < len(seq) and end <= len(seq):
+					#print beg_ind, end_ind, beg, end, len(cleavage_sites), len(seq)
+					frag = seq[beg:end]
+					if num_missed == 0:
+						frags.append(frag)
 					else:
-						end = len(seq)
-				else:
-					done = True
+						frags.add(frag)
+					beg_ind += 1
+					end_ind += 1
+					if end < len(seq):
+						beg = cleavage_sites[beg_ind]
+						if end_ind < len(cleavage_sites):
+							end = cleavage_sites[end_ind]
+						else:
+							end = len(seq)
+					else:
+						done = True
 	else:
 		# No cleavages
 		frags = [seq]
@@ -117,6 +118,12 @@ def test003():
 	assert len(frags) == 1
 	print "\ttest003 passed"
 
+def test004():
+	seq = "MQFSTVASVAFVALANFVAAESAAAVSQITDGQIQATTTATTEATTTAAPSSTVETVSPSSTETISQQTENGAAKAAVGMGAGALAAAAMLL"
+	frags = digestWithEnzyme(seq, "trypsin", 1)
+	assert len(frags)>0
+	print "\ttest004 passed"
+
 if __name__ == '__main__':
 	fname = sys.argv[1]
 	if fname == "__test__":
@@ -124,6 +131,7 @@ if __name__ == '__main__':
 		test001()
 		test002()
 		test003()
+		test004()
 		print "All tests passed"
 		sys.exit()
 	patterns = sys.argv[2].split("/")
