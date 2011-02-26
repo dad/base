@@ -60,6 +60,9 @@ def digest(seq, pattern, num_missed=0):
 						end = len(seq)
 				else:
 					done = True
+	else:
+		# No cleavages
+		frags = [seq]
 	return list(frags)
 
 def digestWithEnzyme(seq, enzyme, num_missed=0):
@@ -107,12 +110,20 @@ def test002():
 	assert double_count > 0
 	print "\ttest002 passed"
 
+def test003():
+	seq = "KPAARPLLKPLLRPPK"
+	frags = digestWithEnzyme(seq, "trypsin", 0)
+	assert frags[0] == seq
+	assert len(frags) == 1
+	print "\ttest003 passed"
+
 if __name__ == '__main__':
 	fname = sys.argv[1]
 	if fname == "__test__":
 		print "Running tests..."
 		test001()
 		test002()
+		test003()
 		print "All tests passed"
 		sys.exit()
 	patterns = sys.argv[2].split("/")
