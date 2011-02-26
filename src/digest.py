@@ -1,5 +1,7 @@
-import sys, os, math, string
+import sys, os, math, string, re
 import biofile
+
+_enzymes = {"trypsin":"[KR][^P]", "lysc":"[K][*]"}
 
 def split(seq, pat):
 	frags = []
@@ -16,9 +18,60 @@ def split(seq, pat):
 		# No matches at all -- add whole sequence
 		frags.append(seq)
 	return frags
-		
 
-def digest(seq, patterns, complete=True):
+def getCleavageSites(seq, compiled_pattern):
+	cleavage_sites = set()
+	for mat in compiled_pattern.finditer(seq):
+		cleavage_sites.add(mat.start()+1)
+		sub_sites = getCleavageSites(seq[mat.start()+1:mat.end()], compiled_pattern)
+		cleavage_sites = cleavage_sites.union(sub_sites)
+	return sorted(cleavage_sites)
+		
+def digest(seq, pattern, num_missed=0):
+	pat = re.compile(pattern)
+	frags = set()
+	if num_missed == 0:
+		frags = list()
+	cleavage_sites = list(getCleavageSites(seq, pat))
+	#print ','.join([str(x) for x in cleavage_sites])
+	if len(cleavage_sites) > 0:
+		# Now, generate set of peptides
+		for miss in range(0,num_missed+1):
+			# Loop over pairs of beginning/end
+			beg_ind = -1
+			end_ind = beg_ind + miss + 1
+			beg = 0
+			end = cleavage_sites[end_ind]
+			done = False
+			while not done: #beg < len(seq) and end <= len(seq):
+				#print beg_ind, end_ind, beg, end, len(cleavage_sites), len(seq)
+				frag = seq[beg:end]
+				if num_missed == 0:
+					frags.append(frag)
+				else:
+					frags.add(frag)
+				beg_ind += 1
+				end_ind += 1
+				if end < len(seq):
+					beg = cleavage_sites[beg_ind]
+					if end_ind < len(cleavage_sites):
+						end = cleavage_sites[end_ind]
+					else:
+						end = len(seq)
+				else:
+					done = True
+	return list(frags)
+
+def digestWithEnzyme(seq, enzyme, num_missed=0):
+	res = None
+	try:
+		pat = _enzymes[enzyme]
+		res = digest(seq, pat, num_missed)
+	except KeyError, ke:
+		raise Exception, "Enzyme {0} not found".format(enzyme)
+	return res
+
+def digestOld(seq, patterns, complete=True):
 	all_frags = []
 	digest = [seq]
 	if complete:
@@ -32,16 +85,34 @@ def digest(seq, patterns, complete=True):
 
 def test001():
 	seq = "MPIMLEDYQKNFLELAIECQALRFGSFKLKSGRESPYFFNLGLFNTGKLLSNLATAYAIAIIQSDLKFDVIFGPAYKGIPLAAIVCVKLAEIGGSKFQNIQYAFNRKEAKDHGEGGIIVGSALENKRILIIDDVMTAGTAINEAFEIISNAKGQVVGSIIALDRQEVVSTDDKEGLSATQTVSKKYGIPVLSIVSLIHIITYLEGRITAEEKSKIEQYLQTYGASA"
-	pat = "K/R"
-	frags = digest(seq, pat, True)
+	seq = "MPIMLEDYQKNFLELAIECQALRFGSFKLKSGRESPYFFNLGLFNTGKLLSNLATAYAIAIIQSDLKFDVIFGPAYK"
+	frags = digestWithEnzyme(seq, "trypsin", 0)
+	#print ''.join(frags)
+	#print seq
 	assert ''.join(frags) == seq
 	print "\ttest001 passed"
+
+def test002():
+	seq = "MPIMLEDYQKNFLELAIECQALRFGSFKLKSGRESPYFFNLGLFNTGKLLSNLATAYAIAIIQSDLKFDVIFGPAYK"
+	frags = digestWithEnzyme(seq, "trypsin", 1)
+	double_count = 0
+	for frag in frags:
+		k_count = frag.count("K")
+		r_count = frag.count("R")
+		both_count = k_count + r_count
+		if both_count > 1:
+			double_count += 1
+		assert both_count < 3
+		assert both_count >= 1
+	assert double_count > 0
+	print "\ttest002 passed"
 
 if __name__ == '__main__':
 	fname = sys.argv[1]
 	if fname == "__test__":
 		print "Running tests..."
 		test001()
+		test002()
 		print "All tests passed"
 		sys.exit()
 	patterns = sys.argv[2].split("/")
