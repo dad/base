@@ -307,13 +307,15 @@ class DelimitedLineReader:
 
 	def nextDict(self, apply_handlers=True):
 		## Return fields as a dictionary, keyed by the header names
+		## If no headers, return dictionary keyed by column numbers
 		headers = self.getHeader()
 		res = None
+		flds = self.next(True, apply_handlers)
 		if not headers is None:
-			flds = self.next(True, apply_handlers)
 			res = dict(zip(headers, flds))
 		else:
-			raise ReaderError, "Attempt to return dictionary of fields, but header is empty"
+			res = dict(zip(range(len(flds)),flds))
+			#raise ReaderError, "Attempt to return dictionary of fields, but header is empty"
 		return res
 
 	def process(self, apply_handlers=True):
@@ -707,7 +709,7 @@ def test012():
 	# Comment as last line
 	n_lines = 10
 	header_list = ["str","float","int","str"]
-	fname = "tmp_normal.txt"
+	fname = "tmp_commend_last.txt"
 	makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
 	inf = file(fname, 'a')
 	inf.write("# comment\n")
@@ -720,6 +722,22 @@ def test012():
 	inf.close()
 	os.remove(fname)
 	print "** 012 comment as last line"
+
+def test013():
+	# No headers but call to nextDict
+	n_lines = 10
+	fname = "tmp_no_header.txt"
+	field_types = "sfds"
+	makeFile(fname, None, field_types, n_lines, '\t', 0.0)
+	inf = file(fname, 'r')
+	# Infer the types
+	fp = DelimitedLineReader(inf, header=False)
+	while not fp.atEnd():
+		flds = fp.nextDict()
+		assert set(flds.keys()) == set(range(len(field_types)))
+	inf.close()
+	os.remove(fname)
+	print "** 013 no headers but call to nextDict"
 
 
 def randString():
@@ -836,4 +854,5 @@ if __name__=="__main__":
 	test010()
 	test011()
 	test012()
+	test013()
 	print "** All tests passed **"
