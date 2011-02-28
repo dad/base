@@ -20,11 +20,17 @@ def split(seq, pat):
 	return frags
 
 def getCleavageSites(seq, compiled_pattern):
+	"""Get indices of sites 
+	"""
 	cleavage_sites = set()
 	for mat in compiled_pattern.finditer(seq):
 		cleavage_sites.add(mat.start()+1)
-		sub_sites = getCleavageSites(seq[mat.start()+1:mat.end()], compiled_pattern)
-		cleavage_sites = cleavage_sites.union(sub_sites)
+		sub_seq = seq[mat.start()+1:mat.end()+1]
+		#print mat.start()+1, mat.end()+1, seq, sub_seq
+		sub_sites = getCleavageSites(sub_seq, compiled_pattern)
+		# Move sub_sites forward by the placement of sub_seq in seq
+		moved_sub_sites = set([s+mat.start()+1 for s in sub_sites])
+		cleavage_sites = cleavage_sites.union(moved_sub_sites)
 	return sorted(cleavage_sites)
 		
 def digest(seq, pattern, num_missed=0):
@@ -61,6 +67,10 @@ def digest(seq, pattern, num_missed=0):
 							end = len(seq)
 					else:
 						done = True
+		if num_missed == 0:
+			# Need to remove missed cleavages due to pattern matching,
+			# e.g. "KT" matches, and needs to be broken down to "K" and "T"
+			frags = [f for f in frags if pat.match(f) is None]
 	else:
 		# No cleavages
 		frags = [seq]
@@ -124,6 +134,18 @@ def test004():
 	assert len(frags)>0
 	print "\ttest004 passed"
 
+def test005():
+	seq = "VRKT"
+	frags = digestWithEnzyme(seq, "trypsin", 0)
+	assert set(frags) == set(["VR","K","T"])
+	print "\ttest005 passed"
+
+def test006():
+	seq = "VRKT"
+	frags = digestWithEnzyme(seq, "trypsin", 1)
+	assert set(frags) == set(["VR","VRK","KT","K","T"])
+	print "\ttest006 passed"
+
 if __name__ == '__main__':
 	fname = sys.argv[1]
 	if fname == "__test__":
@@ -132,6 +154,8 @@ if __name__ == '__main__':
 		test002()
 		test003()
 		test004()
+		test005()
+		test006()
 		print "All tests passed"
 		sys.exit()
 	patterns = sys.argv[2].split("/")

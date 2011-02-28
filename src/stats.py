@@ -25,7 +25,8 @@ class Histogram:
 		self.min_val = min_val
 		self.max_val = max_val
 		self.bin_width = (max_val-min_val)/float(n_bins)
-		self.extras = []
+		self.total_count = 0
+		self._extras = []
 
 	def getBin(self, x):
 		b = -1
@@ -43,14 +44,18 @@ class Histogram:
 		if self.validBin(b):
 			self.bins[b] += 1
 		else:
-			self.extras.append(x)
+			self._extras.append(x)
+		self.total_count += 1
 
 	def printMe(self):
 		print "%s" % self
+	
+	def values(self):
+		pass
 
 	def __str__(self):
 		rep = ''
-		rep += "bin\tbin.mid\tcount\n"
+		rep += "bin\tbin.mid\tcount\tdensity\n"
 		# Don't print empty bins on tails
 		bin_min = None
 		bin_max = None
@@ -81,9 +86,14 @@ class Histogram:
 			rep += "%d\t%f\t%d\n" % (i, bin_mid, self.bins[i])
 		#if i < len(self.bins)-1:
 		#	print self.bins[i+1]
-		if len(self.extras)>0:
-			rep += "# Extras: %s\n" % (' '.join(['%s'%s for s in self.extras]),)
+		if len(self._extras)>0:
+			rep += "# Extras: %s\n" % (' '.join(['%s'%s for s in self._extras]),)
 		return rep
+	
+	def write(self, stream, header=None):
+		if header is None:
+			header = "bin\tbin.mid\tcount\tdensity\n"
+		stream.write(header)
 
 	def total(self):
 		return sum(self.bins) + len(self.extras)
