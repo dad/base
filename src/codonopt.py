@@ -40,8 +40,9 @@ if __name__=='__main__':
 	info_outs.write("# Using optimal codons for %s\n" % options.species)
 	opt_codons = cai.getOptimalCodons(options.species)
 	relad_dict = cai.getRelativeAdaptivenessValues(options.species)
+	ln_relad_dict = dict([(k,math.log(v+0.001)) for (k,v) in relad_dict.items()])
 	for (id, seq) in seqs:
-		info_outs.write("# %s Fop = %1.4f, CAI = %1.4f, GC = %1.2f\n" % (id, cai.getFop(seq, opt_codons), cai.getCAI(seq, relad_dict), cai.getGC(seq)))
+		info_outs.write("# %s Fop = %1.4f, CAI = %1.4f, GC = %1.2f\n" % (id, cai.getFop(seq, opt_codons), cai.getCAI(seq, ln_relad_dict), cai.getGC(seq)))
 
 	if options.optimize:
 		info_outs.write("# Optimizing sequences...\n")
@@ -64,7 +65,7 @@ if __name__=='__main__':
 					#opt_seq += opt_codon_dict[aa] #random.choice(codons[aa])
 					opt_seq += random.choice(codons[aa])
 				assert translate.translate(opt_seq) == prot_seq
-				header_line = "%s Fop = %1.4f, CAI = %1.4f, GC = %1.2f" % (id, cai.getFop(opt_seq, opt_codons), cai.getCAI(opt_seq, relad_dict), cai.getGC(opt_seq))
+				header_line = "%s Fop = %1.4f, CAI = %1.4f, GC = %1.2f" % (id, cai.getFop(opt_seq, opt_codons), cai.getCAI(opt_seq, ln_relad_dict), cai.getGC(opt_seq))
 				info_outs.write("# Optimized %s\n" % header_line)
 				opt_headers.append(header_line)
 				opt_seqs.append(opt_seq)
