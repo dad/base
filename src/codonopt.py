@@ -40,6 +40,9 @@ if __name__=='__main__':
 	info_outs.write("# Using optimal codons for %s\n" % options.species)
 	opt_codons = cai.getOptimalCodons(options.species)
 	relad_dict = cai.getRelativeAdaptivenessValues(options.species)
+	# DAD: cai.getCAI takes only log-transformed relative adaptiveness values.
+	# Here, knowing that some values are == 0, add 0.001.
+	# Should be using some sort of better estimator!
 	ln_relad_dict = dict([(k,math.log(v+0.001)) for (k,v) in relad_dict.items()])
 	for (id, seq) in seqs:
 		info_outs.write("# %s Fop = %1.4f, CAI = %1.4f, GC = %1.2f\n" % (id, cai.getFop(seq, opt_codons), cai.getCAI(seq, ln_relad_dict), cai.getGC(seq)))
