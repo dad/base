@@ -42,3 +42,7 @@ def alignGeneFromProtein(gene, prot_align):
 			gene_align.append(gene[j : 3 + j])
 			j += 3
 	return string.join(gene_align,'')
+
+if __name__=='__main__':
+	# Read
+	pass

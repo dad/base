@@ -144,7 +144,7 @@ barplot.err <- function(x, x.lower=x, x.upper=x, ylim=NULL, ...) {
 #}
 
 
-plot.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, add=FALSE, log='', bar.col=NULL, ...) {
+plot.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, add=FALSE, log='', bar.col=NULL, type='l', ...) {
 	if (is.null(x.lower)) x.lower = x
 	if (is.null(x.upper)) x.upper = x
 	if (is.null(y.lower)) y.lower = y

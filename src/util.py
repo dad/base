@@ -5,13 +5,29 @@ def feq(f1,f2,eps=1e-8):
 	return abs(f1-f2)<eps
 
 def printTiming(func):
+	"""Use as follows. Given a function foo(arg1,arg2), define as:
+	@util.printTiming
+	def foo(arg1,arg2):
+		<some stuff>
+	When foo(a,b) is called, printTiming will execute.
+	"""
+	# Define a wrapper function for func which stores the time before and after calling func.
 	def wrapper(*arg):
+		# Store the current time, in microseconds
 		t1 = time.time()
+		# Call the function
 		res = func(*arg)
+		# Store the current time again, in microseconds
 		t2 = time.time()
 		print '%s took %0.3f ms' % (func.func_name, (t2-t1)*1000.0)
 		return res
+	# Return the wrapper function
 	return wrapper
+
+@printTiming
+def test_printTiming(s1):
+	time.sleep(0.5)
+	print 'The next message should show at least 500ms of wait time:\n\t',
 
 class OutStreams:
 	def __init__(self, stream_list=[]):
@@ -841,7 +857,9 @@ def readTable(fname, header=True, sep='\t', header_name_processor=defaultHeader)
 
 
 if __name__=="__main__":
-	# Tests
+	# Utility function tests
+	test_printTiming('test')
+	# DelimitedLineReader tests
 	test001()
 	test002()
 	test003()
