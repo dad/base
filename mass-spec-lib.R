@@ -56,6 +56,8 @@ label.silac <- function(x, abund.f='ratio.hl.count', ratio.f="ratio.hl.normalize
 }
 
 plot.silac.updown <- function(x, count.cutoff, up.orfs, down.orfs, lab.fld="gene", abund.f="ratio.hl.count", sd.envelope=0.995, cex.pt=1, cex.gene.lab=0.6, xlim=NULL, ...) {
+	up.orfs <- as.character(up.orfs)
+	down.orfs <- as.character(down.orfs)
 	ms.sub <- subset(x, ratio.hl.count>=count.cutoff)
 	sig.sub <- ms.sub[match(c(up.orfs,down.orfs),ms.sub$orf),]
 	up.sig.sub <- ms.sub[match(up.orfs,ms.sub$orf),]
@@ -106,7 +108,7 @@ get.silac.updown <- function(x, count.cutoff=2, sd.envelope=0.95) {
 	sd.logs <- subset(x, ratio.hl.count>=max(2,count.cutoff))$ratio.hl.normalized.sd
 	sd.log.prop <- sd.envelope
 	sd.log.cutoff <- sd.logs[order(sd.logs)][ceiling(length(sd.logs)*sd.log.prop)]
-	
+
 	ms.up <- subset(ms.sub, ratio.hl.normalized.mean>1 & ratio.hl.normalized.lower.95>exp(sd.log.cutoff/sqrt(ratio.hl.count)))
 	ms.down <- subset(ms.sub, ratio.hl.normalized.mean<1 & ratio.hl.normalized.upper.95<exp(-sd.log.cutoff/sqrt(ratio.hl.count)))
 	list(up=ms.up[order(ms.up$ratio.hl.normalized.mean, decreasing=TRUE),], down=ms.down[order(ms.down$ratio.hl.normalized.mean, decreasing=FALSE),], sd.log.cutoff=sd.log.cutoff)

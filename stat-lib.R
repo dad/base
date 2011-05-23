@@ -1,8 +1,8 @@
 # For rcorr functions
-library(Hmisc)
+#library(Hmisc)
 # For principal component regression functions
-library(pls)
-source("~/research/lib/pcr-lib.R")
+#library(pls)
+#source("~/research/lib/pcr-lib.R")
 # For pcor functions
 source("~/research/lib/pcor.R")
 
@@ -219,7 +219,7 @@ pcor.covmat <- function(covmat) {
 
 pcor.pc <- function(x, y, z.mat, z.indices=NULL, method='s', ...) {
   z.mat <- as.matrix(scalerankcols(z.mat))
-  rc <- rcormat(z.mat, method=method)
+  rc <- cor(z.mat, use='pairwise.complete.obs', method=method)
   e <- eigen(rc$r)
   # Make scores
   scores <- z.mat %*% e$vectors
@@ -1217,7 +1217,8 @@ matrix.prcomp <- function(covmat, select.flds=NULL, raw.data=NULL, scores=FALSE,
 		names(res$scores) <- colnames(loadings)
 		# This is inefficient, as we're computing many more correlations than are needed.
 		df <- data.frame(raw.data[,select.flds], res$scores)
-		res$r <- rcormat(df)$r[select.flds, colnames(loadings)]
+		#res$r <- rcormat(df)$r[select.flds, colnames(loadings)]
+		res$r <- cor(df, use='pairwise.complete.obs')[select.flds, colnames(loadings)]
 		class(res$r) <- "matrix.prcomp.r.squared"
 		res$r.squared <- res$r^2
 		class(res$r.squared) <- "matrix.prcomp.r.squared"
