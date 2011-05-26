@@ -1108,25 +1108,25 @@ _yeast_relative_adaptiveness_sharp_cowe = {
 				 'TGC':0.075, 'TGG':1.000, 'TGT':1.000,
 	'TTA':0.125, 'TTC':1.000, 'TTG':1.000, 'TTT':0.124}
 
-## From Drummond unpublished 2009
-## Top 1% of genes by expression according to Holstege et al. Mol Cell 1998
+## From Drummond unpublished 2011
+## Top 5% of genes by expression, integrating over 14 mRNA datasets
 _s_cerevisiae_relative_adaptiveness = {
-	'AAA':0.1427, 'AAC':1.0000, 'AAG':1.0000, 'AAT':0.0871, 
-	'ACA':0.0398, 'ACC':0.9480, 'ACG':0.0061, 'ACT':1.0000, 
-	'AGA':1.0000, 'AGC':0.0557, 'AGG':0.0018, 'AGT':0.0186, 
-	'ATA':0.0082, 'ATC':1.0000, 'ATT':0.7766, 'CAA':1.0000, 
-	'CAC':1.0000, 'CAG':0.0027, 'CAT':0.2646, 'CCA':1.0000, 
-	'CCC':0.0116, 'CCG':0.0000, 'CCT':0.0882, 'CGA':0.0000, 
-	'CGC':0.0018, 'CGG':0.0000, 'CGT':0.1774, 'CTA':0.0654, 
-	'CTC':0.0014, 'CTG':0.0028, 'CTT':0.0057, 'GAA':1.0000, 
-	'GAC':1.0000, 'GAG':0.0145, 'GAT':0.6601, 'GCA':0.0130, 
-	'GCC':0.3136, 'GCG':0.0024, 'GCT':1.0000, 'GGA':0.0065, 
-	'GGC':0.0239, 'GGG':0.0065, 'GGT':1.0000, 'GTA':0.0000, 
-	'GTC':0.8040, 'GTG':0.0108, 'GTT':1.0000, 'TAC':1.0000, 
-	'TAT':0.0660, 'TCA':0.0557, 'TCC':0.6288, 'TCG':0.0000, 
-	'TCT':1.0000, 'TGC':0.2621, 'TGT':1.0000, 'TTA':0.1892, 
-	'TTC':1.0000, 'TTG':1.0000, 'TTT':0.1624, 'ATG':1.0000, 'TGG':1.0000}
-
+ 	'AAA':0.3814, 'AAC':1.0000, 'AAG':1.0000, 'AAT':0.3759,
+ 	'ACA':0.2352, 'ACC':0.7998, 'ACG':0.0424, 'ACT':1.0000,
+ 	'AGA':1.0000, 'AGC':0.1135, 'AGG':0.0415, 'AGT':0.1607,
+ 	'ATA':0.1409, 'ATC':0.9370, 'ATT':1.0000, 'ATG':1.0000,
+ 	'CAA':1.0000, 'CAC':1.0000, 'CAG':0.0961, 'CAT':0.6014,
+ 	'CCA':1.0000, 'CCC':0.0463, 'CCG':0.0410, 'CCT':0.2576,
+ 	'CGA':0.0173, 'CGC':0.0184, 'CGG':0.0071, 'CGT':0.2366,
+ 	'CTA':0.1732, 'CTC':0.0288, 'CTG':0.0479, 'CTT':0.0893,
+ 	'GAA':1.0000, 'GAC':1.0000, 'GAG':0.1188, 'GAT':0.9319,
+ 	'GCA':0.1202, 'GCC':0.4108, 'GCG':0.0229, 'GCT':1.0000,
+ 	'GGA':0.0517, 'GGC':0.0905, 'GGG':0.0193, 'GGT':1.0000,
+ 	'GTA':0.0976, 'GTC':0.7005, 'GTG':0.0824, 'GTT':1.0000,
+ 	'TAA':1.0000, 'TAC':1.0000, 'TAG':0.1229, 'TAT':0.3537,
+ 	'TCA':0.2262, 'TCC':0.6525, 'TCG':0.0616, 'TCT':1.0000,
+ 	'TGA':0.1102, 'TGC':0.1905, 'TGG':1.0000, 'TGT':1.0000,
+ 	'TTA':0.3499, 'TTC':1.0000, 'TTG':1.0000, 'TTT':0.4590}
 
 # compute natural logs of relative adaptivenesses
 _ln_s_cerevisiae_relative_adaptiveness = logRelativeAdaptiveness(_s_cerevisiae_relative_adaptiveness)
