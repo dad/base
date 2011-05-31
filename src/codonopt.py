@@ -3,7 +3,7 @@ import cai, translate, util, biofile
 from optparse import OptionParser
 
 if __name__=='__main__':
-	parser = OptionParser(usage="%prog [options] sequence")
+	parser = OptionParser(usage="%prog [options] <sequence|FASTA filename>")
 	parser.add_option("-o", "--out", dest="out_fname", type="string", default=None, help="output filename")
 	parser.add_option("-r", "--reverse-translate", dest="reverse_translate", action="store_true", help="interpret sequences as amino acids, and convert back to codons?")
 	parser.add_option("--species", dest="species", type="string", default="scer", help="species for identifying optimal codons")

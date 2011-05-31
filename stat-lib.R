@@ -1477,10 +1477,10 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
     at <- seq(trans(xlim[1]), trans(xlim[2]), length.out=length.out)
 
 	if (log) {log.str <- "x"} else {log.str <- ""}
-	plot(inv.trans(at), densities[[1]](at), type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, ...)
+	plot(c(0,inv.trans(at),1.0), c(0,densities[[1]](at),1.0), type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, ...)
 	for (i in 1:length(x)) {
 		d <- densities[[i]]
-		lines(inv.trans(at), d(at), col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+		lines(c(0,inv.trans(at),1.0), c(0,d(at),1.0), col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
 	}
 
 	if (!is.null(legend.at)) {
