@@ -1614,7 +1614,7 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 	d <- densities[[1]]
 	plot(inv.trans(d$x), d$y*relative.heights[[1]]/height.div, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, ...)
 	if (use.log.axis) {
-		my.axis(1, xlim, log=TRUE)
+		my.axis(1, xlim, log=TRUE, expand.range=FALSE)
 	}
 	for (i in 1:length(x)) {
 		d <- densities[[i]]
