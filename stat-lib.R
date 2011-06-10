@@ -1495,9 +1495,10 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 }
 
 ## Takes a list of variables, plots kernel densities
-multi.density <- function(x, log=F, kernel="r", bw='nrd0', col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
-	equal.height=F, relative.heights=NULL, xlab="x", ylab="Density", weight.list=NULL, cex.legend=1, points=FALSE, points.pch=NA, ...) {
+multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
+	equal.height=FALSE, relative.heights=NULL, max.height=1.0, xlab="x", ylab="Density", weight.list=NULL, cex.legend=1, points=FALSE, points.pch=NA, ...) {
 	extra.args <- list(...)
+	log.transform <- log
 	if (is.data.frame(x) || is.matrix(x)) {
 		col.names <- colnames(x)
 		x <- lapply(1:ncol(x),function(m){x[,m]})
@@ -1514,7 +1515,7 @@ multi.density <- function(x, log=F, kernel="r", bw='nrd0', col=NULL, lty="solid"
 	ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
 	lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))
 	#cat("h2\n")
-	if (log) {
+	if (log.transform) {
 		trans <- log10
 		inv.trans <- function(y) {10^y}
 	}
@@ -1538,22 +1539,33 @@ multi.density <- function(x, log=F, kernel="r", bw='nrd0', col=NULL, lty="solid"
 		d
 		})
 	#cat("h4\n")
-	max.heights <- lapply(densities, function(d) {max(d$y, na.rm=T)})
-	max.height <- max(unlist(max.heights), na.rm=T)
+	data.max.heights <- sapply(densities, function(d) {max(d$y, na.rm=T)})
+	data.max.height <- max(unlist(data.max.heights), na.rm=T)
 	set.rel.heights <- !is.null(relative.heights)
+	set.max.height <- !is.null(max.height)
+	## Set relative heights?
 	if (set.rel.heights) {
 		relative.heights <- relative.heights/max(relative.heights, na.rm=T)
-		equal.height=T
+		# DAD: this is a hack.
+		equal.height=TRUE
 	}
 	else {
 		relative.heights <- rep(1,length(x))
 	}
+	## Set maximum heights?
+	if (set.max.height) {
+		relative.heights <- max.height*data.max.heights/data.max.height
+		# DAD: hack! Should be called something else.
+		equal.height=TRUE
+	} else {
+		max.height <- data.max.height
+	}
+
 	if (is.null(ylim)) {
 		if (equal.height) {
-			ylim=c(0,1.05)
-		}
-		else {
 			ylim=c(0,1.05*max.height)
+		} else {
+			ylim=c(0,1.05*data.max.height)
 		}
 	}
 
@@ -1586,18 +1598,29 @@ multi.density <- function(x, log=F, kernel="r", bw='nrd0', col=NULL, lty="solid"
 		}
 	}
 
+	# Use prettier log axis if xaxt is unset
+	use.log.axis <- FALSE
+	xaxt <- extra.args$xaxt
+	if (is.null(xaxt) & log.transform) {
+		use.log.axis <- TRUE
+		xaxt <- 'n'
+	}
+
 	## Plot the first dataset
 	if (log) {log.str <- "x"} else {log.str <- ""}
 	if (equal.height) {height.div <- max.height} else {height.div <- 1.0}
 
 	## Actually plot the data
 	d <- densities[[1]]
-	plot(inv.trans(d$x), d$y*relative.heights[[1]]/height.div, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, ...)
+	plot(inv.trans(d$x), d$y*relative.heights[[1]]/height.div, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, ...)
+	if (use.log.axis) {
+		my.axis(1, xlim, log=TRUE)
+	}
 	for (i in 1:length(x)) {
 		d <- densities[[i]]
 		height.div <- 1.0
 		if (equal.height) {
-			height.div <- max.heights[[i]]
+			height.div <- data.max.heights[[i]]
 		}
 		if (fill) {
 			# Put tails on either side so that density goes to zero and polygon has a flat bottom.
@@ -1630,7 +1653,7 @@ multi.density <- function(x, log=F, kernel="r", bw='nrd0', col=NULL, lty="solid"
 
 multidens <- multi.density
 
-multi.lm <- function(response, predictors, data, rank=F, na.last=T){
+multi.lm <- function(response, predictors, data, rank=FALSE, na.last=TRUE){
 	if (rank) {
 		data <- rankcols(data[append(response,predictors)], na.last=na.last)
 	}
