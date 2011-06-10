@@ -1539,34 +1539,35 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 		d
 		})
 	#cat("h4\n")
+
+	## Peak height logic
 	data.max.heights <- sapply(densities, function(d) {max(d$y, na.rm=T)})
 	data.max.height <- max(unlist(data.max.heights), na.rm=T)
 	set.rel.heights <- !is.null(relative.heights)
 	set.max.height <- !is.null(max.height)
+	# By default, max. heights are given by data
+	abs.max.heights <- unlist(data.max.heights)
+
 	## Set relative heights?
 	if (set.rel.heights) {
+		# Normalize the passed-in relative.heights variable
 		relative.heights <- relative.heights/max(relative.heights, na.rm=T)
-		# DAD: this is a hack.
-		equal.height=TRUE
+		# Set max. height later; assume 1.0 for now.
+		abs.max.heights <- relative.heights
 	}
-	else {
-		relative.heights <- rep(1,length(x))
+
+	## Make all equal height?
+	if (equal.height) {
+		abs.max.heights <- rep(1, length(x))
 	}
+
 	## Set maximum heights?
 	if (set.max.height) {
-		relative.heights <- max.height*data.max.heights/data.max.height
-		# DAD: hack! Should be called something else.
-		equal.height=TRUE
-	} else {
-		max.height <- data.max.height
+		abs.max.heights <- max.height*abs.max.heights/max(abs.max.heights,na.rm=T)
 	}
 
 	if (is.null(ylim)) {
-		if (equal.height) {
-			ylim=c(0,1.05*max.height)
-		} else {
-			ylim=c(0,1.05*data.max.height)
-		}
+		ylim = c(0,1.05*max(abs.max.heights))
 	}
 
 	## X limits
@@ -1590,7 +1591,7 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 		}
 	}
 	if (missing(ylab) | is.null(ylab)) {
-		if (equal.height) {
+		if (equal.height | set.rel.heights | set.max.height) {
 			ylab <- "Peak-normalized density"
 		}
 		else {
@@ -1608,11 +1609,10 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 
 	## Plot the first dataset
 	if (log) {log.str <- "x"} else {log.str <- ""}
-	if (equal.height) {height.div <- max.height} else {height.div <- 1.0}
 
 	## Actually plot the data
 	d <- densities[[1]]
-	plot(inv.trans(d$x), d$y*relative.heights[[1]]/height.div, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, ...)
+	plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, ...)
 	if (use.log.axis) {
 		my.axis(1, xlim, log=TRUE, expand.range=FALSE)
 	}
@@ -1624,10 +1624,10 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 		}
 		if (fill) {
 			# Put tails on either side so that density goes to zero and polygon has a flat bottom.
-			polygon(inv.trans(c(min(d$x),d$x,max(d$x))), relative.heights[[i]]*c(0,d$y,0)/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+			polygon(inv.trans(c(min(d$x),d$x,max(d$x))), abs.max.heights[[i]]*c(0,d$y/data.max.heights[[i]],0), col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
 		}
 		else {
-			lines(inv.trans(d$x), relative.heights[[i]]*d$y/height.div, col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+			lines(inv.trans(d$x), abs.max.heights[[i]]*d$y/data.max.heights[[i]], col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
 		}
 	}
 
