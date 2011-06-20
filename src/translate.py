@@ -58,11 +58,15 @@ for (cod,aa) in _scer_mito_code_alts.items():
 	_scer_mito_code[cod] = aa
 	_scer_mito_code[cod.replace('U','T')] = aa
 
-def geneticCode(code=None):
+def geneticCode(rna, code=None):
 	res = _genetic_code
 	if not code is None:
 		if code == 'scer-mito':
 			res = _scer_mito_code
+	if rna:
+		res = dict([(k,v) for (k,v) in res.items() if not 'T' in k])
+	else:
+		res = dict([(k,v) for (k,v) in res.items() if not 'U' in k])
 	return res
 
 #--------------------------------------------------------------------------------
@@ -161,19 +165,6 @@ def randomReverseTranslate(prot, rna=False):
 		gene += codon
 	#print sequenceDiffs(prot, translate.TranslateRaw(gene))
 	return gene
-
-def DNACodons():
-	return _dna_codons
-
-def RNACodons():
-	return _rna_codons
-
-def AADNACodons():
-	return _aa_dna_codons
-
-def AARNACodons():
-	return _aa_rna_codons
-
 
 _three_letter_codes = {
 	'A':'Ala', 'C':'Cys', 'D':'Asp', 'E':'Glu', 'F':'Phe', 'G':'Gly', 'H':'His', 'I':'Ile', 'K':'Lys', 'L':'Leu', 'M':'Met', 'N':'Asn', 'P':'Pro', 'Q':'Gln', 'R':'Arg', 'S':'Ser', 'T':'Thr', 'V':'Val', 'W':'Trp', 'Y':'Tyr'}
@@ -277,5 +268,17 @@ def AAs():
 
 def AAsAndStop():
 	return AAs()+'*'
+
+def DNACodons():
+	return _dna_codons
+
+def RNACodons():
+	return _rna_codons
+
+def AADNACodons():
+	return _aa_dna_codons
+
+def AARNACodons():
+	return _aa_rna_codons
 
 # End translate.py

@@ -53,7 +53,7 @@ def getCodonProbabilitiesForMultipleSequences(seqs, pseudocount):
 	return (codon_prob, codon_prob_from_nucleotide, codon_freq, nucleotide_freq)
 
 def getSYangNielsen(seq, codon_prob, codon_prob_from_nt, pseudocount):
-	gc = translate.geneticCode()
+	gc = translate.geneticCode(rna=False)
 	# Compute normalizations for conditional probabilities of a codon given an amino acid
 	alt_codons = {}
 	cond_normalization = {}
@@ -99,7 +99,7 @@ def getSYangNielsenNoMutBias(seq, codon_prob, codon_prob_from_nt, pseudocount):
 			sum_sc += sum_sc_i
 	return sum_sc/len(gene_codons)
 
-class CodingFrequencies:
+class CodingFrequencies(object):
 	def __init__(self, pseudocount=0):
 		# Track the frequency of each codon relative to its synonyms
 		self.codon_freqs = {}
@@ -108,12 +108,12 @@ class CodingFrequencies:
 		# Track the frequency of each nucleotide relative to all nucleotides
 		self.nucleotide_freqs = {}
 		self.nucleotide_counts = 0
-		self.gc = translate.geneticCode()
+		self.gc = translate.geneticCode(rna=False)
 		self.pseudocount = pseudocount
 
 		for nt in 'ACGT':
 			self.nucleotide_freqs[nt] = 0
-		for aa in translate.AAs():
+		for aa in translate.AAsAndStop():
 			codons = translate.getCodonsForAA(aa, rna=False)
 			for codon in codons:
 				self.codon_freqs[codon] = 0
@@ -140,6 +140,13 @@ class CodingFrequencies:
 	def addCodons(self, codons):
 		for codon in codons:
 			self.countCodon(codon)
+	
+	def addGene(self, gene):
+		self.addCodons(splitByFrame(gene,0))
+	
+	def addGenes(self, genes):
+		for g in genes:
+			self.addGene(g)
 
 	def getNucleotideProportion(self, nucleotide):
 		nt_count = self.nucleotide_counts
@@ -179,6 +186,34 @@ class CodingFrequencies:
 
 	def getAACount(self, aa):
 		return self.aa_counts[aa]
+	
+	# Relative synonymous codon usage as defined in Sharp and Li NAR 1987.
+	# RSCU(codon) = n(codon)*degeneracy(aa)/n(aa)
+	def getRelativeSynonymousCodonUsage(self):
+		# RSCU is a dictionary keyed by codon
+		rscu = {}
+		gc = translate.geneticCode(rna=False)
+		aa_codons = translate.DNACodons()
+		for codon in aa_codons:
+			ncodon = self.getCodonCount(codon) + self.pseudocount
+			naa = self.getAACount(gc[codon]) + self.pseudocount
+			deg = len(translate.getSynonyms(codon,rna=False))
+			rscu[codon] = ncodon*deg/float(naa)
+		return rscu
+
+	def getRelativeAdaptiveness(self):
+		rscus = self.getRelativeSynonymousCodonUsage()
+		return self.getRelativeAdaptivenessFromRSCUs(rscus, rna=False)
+
+	def getRelativeAdaptivenessFromRSCUs(self, rscu_dict):
+		relad = {}
+		for aa in translate.AAsAndStop():
+			codons = translate.getCodonsForAA(aa, rna=False)
+			# Normalize for maximum RSCU in this family
+			max_rscu = max([rscu_dict[c] for c in codons])
+			for c in codons:
+				relad[c] = rscu_dict[c]/max_rscu
+		return relad
 
 	def getSelectionCoefficient(self, from_codon, to_codon):
 		sc = None
@@ -193,6 +228,13 @@ class CodingFrequencies:
 			assert to_p > 0.0
 			sc = math.log(to_p/from_p) - sum([math.log(np(to_codon[i])/np(from_codon[i])) for i in range(3)])
 		return sc
+	
+	def write(self, outstream):
+		for aa in translate.AAsAndStop():
+			outstream.write('{0}\t{1}\n'.format(aa, self.getAACount(aa)))
+		for aa in translate.AAsAndStop():
+			for codon in sorted(translate.getCodonsForAA(aa)):
+				outstream.write('{0}\t{1}\t{2}\n'.format(aa, codon, self.getCodonCount(codon)))
 
 def estimateSelectionCoefficientForCodon(codon, cons_cf, var_cf):
 	aa = translate.translate(codon)
@@ -628,7 +670,7 @@ def splitByFrame(nts, frame_index):
 		codon_list += [nts[3*n+frame_index:len(nts)]]
 	return codon_list
 
-def test_sbf():
+def test_splitByFrame():
 	# Tests the split_by_frame function
 	gene1 = 'ATGGATTAGAC'
 	gene2 = 'GATACCCAG'
@@ -790,6 +832,8 @@ def getMHOptimalityTables(left, right, nopFxn):
 
 	return [x for x in tables.values() if (getSum(x) > 0)]
 
+genetic_code = translate.geneticCode(rna=False)
+'''
 genetic_code = {'TTT':'F', 'TTC':'F', 'TTA':'L', 'TTG':'L', 'CTT':'L', 'CTC':'L',
 		'CTA':'L', 'CTG':'L', 'ATT':'I', 'ATC':'I', 'ATA':'I', 'ATG':'M', 'GTT':'V',
 		'GTC':'V', 'GTA':'V', 'GTG':'V', 'TCT':'S', 'TCC':'S', 'TCA':'S',
@@ -801,30 +845,33 @@ genetic_code = {'TTT':'F', 'TTC':'F', 'TTA':'L', 'TTG':'L', 'CTT':'L', 'CTC':'L'
 		'TGT':'C', 'TGC':'C', 'TGA':'*', 'TGG':'W', 'CGT':'R',
 		'CGC':'R', 'CGA':'R', 'CGG':'R', 'AGT':'S', 'AGC':'S', 'AGA':'R',
 		'AGG':'R', 'GGT':'G', 'GGC':'G', 'GGA':'G', 'GGG':'G'}
-
+'''
+# DAD: should use translate content here
 _aa_codons = [k for k in genetic_code.keys() if genetic_code[k] != "*"]
 _syn_codons = dict([(v,k) for (k,v) in genetic_code.items() if v != "*"]).values() + ['TGA','TAG','TAA']
 _degeneracy = dict([(c, genetic_code.values().count(genetic_code[c])) for c in genetic_code.keys()])
 _aas = 'ACDEFGHIKLMNPQRSTVWY'
 _deg_aas = 'ACDEFGHIKLNPQRSTVY'
 
+
 # Relative synonymous codon usage as defined in Sharp and Li NAR 1987.
 # RSCU(codon) = n(codon)*degeneracy(aa)/n(aa)
-def relative_synonymous_codon_usage(gene):
+def getRelativeSynonymousCodonUsage(gene, pseudocount=0, ):
 	prot = translate.TranslateRaw(gene)
 	codons = splitByFrame(gene,0)
 	#base_usage = dict([(aa, prot.count(aa)) for aa in _aas])
 	rscu = {}
+	gc = translate.geneticCode()
 	for codon in _aa_codons:
 		ncodon = codons.count(codon)
-		aa = translate._genetic_code[codon]
+		aa = gc[codon]
 		naa = prot.count(aa)
 		deg = _degeneracy[codon]
 		rscu[codon] = ncodon*deg/float(naa)
 	return rscu
 
 def getRelativeAdaptiveness(gene):
-	rscus = relative_synonymous_codon_usage(gene)
+	rscus = getRelativeSynonymousCodonUsage(gene)
 	return getRelativeAdaptivenessFromRSCUs(rscus, rna=False)
 
 def getRelativeAdaptivenessFromRSCUs(rscus, rna=False):
@@ -850,7 +897,7 @@ def logRelativeAdaptiveness(relad):
 # weights obtained by regressing a target variable (say,
 # expression level) on RSCU.
 def wRSCU(gene, weights):
-	freqs = relative_synonymous_codon_usage(gene)
+	freqs = getRelativeSynonymousCodonUsage(gene)
 	wts = [weights[codon]*freqs[codon] for codon in freqs.keys()]
 	wrscu_val = sum(wts)/len(wts)
 	return wrscu_val
