@@ -17,6 +17,11 @@ ep <- function(x) {
 	eval(parse(text=x))
 }
 
+# Subset with text conditions, good for dynamic subsets
+tsubset <- function(x,cond.text) {
+	subset(x, eval(parse(text=cond.text)))
+}
+
 catn <- function(s, sep='') {
   cat(paste(s, sep=sep),'\n')
 }
