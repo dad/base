@@ -1,4 +1,4 @@
-import time, os, random, string, sys
+import time, os, random, string, sys, math
 
 # Float equality.  On my system (WinXP, Python 2.6), smallest distinguishable float difference is 7.45e-9.
 def feq(f1,f2,eps=1e-8):
@@ -68,7 +68,14 @@ def isComment(s, comment_char='#'):
 	return res
 
 def isNA(x):
-	return x is None or x == 'NA' or x == ''
+	res = x is None
+	if not res:
+		if type(x) == str:
+			x = x.upper()
+			res = (x=='NA' or x=='' or x=='NAN')
+		elif type(x) == float:
+			res = math.isnan(x)
+	return res
 
 def strNA(x):
 	if isNA(x):
@@ -826,7 +833,7 @@ class LightDataFrame:
 
 	def getHeaders(self):
 		return self._headers
-		
+
 	def __str__(self):
 		return "** not implemented **"
 
