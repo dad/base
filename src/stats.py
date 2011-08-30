@@ -268,7 +268,7 @@ def median(numlist):
     assert isinstance(numlist, list)
     xlist = []  # make a copy of the list
     for x in numlist:
-		if isinstance(x, (int, float)):
+		if isinstance(x, (int, float, long)):
 			xlist.append(x)
 		elif x in [None, '-']:
 			pass
