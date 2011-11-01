@@ -76,7 +76,7 @@ def getSYangNielsen(seq, codon_prob, codon_prob_from_nt, pseudocount):
 	return sum_sc/len(gene_codons)
 
 def getSYangNielsenNoMutBias(seq, codon_prob, codon_prob_from_nt, pseudocount):
-	gc = translate.geneticCode()
+	gc = translate.geneticCode(rna=False)
 	# Compute normalizations for conditional probabilities of a codon given an amino acid
 	alt_codons = {}
 	cond_normalization = {}
@@ -217,7 +217,7 @@ class CodingFrequencies(object):
 
 	def getSelectionCoefficient(self, from_codon, to_codon):
 		sc = None
-		gc = translate.geneticCode()
+		gc = translate.geneticCode(rna=False)
 		if gc[from_codon] == gc[to_codon]:
 			# Y = to, X = from
 			# s_X->Y = ln p_X/p_Y - sum_i ln p_X_i/p_Y_i
@@ -452,7 +452,7 @@ def conservedAAunconservedCodon(site, master_prot, other_prots, master_codon, ot
 def splitByConservation(conservationFxn, master_cdna, master_prot, other_cdnas, other_prots, n_terminal_start=0):
 	""" Divide cDNA into conserved and variable portions based on conservationFxn.
 	"""
-	gc = translate.geneticCode()
+	gc = translate.geneticCode(rna=False)
 	all_tables = []
 	# One table per amino acid class per gene
 	dna_codon_map = {}
@@ -521,7 +521,7 @@ def test_splitByConservation():
 
 # The functions getCodonCounts() and getAkashi2x2TablesForORF() are for inverse-Akashi analyses.
 def getCodonCounts(conservationFxn, master_cdna, master_prot, other_cdnas, other_prots, n_terminal_start=0):
-	gc = translate.geneticCode()
+	gc = translate.geneticCode(rna=False)
 	all_tables = []
 	# One table per amino acid class per gene
 	conserved_codon_counts = {}
@@ -571,7 +571,7 @@ def getCodonCounts(conservationFxn, master_cdna, master_prot, other_cdnas, other
 def getAkashi2x2TablesForORF(conservationFxn, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount, n_terminal_start):
 	# Now build the tables for this gene
 	# Compute conserved--preferred association using each codon as preferred in turn
-	gc = translate.geneticCode()
+	gc = translate.geneticCode(rna=False)
 	(conserved_codon_counts, variable_codon_counts) = getCodonCounts(conservationFxn, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, n_terminal_start)
 	gene_codon_tables = {}
 	for codon in translate.AADNACodons():
@@ -861,7 +861,7 @@ def getRelativeSynonymousCodonUsage(gene, pseudocount=0, ):
 	codons = splitByFrame(gene,0)
 	#base_usage = dict([(aa, prot.count(aa)) for aa in _aas])
 	rscu = {}
-	gc = translate.geneticCode()
+	gc = translate.geneticCode(rna=False)
 	for codon in _aa_codons:
 		ncodon = codons.count(codon)
 		aa = gc[codon]
