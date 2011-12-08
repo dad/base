@@ -11,7 +11,7 @@ if __name__=='__main__':
 	parser.add_option("-p", "--optimize", dest="optimize", action="store_true", default=False, help="optimize the codons?")
 
 	(options, args) = parser.parse_args()
-	seq = args[0]
+	seq = args[0].upper()
 
 	# Start up output
 	info_outs = util.OutStreams([sys.stdout])
@@ -62,7 +62,7 @@ if __name__=='__main__':
 	# If optimization is desired, do it.
 	if options.optimize:
 		info_outs.write("# Optimizing sequences...\n")
-		gc = translate.geneticCode()
+		gc = translate.geneticCode(rna=False)
 		codons = {}
 		opt_codon_dict = dict([(gc[c],c) for c in opt_codons])
 		opt_codon_dict['W'] = 'TGG'
