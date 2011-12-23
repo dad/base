@@ -1,5 +1,8 @@
 import time, os, random, string, sys, math
 
+# Definition of the default NA string.
+NA = 'NA'
+
 # Float equality.  On my system (WinXP, Python 2.6), smallest distinguishable float difference is 7.45e-9.
 def feq(f1,f2,eps=1e-8):
 	return abs(f1-f2)<eps
@@ -72,14 +75,14 @@ def isNA(x):
 	if not res:
 		if type(x) == str:
 			x = x.upper()
-			res = (x=='NA' or x=='' or x=='NAN')
+			res = (x==NA or x=='' or x=='NAN')
 		elif type(x) == float:
 			res = math.isnan(x)
 	return res
 
 def strNA(x):
 	if isNA(x):
-		return "NA"
+		return NA
 	else:
 		return str(x)
 
@@ -92,13 +95,13 @@ def formatNAOld(x, format, sep=None):
 		res = []
 		for i in range(len(x)):
 			if isNA(x[i]):
-				res.append("NA")
+				res.append(NA)
 			else:
 				res.append(flds[i] % x[i])
 		return sep.join(res)
 	else:
 		if isNA(x):
-			return "NA"
+			return NA
 		else:
 			return format % x
 
@@ -117,9 +120,32 @@ def formatNA(x, format="{0}", sep=None):
 		return sep.join(res)
 	else:
 		if isNA(x):
-			return "NA"
+			return NA
 		else:
 			return format.format(x)
+
+""" Class for applying formatting automatically.
+"""
+class FieldFormatter:
+	def __init__(self, var, format, transform=lambda x: x):
+		self.var = var
+		self.format = format
+		self.transform = transform
+
+	def __str__(self):
+		res = None
+		if not isNA(self.var):
+			try:
+				trans_var = self.transform(self.var)
+				res = self.format.format(trans_var)
+			except ValueError:
+				pass
+			except TypeError:
+				pass
+		else:
+			res = NA
+		return res
+
 
 def looseIntParser(x):
 	v = None
