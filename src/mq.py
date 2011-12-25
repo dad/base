@@ -76,7 +76,7 @@ class ProteinQuant(object):
 	def getIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
 		for pep in self.peptides:
-			intens = pep.getIntensity()
+			intens = pep.intensity
 			if not util.isNA(intens):
 				acc.add(intens)
 		return acc.getSummary()
@@ -88,7 +88,7 @@ class ProteinQuant(object):
 	def getHeavyIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
 		for pep in self.peptides:
-			intens = pep.getHeavyIntensity()
+			intens = pep.heavy_intensity
 			if not util.isNA(intens):
 				acc.add(intens)
 		return acc.getSummary()
@@ -100,7 +100,7 @@ class ProteinQuant(object):
 	def getLightIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
 		for pep in self.peptides:
-			intens = pep.getLightIntensity()
+			intens = pep.light_intensity
 			if not util.isNA(intens):
 				acc.add(intens)
 		return acc.getSummary()
@@ -150,6 +150,10 @@ class ProteinQuant(object):
 		for pep in self.getPeptides():
 			for r in pep.getNormalizedHeavyLightRatios():
 				yield r
+	
+	@property
+	def key(self):
+		return self.id
 
 
 class PeptideData(object):
@@ -174,7 +178,7 @@ class PeptideDetectionEvent(object):
 
 class PeptideQuant(object):
 	def __init__(self, key):
-		self.key = key
+		self._key = key
 		self.sequence = None
 		self.mod_sequence = None
 		self.heavy_light_ratio_list = []
@@ -184,6 +188,10 @@ class PeptideQuant(object):
 		self._msms_count = 0
 		self._parent_proteins = set()
 		self._slices = set()
+
+	@property
+	def key(self):
+		return self._key
 
 	def add(self, pep_data):
 		if self.sequence is None:
@@ -245,7 +253,8 @@ class PeptideQuant(object):
 				acc.add(math.log(ratio))
 		return acc.getSummary()
 
-	def getHeavyLightRatio(self):
+	@property
+	def ratio(self):
 		res = None
 		med = self.getHeavyLightRatioSummary().median
 		if not util.isNA(med):
@@ -259,7 +268,8 @@ class PeptideQuant(object):
 				acc.add(math.log(ratio))
 		return acc.getSummary()
 
-	def getNormalizedHeavyLightRatio(self):
+	@property
+	def normalized_ratio(self):
 		res = None
 		med = self.getNormalizedHeavyLightRatioSummary().median
 		if not util.isNA(med):
@@ -276,8 +286,9 @@ class PeptideQuant(object):
 				acc.add(intens)
 		return acc.getSummary()
 
-	def getIntensity(self):
-		return self.getHeavyIntensity() + self.getLightIntensity()
+	@property
+	def intensity(self):
+		return self.light_intensity + self.heavy_intensity
 
 	def getHeavyIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
@@ -286,7 +297,8 @@ class PeptideQuant(object):
 				acc.add(intens)
 		return acc.getSummary()
 
-	def getHeavyIntensity(self):
+	@property
+	def heavy_intensity(self):
 		return self.getHeavyIntensitySummary().sum
 
 	def getLightIntensitySummary(self):
@@ -296,7 +308,8 @@ class PeptideQuant(object):
 				acc.add(intens)
 		return acc.getSummary()
 
-	def getLightIntensity(self):
+	@property
+	def light_intensity(self):
 		return self.getLightIntensitySummary().sum
 
 	@property
@@ -326,12 +339,10 @@ class PeptideQuant(object):
 	def slices(self):
 		for s in self._slices:
 			yield s
-
-	intensity = property(getIntensity)
-	intensity_h = property(getHeavyIntensity)
-	intensity_l = property(getLightIntensity)
-	ratio_hl = property(getHeavyLightRatio)
-	ratio_hl_normalized = property(getNormalizedHeavyLightRatio)
+	
+	@property
+	def n_slices(self):
+		return len(self._slices)
 
 	def __str__(self):
 		line = self.key
