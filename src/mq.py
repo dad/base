@@ -39,9 +39,6 @@ class ProteinQuant(object):
 		pq.peptide_dict = dict(self.peptide_dict.items())
 		return pq
 
-	def getPeptides(self):
-		return self.peptide_dict.values()
-
 	def getNormalizedHeavyLightRatioSummary(self):
 		acc = stats.Accumulator(store=True)
 		for pep in self.peptide_dict.values():
@@ -51,7 +48,8 @@ class ProteinQuant(object):
 		s = acc.getSummary()
 		return s
 
-	def getNormalizedHeavyLightRatio(self):
+	@property
+	def normalized_ratio(self):
 		res = None
 		med = self.getNormalizedHeavyLightRatioSummary().median
 		if not util.isNA(med):
@@ -67,7 +65,8 @@ class ProteinQuant(object):
 		s = acc.getSummary()
 		return s
 
-	def getHeavyLightRatio(self):
+	@property
+	def ratio(self):
 		res = None
 		med = self.getHeavyLightRatioSummary().median
 		if not util.isNA(med):
@@ -82,7 +81,8 @@ class ProteinQuant(object):
 				acc.add(intens)
 		return acc.getSummary()
 
-	def getIntensity(self):
+	@property
+	def intensity(self):
 		return self.getIntensitySummary().sum
 
 	def getHeavyIntensitySummary(self):
@@ -93,7 +93,8 @@ class ProteinQuant(object):
 				acc.add(intens)
 		return acc.getSummary()
 
-	def getHeavyIntensity(self):
+	@property
+	def heavy_intensity(self):
 		return self.getHeavyIntensitySummary().sum
 
 	def getLightIntensitySummary(self):
@@ -104,19 +105,9 @@ class ProteinQuant(object):
 				acc.add(intens)
 		return acc.getSummary()
 
-	def getLightIntensity(self):
+	@property
+	def light_intensity(self):
 		return self.getLightIntensitySummary().sum
-
-	def getAbundance(self):
-		return self.getIntensity()/self.n_peptides
-
-	def getHeavyAbundance(self):
-		# DAD: should isolate heavy peptides.
-		return self.getHeavyIntensity()/self.n_peptides
-
-	def getLightAbundance(self):
-		# DAD: should isolate light peptides.
-		return self.getLightIntensity()/self.n_peptides
 
 	def getMSMSCountSummary(self):
 		acc = stats.Accumulator(store=True)
@@ -159,17 +150,6 @@ class ProteinQuant(object):
 		for pep in self.getPeptides():
 			for r in pep.getNormalizedHeavyLightRatios():
 				yield r
-
-	# Properties:
-	# property(fget=None, fset=None, fdel=None, doc=None)
-	intensity = property(getIntensity)
-	intensity_h = property(getHeavyIntensity)
-	intensity_l = property(getLightIntensity)
-	abundance = property(getAbundance)
-	abundance_h = property(getHeavyAbundance)
-	abundance_l = property(getLightAbundance)
-	ratio_hl = property(getHeavyLightRatio)
-	ratio_hl_normalized = property(getNormalizedHeavyLightRatio)
 
 
 class PeptideData(object):
