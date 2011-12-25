@@ -121,32 +121,41 @@ class ProteinQuant(object):
 	def getMSMSCountSummary(self):
 		acc = stats.Accumulator(store=True)
 		for pep in self.peptide_dict.values():
-			msms_count = pep.getMSMSCount()
+			msms_count = pep.msms_count
 			if not util.isNA(msms_count):
 				acc.add(msms_count)
 		return acc.getSummary()
 
-	def getMSMSCount(self):
+	@property
+	def msms_count(self):
 		return int(self.getMSMSCountSummary().sum)
 
-	def getDegeneracy(self):
+	@property
+	def degeneracy(self):
 		min_proteins = None
 		for pep in self.peptide_dict.values():
-			n = len(pep.parent_proteins)
+			n = len(pep._parent_proteins)
 			if min_proteins is None or (n < min_proteins):
 				min_proteins = n
 		return min_proteins
 	
-	def getPeptides(self):
+	@property
+	def peptides(self):
 		for pep in self.peptide_dict.values():
 			yield pep
 	
-	def getHeavyLightRatios(self):
+	@property
+	def n_peptides(self):
+		return len(self.peptide_dict)
+	
+	@property
+	def ratios(self):
 		for pep in self.getPeptides():
 			for r in pep.getHeavyLightRatios():
 				yield r
 
-	def getNormalizedHeavyLightRatios(self):
+	@property
+	def normalized_ratios(self):
 		for pep in self.getPeptides():
 			for r in pep.getNormalizedHeavyLightRatios():
 				yield r
@@ -159,14 +168,8 @@ class ProteinQuant(object):
 	abundance = property(getAbundance)
 	abundance_h = property(getHeavyAbundance)
 	abundance_l = property(getLightAbundance)
-	msms_count = property(getMSMSCount)
 	ratio_hl = property(getHeavyLightRatio)
 	ratio_hl_normalized = property(getNormalizedHeavyLightRatio)
-	degeneracy = property(getDegeneracy)
-	peptides = property(getPeptides)
-	n_peptides = property(lambda self: len(self.peptide_dict))
-	ratios = property(getHeavyLightRatios)
-	normalized_ratios = property(getNormalizedHeavyLightRatios)
 
 
 class PeptideData(object):
@@ -178,7 +181,7 @@ class PeptideData(object):
 		self._slice = None
 		self.sequence = None
 		self.mods = None
-		self.msms_count = None
+		self._msms_count = None
 
 class PeptideDetectionEvent(object):
 	"""
@@ -199,7 +202,7 @@ class PeptideQuant(object):
 		self.intensity_l_list = []
 		self.intensity_h_list = []
 		self._msms_count = 0
-		self.parent_proteins = set()
+		self._parent_proteins = set()
 		self._slices = set()
 
 	def add(self, pep_data):
@@ -215,7 +218,7 @@ class PeptideQuant(object):
 		self._slices.add(pep_data._slice)
 
 	def addProtein(self, id):
-		self.parent_proteins.add(id)
+		self._parent_proteins.add(id)
 
 	def merge(self, pep_quant):
 		# Merge non-destructively
@@ -227,7 +230,7 @@ class PeptideQuant(object):
 		pep.heavy_light_normalized_ratio_list = self.heavy_light_normalized_ratio_list + pep_quant.heavy_light_normalized_ratio_list
 		pep.intensity_l_list = self.intensity_l_list + pep_quant.intensity_l_list
 		pep.intensity_h_list = self.intensity_h_list + pep_quant.intensity_h_list
-		pep.parent_proteins = self.parent_proteins.union(pep_quant.parent_proteins)
+		pep._parent_proteins = self._parent_proteins.union(pep_quant._parent_proteins)
 		pep.msms_count = self.msms_count + pep_quant.msms_count
 		pep._slices = self._slices.union(pep_quant._slices)
 		return pep
@@ -238,7 +241,7 @@ class PeptideQuant(object):
 		pep.heavy_light_normalized_ratio_list = self.heavy_light_normalized_ratio_list[:]
 		pep.intensity_l_list = self.intensity_l_list[:]
 		pep.intensity_h_list = self.intensity_h_list[:]
-		pep.parent_proteins = set(list(self.parent_proteins))
+		pep._parent_proteins = set(list(self._parent_proteins))
 		pep.msms_count = self.msms_count
 		pep._slices = set(list(self._slices))
 		return pep
@@ -316,39 +319,39 @@ class PeptideQuant(object):
 	def getLightIntensity(self):
 		return self.getLightIntensitySummary().sum
 
-	def getMSMSCount(self):
+	@property
+	def msms_count(self):
 		return int(self._msms_count)
 
-	def getParentProteins(self):
-		return list(self.parent_proteins)
+	@msms_count.setter
+	def msms_count(self, x):
+		self._msms_count = x
 
-	def getHeavyLightRatios(self):
+	@property
+	def parent_proteins(self):
+		for p in self._parent_proteins:
+			yield p
+
+	@property
+	def ratios(self):
 		for x in self.heavy_light_ratio_list:
 			yield x
 
-	def getHeavyLightNormalizedRatios(self):
+	@property
+	def normalized_ratios(self):
 		for x in self.heavy_light_normalized_ratio_list:
 			yield x
 
-	def getMSMSCount(self):
-		return self._msms_count
-
-	def setMSMSCount(self, x):
-		self._msms_count = x
-
-	def getSlices(self):
+	@property
+	def slices(self):
 		for s in self._slices:
 			yield s
 
 	intensity = property(getIntensity)
 	intensity_h = property(getHeavyIntensity)
 	intensity_l = property(getLightIntensity)
-	msms_count = property(getMSMSCount,setMSMSCount)
 	ratio_hl = property(getHeavyLightRatio)
 	ratio_hl_normalized = property(getNormalizedHeavyLightRatio)
-	slices = property(getSlices)
-	ratios = property(getHeavyLightRatios)
-	normalized_ratios = property(getHeavyLightNormalizedRatios)
 
 	def __str__(self):
 		line = self.key
@@ -643,11 +646,10 @@ class ExperimentEvidence(object):
 		line += '%d peptides, %d proteins' % (len(self.peptide_data), len(self.protein_data))
 		return line
 	
-	def getProteins(self):
+	@property
+	def proteins(self):
 		for prot in self.protein_data.values():
 			yield prot
-	
-	proteins = property(getProteins)
 
 class ExperimentEvidenceFactory(object):
 	"""Class that parses evidence files into multiple ExperimentEvidence objects.
@@ -705,3 +707,15 @@ class ExperimentEvidenceFactory(object):
 					res = ex.parseFields(flds, orf_dict)
 			inf.close()
 		return self.experiments
+
+def test001():
+	return True
+
+if __name__=='__main__':
+	# test cases
+	res = test001()
+	if not res:
+		print "test001 failed"
+	else:
+		print "test001 passed"
+	
