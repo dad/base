@@ -60,7 +60,7 @@ class ProteinQuant(object):
 
 	def getHeavyLightRatioSummary(self):
 		acc = stats.Accumulator(store=True)
-		for pep in self.peptide_dict.values():
+		for pep in self.peptides:
 			for ratio in pep.heavy_light_ratio_list:
 				if not util.isNA(ratio):
 					acc.add(math.log(ratio))
@@ -76,7 +76,7 @@ class ProteinQuant(object):
 
 	def getIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
-		for pep in self.peptide_dict.values():
+		for pep in self.peptides:
 			intens = pep.getIntensity()
 			if not util.isNA(intens):
 				acc.add(intens)
@@ -87,7 +87,7 @@ class ProteinQuant(object):
 
 	def getHeavyIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
-		for pep in self.peptide_dict.values():
+		for pep in self.peptides:
 			intens = pep.getHeavyIntensity()
 			if not util.isNA(intens):
 				acc.add(intens)
@@ -98,7 +98,7 @@ class ProteinQuant(object):
 
 	def getLightIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
-		for pep in self.peptide_dict.values():
+		for pep in self.peptides:
 			intens = pep.getLightIntensity()
 			if not util.isNA(intens):
 				acc.add(intens)
@@ -108,15 +108,15 @@ class ProteinQuant(object):
 		return self.getLightIntensitySummary().sum
 
 	def getAbundance(self):
-		return self.getIntensity()/len(self.getPeptides())
+		return self.getIntensity()/self.n_peptides
 
 	def getHeavyAbundance(self):
 		# DAD: should isolate heavy peptides.
-		return self.getHeavyIntensity()/len(self.getPeptides())
+		return self.getHeavyIntensity()/self.n_peptides
 
 	def getLightAbundance(self):
 		# DAD: should isolate light peptides.
-		return self.getLightIntensity()/len(self.getPeptides())
+		return self.getLightIntensity()/self.n_peptides
 
 	def getMSMSCountSummary(self):
 		acc = stats.Accumulator(store=True)
@@ -136,6 +136,20 @@ class ProteinQuant(object):
 			if min_proteins is None or (n < min_proteins):
 				min_proteins = n
 		return min_proteins
+	
+	def getPeptides(self):
+		for pep in self.peptide_dict.values():
+			yield pep
+	
+	def getHeavyLightRatios(self):
+		for pep in self.getPeptides():
+			for r in pep.getHeavyLightRatios():
+				yield r
+
+	def getNormalizedHeavyLightRatios(self):
+		for pep in self.getPeptides():
+			for r in pep.getNormalizedHeavyLightRatios():
+				yield r
 
 	# Properties:
 	# property(fget=None, fset=None, fdel=None, doc=None)
@@ -149,6 +163,11 @@ class ProteinQuant(object):
 	ratio_hl = property(getHeavyLightRatio)
 	ratio_hl_normalized = property(getNormalizedHeavyLightRatio)
 	degeneracy = property(getDegeneracy)
+	peptides = property(getPeptides)
+	n_peptides = property(lambda self: len(self.peptide_dict))
+	ratios = property(getHeavyLightRatios)
+	normalized_ratios = property(getNormalizedHeavyLightRatios)
+
 
 class PeptideData(object):
 	def __init__(self):
@@ -164,6 +183,7 @@ class PeptideData(object):
 class PeptideDetectionEvent(object):
 	"""
 	An object representing a single peptide detection event.
+	DAD: track charge state.
 	"""
 	def __init__(self, prop_dict):
 		# Takes a property dictionary
@@ -209,7 +229,7 @@ class PeptideQuant(object):
 		pep.intensity_h_list = self.intensity_h_list + pep_quant.intensity_h_list
 		pep.parent_proteins = self.parent_proteins.union(pep_quant.parent_proteins)
 		pep.msms_count = self.msms_count + pep_quant.msms_count
-		pep._slices = self.slices.union(pep_quant._slices)
+		pep._slices = self._slices.union(pep_quant._slices)
 		return pep
 
 	def copy(self):
@@ -303,7 +323,12 @@ class PeptideQuant(object):
 		return list(self.parent_proteins)
 
 	def getHeavyLightRatios(self):
-		return self.heavy_light_ratio_list
+		for x in self.heavy_light_ratio_list:
+			yield x
+
+	def getHeavyLightNormalizedRatios(self):
+		for x in self.heavy_light_normalized_ratio_list:
+			yield x
 
 	def getMSMSCount(self):
 		return self._msms_count
@@ -312,7 +337,8 @@ class PeptideQuant(object):
 		self._msms_count = x
 
 	def getSlices(self):
-		return self._slices
+		for s in self._slices:
+			yield s
 
 	intensity = property(getIntensity)
 	intensity_h = property(getHeavyIntensity)
@@ -321,6 +347,8 @@ class PeptideQuant(object):
 	ratio_hl = property(getHeavyLightRatio)
 	ratio_hl_normalized = property(getNormalizedHeavyLightRatio)
 	slices = property(getSlices)
+	ratios = property(getHeavyLightRatios)
+	normalized_ratios = property(getHeavyLightNormalizedRatios)
 
 	def __str__(self):
 		line = self.key
@@ -614,6 +642,12 @@ class ExperimentEvidence(object):
 			line += "%s\t%s\t%s, " % (self.filename, hl_str, self.experiment)
 		line += '%d peptides, %d proteins' % (len(self.peptide_data), len(self.protein_data))
 		return line
+	
+	def getProteins(self):
+		for prot in self.protein_data.values():
+			yield prot
+	
+	proteins = property(getProteins)
 
 class ExperimentEvidenceFactory(object):
 	"""Class that parses evidence files into multiple ExperimentEvidence objects.
@@ -671,24 +705,3 @@ class ExperimentEvidenceFactory(object):
 					res = ex.parseFields(flds, orf_dict)
 			inf.close()
 		return self.experiments
-
-class FieldFormatter:
-	def __init__(self, var, format, transform=lambda x: x):
-		self.var = var
-		self.format = format
-		self.transform = transform
-
-	def __str__(self):
-		res = None
-		if not util.isNA(self.var):
-			try:
-				trans_var = self.transform(self.var)
-				res = self.format.format(trans_var)
-			except ValueError:
-				pass
-			except TypeError:
-				pass
-		else:
-			res = 'NA'
-		return res
-
