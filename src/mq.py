@@ -495,11 +495,21 @@ class ExperimentEvidence(object):
 			flds = dlr.nextDict()
 			self.parseFields(flds, orf_dict)
 
-	def getPeptideKeys(self):
-		return self.peptide_data.keys()
+	@property
+	def peptides(self):
+		for p in self.peptide_data.values():
+			yield p
+	
+	@property
+	def proteins(self):
+		for p in self.protein_data.values():
+			yield p
+	
+	#def getPeptideKeys(self):
+	#	return self.peptide_data.keys()
 
-	def getProteinKeys(self):
-		return self.protein_data.keys()
+	#def getProteinKeys(self):
+	#	return self.protein_data.keys()
 
 	def normalizeRatiosBy(self, norm_prot):
 		ratio_stats = norm_prot.getHeavyLightRatioSummary()
