@@ -191,6 +191,34 @@ def dictParser(x, entry_sep=';', key_sep='='):
 	entries = x.split(entry_sep)
 	return dict([entry.split(key_sep) for entry in entries])
 
+
+class TestCase(object):
+	"""Generic test case"""
+	def __init__(self, description="Test case", result=False, message="Failed"):
+		self.description = description
+		self.result = result
+		self.message = message
+	
+	def run(self):
+		self.result = False
+
+class TestHarness(object):
+	def __init__(self):
+		self.testcases = []
+	
+	def add(self, test):
+		self.testcases.append(test)
+	
+	def run(self, stream=sys.stdout):
+		for test in self.testcases:
+			stream.write("Running {0}...".format(test.description))
+			test.run()
+			if not test.result:
+				stream.write("{0}\n".format(test.message))
+			else:
+				stream.write("passed!\n")
+			
+
 def maxQuantHeader(header_flds):
 	# Header line
 	header_line = '\t'.join(header_flds)
