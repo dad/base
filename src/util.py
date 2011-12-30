@@ -215,6 +215,7 @@ class TestHarness(object):
 	def run(self, stream=sys.stdout):
 		n_tests = 0
 		n_passed = 0
+		total_time = 0.0
 		for test in self.testcases:
 			stream.write("Test {}:\n\t{}...".format(n_tests+1, test.description))
 			# Store the current time again, in seconds
@@ -222,14 +223,15 @@ class TestHarness(object):
 			test.run()
 			# Store the current time again, in seconds
 			t2 = time.clock()
-			timing = '[{0:1f} sec]'.format(t2-t1)
+			timing = '[{0:.1f} sec]'.format(t2-t1)
+			total_time += (t2-t1)
 			n_tests += 1
 			if not test.result:
 				stream.write("{0}\n\t{1}\n".format(timing, test.message))
 			else:
 				n_passed += 1
 				stream.write("passed! {0}\n".format(timing))
-		stream.write("{0} test completed, {1} passed.\n".format(n_tests, n_passed))
+		stream.write("{} test completed, {} passed, {:.1f} seconds.\n".format(n_tests, n_passed, total_time))
 		
 			
 
