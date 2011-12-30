@@ -411,7 +411,7 @@ class ExperimentEvidence(object):
 			res = False
 		return res
 
-	def parseFields(self, flds, orf_dict):
+	def parseFields(self, flds, orf_dict=None):
 		# Filter out all lines except those corresponding to the specified experiment
 		# Return True if we decided to parse this line
 		parsed = False
@@ -488,12 +488,14 @@ class ExperimentEvidence(object):
 		inf = file(os.path.expanduser(self.filename),'r')
 		dlr = util.DelimitedLineReader(inf, strip=False, header_name_processor=util.maxQuantHeader)
 		# Read in the data
-		max_lines = 1e7
+		max_lines = 1e9
 		line = 0
 		while not dlr.atEnd() and line < max_lines:
 			line += 1
 			flds = dlr.nextDict()
 			self.parseFields(flds, orf_dict)
+		if line == max_lines:
+			print "# Warning: max_lines {0} exceeded in ExperimentEvidence.readData()".format(max_lines)
 
 	@property
 	def peptides(self):

@@ -191,6 +191,9 @@ def dictParser(x, entry_sep=';', key_sep='='):
 	entries = x.split(entry_sep)
 	return dict([entry.split(key_sep) for entry in entries])
 
+##########################
+# Simple testing framework
+##########################
 
 class TestCase(object):
 	"""Generic test case"""
@@ -210,13 +213,24 @@ class TestHarness(object):
 		self.testcases.append(test)
 	
 	def run(self, stream=sys.stdout):
+		n_tests = 0
+		n_passed = 0
 		for test in self.testcases:
-			stream.write("Running {0}...".format(test.description))
+			stream.write("Test {}:\n\t{}...".format(n_tests+1, test.description))
+			# Store the current time again, in seconds
+			t1 = time.clock()
 			test.run()
+			# Store the current time again, in seconds
+			t2 = time.clock()
+			timing = '[{0:1f} sec]'.format(t2-t1)
+			n_tests += 1
 			if not test.result:
-				stream.write("{0}\n".format(test.message))
+				stream.write("{0}\n\t{1}\n".format(timing, test.message))
 			else:
-				stream.write("passed!\n")
+				n_passed += 1
+				stream.write("passed! {0}\n".format(timing))
+		stream.write("{0} test completed, {1} passed.\n".format(n_tests, n_passed))
+		
 			
 
 def maxQuantHeader(header_flds):
