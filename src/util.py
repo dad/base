@@ -223,14 +223,17 @@ class TestHarness(object):
 			test.run()
 			# Store the current time again, in seconds
 			t2 = time.clock()
-			timing = '[{0:.1f} sec]'.format(t2-t1)
+			timing = '[{:.1f} sec]'.format(t2-t1)
 			total_time += (t2-t1)
 			n_tests += 1
 			if not test.result:
-				stream.write("{0}\n\t{1}\n".format(timing, test.message))
+				line = "{}\n".format(timing)
+				if not test.message is None:
+					line += "\t{}\n".format(test.message)
+				stream.write(line)
 			else:
 				n_passed += 1
-				stream.write("passed! {0}\n".format(timing))
+				stream.write("passed! {}\n".format(timing))
 		stream.write("{} test completed, {} passed, {:.1f} seconds.\n".format(n_tests, n_passed, total_time))
 		
 			
