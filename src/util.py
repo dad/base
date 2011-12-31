@@ -216,7 +216,7 @@ class TestHarness(object):
 		n_passed = 0
 		total_time = 0.0
 		for test in self.testcases:
-			stream.write("Test {}:\n\t{}...".format(n_tests+1, test.__doc__))
+			stream.write("Test {}: {}...".format(n_tests+1, test.__doc__))
 			# Store the current time again, in seconds
 			t1 = time.clock()
 			# Run the test and store the result.
@@ -231,7 +231,7 @@ class TestHarness(object):
 			if not test_result:
 				# If test failed, print timing and its message, if any
 				line = "failed. {}\n".format(timing)
-				if not test.message is None:
+				if not getattr(test, "message", None) is None:
 					line += "\t{}\n".format(test.message)
 				stream.write(line)
 			else:
@@ -239,6 +239,7 @@ class TestHarness(object):
 				n_passed += 1
 				stream.write("passed! {}\n".format(timing))
 		# Write out a brief summary of the test results.
+		stream.write("-"*40 + "\n")
 		stream.write("{} test completed, {} passed, {:.1f} seconds.\n".format(n_tests, n_passed, total_time))
 		
 			
