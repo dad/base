@@ -257,6 +257,13 @@ class LogAccumulator(Accumulator):
 		# Sample variance
 		return (1.0/(self._n-1.0))*(self._sum_sq - self._n*mu*mu)
 
+# Sample with replacement
+# http://code.activestate.com/recipes/273085-sample-with-replacement/
+def sample_wr(population, k):
+    "Chooses k random elements (with replacement) from a population"
+    n = len(population)
+    _random, _int = random.random, int  # speed hack
+    return [population[x] for x in [_int(_random() * n) for i in xrange(k)]]
 
 def correctPValue(p_values, method="BH"):
 	# DAD: implement

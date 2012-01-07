@@ -50,14 +50,6 @@ class OutStreams:
 		for outs in self.streams:
 			outs.flush()
 
-# Sample with replacement
-# http://code.activestate.com/recipes/273085-sample-with-replacement/
-def sample_wr(population, k):
-    "Chooses k random elements (with replacement) from a population"
-    n = len(population)
-    _random, _int = random.random, int  # speed hack
-    return [population[x] for x in [_int(_random() * n) for i in xrange(k)]]
-
 def isBlank(s):
 	return s.strip() == ''
 
@@ -69,6 +61,7 @@ def isComment(s, comment_char='#'):
 	return res
 
 def isNA(x):
+	print "util.isNA() should be updated to na.isNA()"
 	return na.isNA(x)
 
 
@@ -281,6 +274,7 @@ class ReaderEOFError(ReaderError):
 
 def basicHeaderFixer(flds):
 	# Make headers unique
+	res = flds
 	if len(flds) > len(set(flds)):
 		new_flds = ['']*len(flds)
 		for fi in range(len(flds)):
@@ -301,8 +295,6 @@ def basicHeaderFixer(flds):
 		# Ensure we've actually fixed the problem
 		assert len(new_flds) == len(set(new_flds))
 		res = new_flds
-	else:
-		res = flds
 	return res
 
 class DelimitedLineReader:
