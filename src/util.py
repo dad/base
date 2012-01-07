@@ -163,9 +163,9 @@ class TestHarness(object):
 		self.testcases.append(test)
 	
 	def run(self, stream=sys.stdout):
-	"""Run the registered tests. Defaults to sending information to sys.stdout; pass in stream=file(fname,'w') for file output.
-	@return a tuple containing the number of tests, the number that passed, and the total time elapsed.
-	"""
+		"""Run the registered tests. Defaults to sending information to sys.stdout; pass in stream=file(fname,'w') for file output.
+		@return a tuple containing the number of tests, the number that passed, and the total time elapsed.
+		"""
 		# Run the tests, time them, and keep track of the results.
 		n_tests = 0
 		n_passed = 0
