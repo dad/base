@@ -3,10 +3,10 @@
 """Module for statistics.
 
 Originally written by Jesse Bloom, 2004.
-Expanded and maintained by D. Allan Drummond, 2004-2010."""
+Expanded and maintained by D. Allan Drummond, 2004-2012."""
 #
 import re, math, os, string, random
-import listrank
+import listrank, na
 
 #---------------------------------------------------------------------------------
 class StatsError(Exception):
@@ -33,7 +33,7 @@ class Histogram:
 		try:
 			b = int((x-self.min_val)/self.bin_width)
 		except TypeError:
-			raise TypeError, "Value '%s' is not of usable type" % x
+			raise TypeError, "Value '{}' is not of usable type".format(x)
 		return b
 
 	def validBin(self, b):
@@ -48,7 +48,7 @@ class Histogram:
 		self.total_count += 1
 
 	def printMe(self):
-		print "%s" % self
+		print "{}" % self
 	
 	def values(self):
 		pass
@@ -83,11 +83,11 @@ class Histogram:
 
 		for i in range(bin_min,bin_max):
 			bin_mid = self.min_val + self.bin_width*(i+0.5)
-			rep += "%d\t%f\t%d\n" % (i, bin_mid, self.bins[i])
+			rep += "{:d}\t{:f}\t{:d}\n".format(i, bin_mid, self.bins[i])
 		#if i < len(self.bins)-1:
 		#	print self.bins[i+1]
 		if len(self._extras)>0:
-			rep += "# Extras: %s\n" % (' '.join(['%s'%s for s in self._extras]),)
+			rep += "# Extras: {}\n".format(' '.join(['{}'.format(s) for s in self._extras]),)
 		return rep
 	
 	def write(self, stream, header=None):
@@ -107,97 +107,156 @@ class Summary:
 		self.se = None
 		self.variance = None
 		self.n = None
+		self.na = None
 		self.sum = None
 
 	def __str__(self):
 		if self.n == 0:
 			return "no data"
 		else:
-			return "mean = %1.2E, var = %1.2E, N = %d" % (self.mean, self.variance, self.n)
+			return "mean = {me.mean:1.2E}, var = {me.var:1.2E}, N = {me.n:d}".format(me=self)
 
 
-class Accumulator:
+class Accumulator(object):
 	def __init__(self, store=True):
-		self.sum = 0.0
-		self.sum_sq = 0.0
-		self.n = 0
-		self.store = store
-		if self.store:
-			self.data = []
+		self._sum = 0.0
+		self._sum_sq = 0.0
+		self._n = 0
+		self._store = store
+		self._na = 0
+		if self._store:
+			self._data = []
 
 	def add(self, x):
-		self.sum += x
-		self.sum_sq += x*x
-		self.n += 1
-		if self.store:
-			self.data.append(x)
+		if not na.isNA(x):
+			self._sum += x
+			self._sum_sq += x*x
+			self._n += 1
+			if self._store:
+				self._data.append(x)
+		else:
+			self._na += 1
 
 	def addAll(self, x_list):
 		for x in x_list:
 			self.add(x)
 
-	def getMean(self):
+	@property
+	def mean(self):
 		mean = 0.0
-		if self.n > 0:
-			mean = self.sum/self.n
+		if self._n > 0:
+			mean = self._sum/self._n
 		return mean
 
-	def getMedian(self):
+	@property
+	def median(self):
 		res = None
-		if self.store and self.n>0:
-			res = Median(self.data)
+		if self._store and self._n>0:
+			res = Median(self._data)
 		return res
 
-	def getVariance(self):
-		if self.n == 1:
+	@property
+	def variance(self):
+		if self._n == 1:
 			return 0.0
-		if self.n < 1:
+		if self._n < 1:
 			return None
-		mu = self.getMean()
+		mu = self.mean
 		# Sample variance
-		return (1.0/(self.n-1.0))*(self.sum_sq - self.n*mu*mu)
+		return (1.0/(self._n-1.0))*(self._sum_sq - self._n*mu*mu)
 
-	def getSum(self):
-		return self.sum
+	@property
+	def sum(self):
+		return self._sum
 
-	def getN(self):
-		return self.n
+	@property
+	def n(self):
+		return self._n
 
-	def getSD(self):
+	@property
+	def na(self):
+		return self._na
+
+	@property
+	def sd(self):
 		res = None
 		if self.n == 1:
 			res = 0.0
 		if self.n > 1:
-			res = math.sqrt(self.getVariance())
-		return math.sqrt(self.getVariance())
+			res = math.sqrt(self.variance)
+		return res
 
-	def getSE(self):
+	@property
+	def se(self):
 		if self.n == 1:
 			return 0.0
 		if self.n < 1:
 			return None
-		return self.getSD()/math.sqrt(self.n)
+		return self.sd/math.sqrt(self.n)
 
 	def getSEConfidenceInterval(self, alpha):
 		assert False, "Not implemented yet"
 
-	def getData(self):
+	@property
+	def data(self):
 		res = None
-		if self.store:
-			res = self.data
+		if self._store:
+			res = self._data
 		return res
 
-	def getSummary(self):
+	@property
+	def summary(self):
 		s = Summary()
-		s.mean = self.getMean()
-		s.n = self.getN()
-		s.variance = self.getVariance()
+		s.mean = self.mean
+		s.n = self.n
+		s.na = self.na
+		s.variance = self.variance
 		if not s.variance is None:
-			s.sd = self.getSD()
-			s.se = self.getSE()
-		s.sum = self.getSum()
-		s.median = self.getMedian()
+			s.sd = self.sd
+			s.se = self.se
+		s.sum = self.sum
+		s.median = self.median
 		return s
+
+class LogAccumulator(Accumulator):
+	def __init__(self,store=True):
+		self._nolog_sum = 0.0
+		super(LogAccumulator,self).__init__(store)
+	
+	def add(self, x):
+		if not na.isNA(x):
+			super(LogAccumulator,self).add(math.log(x))
+			self._nolog_sum += x
+		else:
+			self._na += 1
+
+	@property
+	def mean(self):
+		log_mean = super(LogAccumulator,self).mean
+		return math.exp(log_mean)
+
+	@property
+	def median(self):
+		med = None
+		log_median = super(LogAccumulator,self).median
+		if not log_median is None:
+			med = math.exp(log_median)
+		return med
+
+	@property
+	def sum(self):
+		return self._nolog_sum
+
+	@property
+	def variance(self):
+		if self._n == 1:
+			return 0.0
+		if self._n < 1:
+			return None
+		mu = math.log(self.mean)
+		# Sample variance
+		return (1.0/(self._n-1.0))*(self._sum_sq - self._n*mu*mu)
+
 
 def correctPValue(p_values, method="BH"):
 	# DAD: implement

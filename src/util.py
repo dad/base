@@ -1,7 +1,5 @@
 import time, os, random, string, sys, math
-
-# Definition of the default NA string.
-NA = 'NA'
+import na
 
 # Float equality.  On my system (WinXP, Python 2.6), smallest distinguishable float difference is 7.45e-9.
 def feq(f1,f2,eps=1e-8):
@@ -71,58 +69,8 @@ def isComment(s, comment_char='#'):
 	return res
 
 def isNA(x):
-	res = x is None
-	if not res:
-		if type(x) == str:
-			x = x.upper()
-			res = (x==NA or x=='' or x=='NAN')
-		elif type(x) == float:
-			res = math.isnan(x)
-	return res
+	return na.isNA(x)
 
-def strNA(x):
-	if isNA(x):
-		return NA
-	else:
-		return str(x)
-
-def formatNAOld(x, format, sep=None):
-	if isinstance(x, list):
-		flds = format.split(sep)
-		if sep is None:
-			sep = '\t'
-		assert len(flds) == len(x)
-		res = []
-		for i in range(len(x)):
-			if isNA(x[i]):
-				res.append(NA)
-			else:
-				res.append(flds[i] % x[i])
-		return sep.join(res)
-	else:
-		if isNA(x):
-			return NA
-		else:
-			return format % x
-
-def formatNA(x, format="{0}", sep=None):
-	if isinstance(x, list):
-		flds = format.split(sep)
-		if sep is None:
-			sep = '\t'
-		assert len(flds) == len(x)
-		res = []
-		for i in range(len(x)):
-			if isNA(x[i]):
-				res.append("NA")
-			else:
-				res.append(flds[i].format(x[i]))
-		return sep.join(res)
-	else:
-		if isNA(x):
-			return NA
-		else:
-			return format.format(x)
 
 """ Class for applying formatting automatically.
 """
@@ -134,7 +82,7 @@ class FieldFormatter:
 
 	def __str__(self):
 		res = None
-		if not isNA(self.var):
+		if not na.isNA(self.var):
 			try:
 				trans_var = self.transform(self.var)
 				res = self.format.format(trans_var)
@@ -143,7 +91,7 @@ class FieldFormatter:
 			except TypeError:
 				pass
 		else:
-			res = NA
+			res = na.NA
 		return res
 
 
@@ -152,9 +100,7 @@ def looseIntParser(x):
 	try:
 		v = int(x)
 	except ValueError:
-		if isNA(x):
-			v = None
-		else:
+		if not na.isNA(x):
 			v = naFloatParser(x)
 	return v
 
@@ -163,9 +109,7 @@ def naIntParser(x):
 	try:
 		v = int(x)
 	except ValueError, ve:
-		if isNA(x):
-			v = None
-		else:
+		if not na.isNA(x):
 			raise ve
 	return v
 
@@ -174,16 +118,14 @@ def naFloatParser(x):
 	try:
 		v = float(x)
 	except ValueError, ve:
-		if isNA(x):
-			v = None
-		else:
+		if not na.isNA(x):
 			raise ve
 	return v
 
 def naStringParser(x):
 	"""A parser that respects NA's."""
 	v = None
-	if not isNA(x):
+	if not na.isNA(x):
 		v = str(x)
 	return v
 
@@ -555,7 +497,7 @@ class DelimitedLineReader:
 				for hi in range(len(self.handlers)):
 					fld = flds[hi]
 					if self.handlers[hi] is None:
-						if not isNA(fld):
+						if not na.isNA(fld):
 							handler_key = self.inferHandlerKey(fld)
 							inferred_string[hi] = handler_key
 							self.handlers[hi] = self.handler_dict[handler_key]

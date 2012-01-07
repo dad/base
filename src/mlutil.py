@@ -32,6 +32,10 @@ class Parameter(object):
 	@property
 	def value(self):
 		return self._value
+
+	@value.setter
+	def value(self, v):
+		self._value = v
 	
 	@property
 	def name(self):
@@ -89,3 +93,31 @@ class ParameterTable(object):
 	@property
 	def optvalues(self):
 		return [self._parameter_dict[k].optvalue for k in self.names]
+
+class LogLikelihoodManager(object):
+	"""Generic base object for LogLikehood wrapping"""
+	def __init__(self):
+		self._parameters = ml.ParameterTable()
+	
+	def getParameter(self, id, default=None):
+		return self._parameters.get(id,default)
+	
+	def __getitem__(self, id):
+		return self.getParameter(id).value
+
+	def updateParameters(self, params):
+		self._parameters.fromOptimizer(params)
+			
+	@property
+	def parameters(self):
+		return self._parameters
+		
+	def logLikelihood(self, params):
+		self.updateParameters(params)
+		raise Exception, "The logLikelihood() method must be overridden!"
+	
+	def fit(self):
+		starting_params = self.parameters.toOptimizer()
+		fitted_params = sp.optimize.fmin(self.logLikelihood, starting_params, disp=False, maxiter=1e6, maxfun=1e7)
+		self.updateParameters(fitted_params)
+		return self.parameters

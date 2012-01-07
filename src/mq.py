@@ -1,5 +1,5 @@
 import math, os
-import stats, util
+import stats, util, na
 
 class ProteinQuant(object):
 	def __init__(self, id):
@@ -40,46 +40,35 @@ class ProteinQuant(object):
 		return pq
 
 	def getNormalizedHeavyLightRatioSummary(self):
-		acc = stats.Accumulator(store=True)
+		acc = stats.LogAccumulator(store=True)
 		for pep in self.peptide_dict.values():
-			for ratio in pep.heavy_light_normalized_ratio_list:
-				if not util.isNA(ratio):
-					acc.add(math.log(ratio))
-		s = acc.getSummary()
-		return s
+			acc.addAll(pep.heavy_light_normalized_ratio_list)
+		return acc.summary
 
 	@property
 	def normalized_ratio(self):
-		res = None
 		med = self.getNormalizedHeavyLightRatioSummary().median
-		if not util.isNA(med):
-			res = math.exp(med)
-		return res
+		return med
 
 	def getHeavyLightRatioSummary(self):
-		acc = stats.Accumulator(store=True)
+		acc = stats.LogAccumulator(store=True)
 		for pep in self.peptides:
-			for ratio in pep.heavy_light_ratio_list:
-				if not util.isNA(ratio):
-					acc.add(math.log(ratio))
-		s = acc.getSummary()
+			acc.addAll(pep.heavy_light_ratio_list)
+		s = acc.summary
 		return s
 
 	@property
 	def ratio(self):
 		res = None
 		med = self.getHeavyLightRatioSummary().median
-		if not util.isNA(med):
+		if not na.isNA(med):
 			res = math.exp(med)
 		return res
 
 	def getIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
-		for pep in self.peptides:
-			intens = pep.intensity
-			if not util.isNA(intens):
-				acc.add(intens)
-		return acc.getSummary()
+		acc.addAll([pep.intensity for pep in self.peptides])
+		return acc.summary
 
 	@property
 	def intensity(self):
@@ -87,11 +76,8 @@ class ProteinQuant(object):
 
 	def getHeavyIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
-		for pep in self.peptides:
-			intens = pep.heavy_intensity
-			if not util.isNA(intens):
-				acc.add(intens)
-		return acc.getSummary()
+		acc.addAll([pep.heavy_intensity for pep in self.peptides])
+		return acc.summary
 
 	@property
 	def heavy_intensity(self):
@@ -99,11 +85,8 @@ class ProteinQuant(object):
 
 	def getLightIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
-		for pep in self.peptides:
-			intens = pep.light_intensity
-			if not util.isNA(intens):
-				acc.add(intens)
-		return acc.getSummary()
+		acc.addAll([pep.light_intensity for pep in self.peptides])
+		return acc.summary
 
 	@property
 	def light_intensity(self):
@@ -111,11 +94,8 @@ class ProteinQuant(object):
 
 	def getMSMSCountSummary(self):
 		acc = stats.Accumulator(store=True)
-		for pep in self.peptide_dict.values():
-			msms_count = pep.msms_count
-			if not util.isNA(msms_count):
-				acc.add(msms_count)
-		return acc.getSummary()
+		acc.addAll([pep.msms_count for pep in self.peptide_dict.values()])
+		return acc.summary
 
 	@property
 	def msms_count(self):
@@ -235,56 +215,48 @@ class PeptideQuant(object):
 		return pep
 
 	def normalizeRatiosBy(self, ratio, norm_ratio):
-		self.heavy_light_ratio_list = [x/ratio for x in self.heavy_light_ratio_list if not util.isNA(x)]
-		self.heavy_light_normalized_ratio_list = [x/norm_ratio for x in self.heavy_light_normalized_ratio_list if not util.isNA(x)]
+		self.heavy_light_ratio_list = [x/ratio for x in self.heavy_light_ratio_list if not na.isNA(x)]
+		self.heavy_light_normalized_ratio_list = [x/norm_ratio for x in self.heavy_light_normalized_ratio_list if not na.isNA(x)]
 
 	def normalizeHeavyIntensity(self, weight):
-		new_int = [intens/weight for intens in self.intensity_h_list if not util.isNA(intens)]
+		new_int = [intens/weight for intens in self.intensity_h_list if not na.isNA(intens)]
 		self.intensity_h_list = new_int
 
 	def normalizeLightIntensity(self, weight):
-		new_int = [intens/weight for intens in self.intensity_l_list if not util.isNA(intens)]
+		new_int = [intens/weight for intens in self.intensity_l_list if not na.isNA(intens)]
 		self.intensity_l_list = new_int
 
 	def getHeavyLightRatioSummary(self):
-		acc = stats.Accumulator(store=True)
-		for ratio in self.heavy_light_ratio_list:
-			if not util.isNA(ratio):
-				acc.add(math.log(ratio))
-		return acc.getSummary()
+		acc = stats.LogAccumulator(store=True)
+		acc.addAll(self.heavy_light_ratio_list)
+		return acc.summary
 
 	@property
 	def ratio(self):
 		res = None
 		med = self.getHeavyLightRatioSummary().median
-		if not util.isNA(med):
+		if not na.isNA(med):
 			res = math.exp(med)
 		return res
 
 	def getNormalizedHeavyLightRatioSummary(self):
-		acc = stats.Accumulator(store=True)
-		for ratio in self.heavy_light_normalized_ratio_list:
-			if not util.isNA(ratio):
-				acc.add(math.log(ratio))
-		return acc.getSummary()
+		acc = stats.LogAccumulator(store=True)
+		acc.addAll(self.heavy_light_normalized_ratio_list)
+		return acc.summary
 
 	@property
 	def normalized_ratio(self):
 		res = None
 		med = self.getNormalizedHeavyLightRatioSummary().median
-		if not util.isNA(med):
+		if not na.isNA(med):
 			res = math.exp(med)
 		return res
 
 	def getIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
-		for intens in self.intensity_l_list:
-			if not util.isNA(intens):
-				acc.add(intens)
-		for intens in self.intensity_h_list:
-			if not util.isNA(intens):
-				acc.add(intens)
-		return acc.getSummary()
+		for (h_int, l_int) in zip(self.intensity_h_list,self.intensity_l_list):
+			acc.add(h_int+l_int)
+		return acc.summary
 
 	@property
 	def intensity(self):
@@ -292,10 +264,8 @@ class PeptideQuant(object):
 
 	def getHeavyIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
-		for intens in self.intensity_h_list:
-			if not util.isNA(intens):
-				acc.add(intens)
-		return acc.getSummary()
+		acc.addAll(self.intensity_h_list)
+		return acc.summary
 
 	@property
 	def heavy_intensity(self):
@@ -303,10 +273,8 @@ class PeptideQuant(object):
 
 	def getLightIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
-		for intens in self.intensity_l_list:
-			if not util.isNA(intens):
-				acc.add(intens)
-		return acc.getSummary()
+		acc.addAll(self.intensity_l_list)
+		return acc.summary
 
 	@property
 	def light_intensity(self):
@@ -416,7 +384,7 @@ class ExperimentEvidence(object):
 		# Return True if we decided to parse this line
 		parsed = False
 		if self.experiment is None or not flds.has_key('experiment') or self.experiment == "{0}".format(flds['experiment']):
-		#if not util.isNA(self.experiment) and flds["experiment"] == self.experiment:
+		#if not na.isNA(self.experiment) and flds["experiment"] == self.experiment:
 			# Process this line
 			# Skip lines corresponding to reverse or contaminant peptide matches.
 			if flds['reverse'] == '+' or flds['contaminant'] == '+':
@@ -436,9 +404,9 @@ class ExperimentEvidence(object):
 				#intensity = flds['intensity']
 				# Invert the H/L ratios if needed
 				if self.invert:
-					if not util.isNA(ratio_hl):
+					if not na.isNA(ratio_hl):
 						pep_data.ratio_hl = 1.0/ratio_hl
-					if not util.isNA(ratio_hl_normalized):
+					if not na.isNA(ratio_hl_normalized):
 						pep_data.ratio_hl_normalized = 1.0/ratio_hl_normalized
 					pep_data.intensity_h = flds['intensity.l']
 					pep_data.intensity_l = flds['intensity.h']
@@ -516,23 +484,20 @@ class ExperimentEvidence(object):
 	def normalizeRatiosBy(self, norm_prot):
 		ratio_stats = norm_prot.getHeavyLightRatioSummary()
 		ratio_norm_stats = norm_prot.getNormalizedHeavyLightRatioSummary()
-		print math.exp(ratio_stats.mean), math.exp(ratio_norm_stats.mean)
+		print ratio_stats.mean, ratio_norm_stats.mean
 		#print ratio_stats.mean, ratio_norm_stats.mean
 		for pep in self.peptide_data.values():
-			pep.normalizeRatiosBy(math.exp(ratio_stats.mean), math.exp(ratio_norm_stats.mean))
+			pep.normalizeRatiosBy(ratio_stats.mean, ratio_norm_stats.mean)
 
 	def normalizePeptideRatios(self, norm_prot, target_log_mean=0.0):
 		# DAD: implement
 		target_peps = [self.peptide_data[k] for k in peptide_keys]
-		acc = stats.Accumulator(store=False)
+		acc = stats.LogAccumulator(store=False)
 		for p in target_peps:
-			for ratio in p.heavy_light_ratio_list:
-				acc.add(math.log(ratio))
-		log_mean = acc.getMean()
-		#log_median = acc.getMedian()
-		log_sd = 1.0 #acc.getSD()
-		#print math.exp(log_mean), log_sd, acc.getVariance(), acc.getN()
-		(mean, sd) = (math.exp(log_mean), math.exp(log_sd))
+			acc.addAll([r for r in p.ratios])
+		mean = acc.mean
+		sd = acc.sd
+		log_mean = math.log(mean)
 		for p_key in self.peptide_data.keys():
 			p = self.peptide_data[p_key]
 			ratlist = p.heavy_light_ratio_list
@@ -551,14 +516,10 @@ class ExperimentEvidence(object):
 		h_acc = stats.Accumulator(store=True)
 		l_acc = stats.Accumulator(store=True)
 		for p in target_peps:
-			for intens in p.intensity_h_list:
-				if not util.isNA(intens):
-					h_acc.add(intens)
-			for intens in p.intensity_l_list:
-				if not util.isNA(intens):
-					l_acc.add(intens)
-		median_h = h_acc.getMedian()
-		median_l = l_acc.getMedian()
+			h_acc.addAll(p.intensity_h_list)
+			l_acc.addAll(p.intensity_l_list)
+		median_h = h_acc.median
+		median_l = l_acc.median
 		# Normalize all peptides
 		for p_key in self.peptide_data.keys():
 			p = self.peptide_data[p_key]
@@ -615,7 +576,7 @@ class ExperimentEvidence(object):
 
 	def calculateProteinRatioSignificance(self, num_nearest_proteins, ratio_field="ratio_hl_normalized", abundance_field="intensity"):
 		# Limit significance calculations to proteins with ratios
-		recs_with_ratios = [r for r in self.protein_data.values() if not util.isNA(getattr(r,ratio_field))]
+		recs_with_ratios = [r for r in self.protein_data.values() if not na.isNA(getattr(r,ratio_field))]
 		# Sort proteins by estimated abundance
 		recs = sorted(recs_with_ratios, key=lambda x: getattr(x, abundance_field))
 		rec_norm_hl = [getattr(r,ratio_field) for r in recs]
@@ -712,13 +673,12 @@ class ExperimentEvidenceFactory(object):
 		return self.experiments
 
 def test001():
-	return True
+	def run(self):
+		return True
 
 if __name__=='__main__':
 	# test cases
-	res = test001()
-	if not res:
-		print "test001 failed"
-	else:
-		print "test001 passed"
+	harness = util.TestHarness()
+	harness.add(test001())
+	harness.run()
 	
