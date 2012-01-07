@@ -114,7 +114,7 @@ class Summary:
 		if self.n == 0:
 			return "no data"
 		else:
-			return "mean = {me.mean:1.2E}, var = {me.var:1.2E}, N = {me.n:d}".format(me=self)
+			return "mean = {me.mean:1.2E}, sd = {me.sd:1.2E}, N = {me.n:d}".format(me=self)
 
 
 class Accumulator(object):

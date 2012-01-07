@@ -154,11 +154,12 @@ class TestHarness(object):
 		self.testcases.append(test)
 	
 	def run(self, stream=sys.stdout):
+		# Run the tests, time them, and keep track of the results.
 		n_tests = 0
 		n_passed = 0
 		total_time = 0.0
 		for test in self.testcases:
-			stream.write("Test {}: {}...".format(n_tests+1, test.__doc__))
+			stream.write("Test {} ({}): {}...".format(n_tests+1, test.__class__.__name__, test.__doc__))
 			# Store the current time again, in seconds
 			t1 = time.clock()
 			# Run the test and store the result.
@@ -171,7 +172,7 @@ class TestHarness(object):
 			# One more test done...
 			n_tests += 1
 			if not test_result:
-				# If test failed, print timing and its message, if any
+				# If test failed, print timing and its message, if any.
 				line = "failed. {}\n".format(timing)
 				if not getattr(test, "message", None) is None:
 					line += "\t{}\n".format(test.message)
@@ -182,9 +183,11 @@ class TestHarness(object):
 				stream.write("passed! {}\n".format(timing))
 		# Write out a brief summary of the test results.
 		stream.write("-"*40 + "\n")
-		stream.write("{} test completed, {} passed, {:.1f} seconds.\n".format(n_tests, n_passed, total_time))
+		stream.write("{0} test{1} completed, {2} passed, {3:.1f} seconds.\n".format(n_tests, "s" if n_tests>1 else "", n_passed, total_time))
 		
-			
+#########################
+# DelimitedLineReader
+#########################
 
 def maxQuantHeader(header_flds):
 	# Header line
