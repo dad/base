@@ -20,7 +20,7 @@ def printTiming(func):
 		res = func(*arg)
 		# Store the current time again, in microseconds
 		t2 = time.time()
-		print '%s took %0.3f ms' % (func.func_name, (t2-t1)*1000.0)
+		print '{0} took {1:0.3f} ms'.format(func.func_name, (t2-t1)*1000.0)
 		return res
 	# Return the wrapper function
 	return wrapper
@@ -561,244 +561,272 @@ class DelimitedLineReader:
 		except IndexError:
 			raise ReaderError, "Bad handler index %d" % handler_index
 
-def test001():
-	# Normal
-	n_lines = 100
-	header_list = ["str","float","int","str"]
-	fname = "tmp_normal.txt"
-	makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
-	inf = file(fname, 'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf)
-	header = fp.getHeader()
-	vals = []
-	while not fp.atEnd():
-		#print fp.cache.cache[-1],
-		v = fp.next()
-		#print fp.isValid(), v
-		vals.append(v[2])
-	assert sum(vals) > n_lines
-	inf.close()
-	os.remove(fname)
-	print "** 001 infer header types"
-
-def test002():
-	# Normal
-	n_lines = 100
-	header_list = ["str","float","int","str"]
-	fname = "tmp_normal.txt"
-	makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
-	inf = file(fname, 'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf)
-	while not fp.atEnd():
-		fp.next()
-	inf.close()
-	os.remove(fname)
-	print "** 002 read through"
-
-def test003():
-	# Normal
-	n_lines = 100
-	header_list = ["str","float","int","anotherStr"]
-	fname = "tmp_normal.txt"
-	makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
-	inf = file(fname, 'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf)
-	header = fp.getHeader()
-	assert header == header_list
-	inf.close()
-	os.remove(fname)
-	print "** 003 header parsing"
-
-def test004():
-	# Normal
-	n_lines = 100
-	header_list = ["str","float","int","str"]
-	fname = "tmp_normal.txt"
-	makeFile(fname, None, "sfds", n_lines, '\t', 0.0)
-	inf = file(fname, 'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf)
-	header = fp.getHeader()
-	vals = []
-	while not fp.atEnd():
-		#print fp.cache.cache[-1],
-		v = fp.next()
-		#print fp.isValid(), v
-		vals.append(v[2])
-	assert sum(vals) > n_lines
-	inf.close()
-	os.remove(fname)
-	print "** 004 infer header types 2"
-
-def test005():
-	# Normal
-	n_lines = random.randint(10,300)
-	header_list = ["str","float","int","str"]
-	fname = "tmp_normal.txt"
-	makeFile(fname, None, "sfds", n_lines, '\t', 0.0)
-	inf = file(fname, 'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf)
-	header = fp.getHeader()
-	while not fp.atEnd():
-		v = fp.next()
-	assert fp.getNumRead() == n_lines
-	inf.close()
-	os.remove(fname)
-	print "** 005 lines read"
-
-def test006():
-	# NA's at some frequency -- infer types.
-	n_lines = 100
-	header_list = ["str","float","int","str"]
-	fname = "tmp_normal.txt"
-	# Put an NA in the first line -- test the ability to look past to infer types
-	first_lines = [randString() + "\t1.00\tNA\t" + randString() + "\n"]
-	makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
-	inf = file(fname, 'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf)
-	header = fp.getHeader()
-	vals = []
-	while not fp.atEnd():
-		#print fp.cache.cache[-1],
-		v = fp.next()
-		#print v
-		if not v[2] is None:
+class test001:
+	"""infer header types"""
+	def run(self):
+		# Normal
+		n_lines = 100
+		header_list = ["str","float","int","str"]
+		fname = "tmp_normal.txt"
+		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf)
+		header = fp.getHeader()
+		vals = []
+		while not fp.atEnd():
+			#print fp.cache.cache[-1],
+			v = fp.next()
+			#print fp.isValid(), v
 			vals.append(v[2])
-	assert sum(vals) > n_lines
-	inf.close()
-	os.remove(fname)
-	print "** 006 infer header types with NA's"
+		res = sum(vals) > n_lines
+		inf.close()
+		os.remove(fname)
+		return res
 
-def test007():
-	# NA's in every line -- infer types.
-	n_lines = 0
-	header_list = ["str","float","int","str"]
-	fname = "tmp_normal.txt"
-	# Put an NA in the first line -- test the ability to look past to infer types
-	first_lines = [randString() + "\t59.3\tNA\t" + randString() + "\n",
-		randString() + "\tNA\t12\t" + randString() + "\n"]
-	makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
-	inf = file(fname,'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf, header=False)
-	header = fp.getHeader()
-	vals = []
-	while not fp.atEnd():
-		#print fp.cache.cache[-1],
-		v = fp.next()
-		#print v
-		if not v[2] is None:
+class test002:
+	"""read through"""
+	def run(self):
+		# Normal
+		n_lines = 100
+		header_list = ["str","float","int","str"]
+		fname = "tmp_normal.txt"
+		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf)
+		while not fp.atEnd():
+			fp.next()
+		inf.close()
+		os.remove(fname)
+		return True
+
+class test003:
+	"""header parsing"""
+	def run(self):
+		# Normal
+		n_lines = 100
+		header_list = ["str","float","int","anotherStr"]
+		fname = "tmp_normal.txt"
+		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf)
+		header = fp.getHeader()
+		res = header == header_list
+		inf.close()
+		os.remove(fname)
+		return res
+
+class test004:
+	"""infer header types 2"""
+	def run(self):
+		# Normal
+		n_lines = 100
+		header_list = ["str","float","int","str"]
+		fname = "tmp_normal.txt"
+		makeFile(fname, None, "sfds", n_lines, '\t', 0.0)
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf)
+		header = fp.getHeader()
+		vals = []
+		while not fp.atEnd():
+			#print fp.cache.cache[-1],
+			v = fp.next()
+			#print fp.isValid(), v
 			vals.append(v[2])
-	assert sum(vals) == 12
-	inf.close()
-	os.remove(fname)
-	print "** 007 infer header types with NA's in every line"
+		res = sum(vals) > n_lines
+		inf.close()
+		os.remove(fname)
+		return res
 
-def test008():
-	# NA's in every line -- infer types.
-	n_lines = 0
-	header_list = ["str","float","int","str"]
-	fname = "tmp_normal.txt"
-	# Put an NA in the first line -- test the ability to look past to infer types
-	first_lines = [randString() + "\t59.3\tNA\t" + randString() + "\n"]*100
-	makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
-	inf = file(fname,'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf, header=False)
-	header = fp.getHeader()
-	inf.close()
-	os.remove(fname)
-	print "** 008 infer header types with NA's in one full column"
+class test005():
+	"""lines read"""
+	def run(self):
+		# Normal
+		n_lines = random.randint(10,300)
+		header_list = ["str","float","int","str"]
+		fname = "tmp_normal.txt"
+		makeFile(fname, None, "sfds", n_lines, '\t', 0.0)
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf)
+		header = fp.getHeader()
+		while not fp.atEnd():
+			v = fp.next()
+		res = fp.getNumRead() == n_lines
+		inf.close()
+		os.remove(fname)
+		return res
 
-def test009():
-	# Header processing
-	n_lines = 100
-	header_list = ["int","int.1","int","int"]
-	fname = "tmp_normal.txt"
-	makeFile(fname, header_list, "ffds", n_lines, '\t', 0.1)
-	inf = file(fname,'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf)
-	header = fp.getHeader()
-	assert header[0] == 'int'
-	assert header[1] == 'int.1'
-	assert header[2] == 'int.2'
-	assert header[3] == 'int.3'
-	inf.close()
-	os.remove(fname)
-	print "** 009 header processing"
+class test006:
+	"""infer header types with NA's"""
+	def run(self):
+		# NA's at some frequency -- infer types.
+		n_lines = 100
+		header_list = ["str","float","int","str"]
+		fname = "tmp_normal.txt"
+		# Put an NA in the first line -- test the ability to look past to infer types
+		first_lines = [randString() + "\t1.00\tNA\t" + randString() + "\n"]
+		makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf)
+		header = fp.getHeader()
+		vals = []
+		while not fp.atEnd():
+			#print fp.cache.cache[-1],
+			v = fp.next()
+			#print v
+			if not v[2] is None:
+				vals.append(v[2])
+		res = sum(vals) > n_lines
+		inf.close()
+		os.remove(fname)
+		return res
 
-def test010():
-	# Header processing
-	n_lines = 100
-	header_list = ["Ratio (H/L)","float","int","This + That"]
-	fname = "tmp_normal.txt"
-	makeFile(fname, header_list, "ffds", n_lines, '\t', 0.1)
-	inf = file(fname,'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf, header=True, header_name_processor=maxQuantHeader)
-	header = fp.getHeader()
-	assert header[0] == 'ratio.hl'
-	assert header[-1] == 'this.plus.that'
-	inf.close()
-	os.remove(fname)
-	print "** 010 header processing: custom header processor"
+class test007:
+	"""infer header types with NA's in every line"""
+	def run(self):
+		# NA's in every line -- infer types.
+		n_lines = 0
+		header_list = ["str","float","int","str"]
+		fname = "tmp_normal.txt"
+		# Put an NA in the first line -- test the ability to look past to infer types
+		first_lines = [randString() + "\t59.3\tNA\t" + randString() + "\n",
+			randString() + "\tNA\t12\t" + randString() + "\n"]
+		makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
+		inf = file(fname,'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf, header=False)
+		header = fp.getHeader()
+		vals = []
+		while not fp.atEnd():
+			#print fp.cache.cache[-1],
+			v = fp.next()
+			#print v
+			if not v[2] is None:
+				vals.append(v[2])
+		res = sum(vals) == 12
+		inf.close()
+		os.remove(fname)
+		return res
 
-def test011():
-	# Adaptive field redefinition
-	n_lines = 100
-	header_list = ["float","float","int","str"]
-	fname = "tmp_normal.txt"
-	last_lines = ["0.2\t0.3\tnot.an.int\twakka\n"]
-	makeFile(fname, header_list, "ffds", n_lines, '\t', 0.01, last_lines=last_lines)
-	inf = file(fname,'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf, header=True, header_name_processor=maxQuantHeader)
-	header = fp.getHeader()
-	while not fp.atEnd():
-		flds = fp.next()
-	inf.close()
-	os.remove(fname)
-	print "** 011 adaptive handler updating"
+class test008:
+	"""infer header types with NA's in one full column"""
+	def run(self):
+		# NA's in every line -- infer types.
+		n_lines = 0
+		header_list = ["str","float","int","str"]
+		fname = "tmp_normal.txt"
+		# Put an NA in the first line -- test the ability to look past to infer types
+		first_lines = [randString() + "\t59.3\tNA\t" + randString() + "\n"]*100
+		makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
+		inf = file(fname,'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf, header=False)
+		header = fp.getHeader()
+		inf.close()
+		os.remove(fname)
+		return True
 
-def test012():
-	# Comment as last line
-	n_lines = 10
-	header_list = ["str","float","int","str"]
-	fname = "tmp_commend_last.txt"
-	makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
-	inf = file(fname, 'a')
-	inf.write("# comment\n")
-	inf.close()
-	inf = file(fname, 'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf)
-	while not fp.atEnd():
-		flds = fp.nextDict()
-	inf.close()
-	os.remove(fname)
-	print "** 012 comment as last line"
+class test009:
+	"""header processing"""
+	def run(self):
+		# Header processing
+		n_lines = 100
+		header_list = ["int","int.1","int","int"]
+		fname = "tmp_normal.txt"
+		makeFile(fname, header_list, "ffds", n_lines, '\t', 0.1)
+		inf = file(fname,'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf)
+		header = fp.getHeader()
+		res = True
+		res = res and header[0] == 'int'
+		res = res and header[1] == 'int.1'
+		res = res and header[2] == 'int.2'
+		res = res and header[3] == 'int.3'
+		inf.close()
+		os.remove(fname)
+		return res
 
-def test013():
-	# No headers but call to nextDict
-	n_lines = 10
-	fname = "tmp_no_header.txt"
-	field_types = "sfds"
-	makeFile(fname, None, field_types, n_lines, '\t', 0.0)
-	inf = file(fname, 'r')
-	# Infer the types
-	fp = DelimitedLineReader(inf, header=False)
-	while not fp.atEnd():
-		flds = fp.nextDict()
-		assert set(flds.keys()) == set(range(len(field_types)))
-	inf.close()
-	os.remove(fname)
-	print "** 013 no headers but call to nextDict"
+class test010:
+	"""header processing: custom header processor"""
+	def run(self):
+		# Header processing
+		n_lines = 100
+		header_list = ["Ratio (H/L)","float","int","This + That"]
+		fname = "tmp_normal.txt"
+		makeFile(fname, header_list, "ffds", n_lines, '\t', 0.1)
+		inf = file(fname,'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf, header=True, header_name_processor=maxQuantHeader)
+		header = fp.getHeader()
+		res = True
+		res = res and header[0] == 'ratio.hl'
+		res = res and header[-1] == 'this.plus.that'
+		inf.close()
+		os.remove(fname)
+		return res
+
+class test011:
+	"""adaptive handler updating"""
+	def run(self):
+		# Adaptive field redefinition
+		n_lines = 100
+		header_list = ["float","float","int","str"]
+		fname = "tmp_normal.txt"
+		last_lines = ["0.2\t0.3\tnot.an.int\twakka\n"]
+		makeFile(fname, header_list, "ffds", n_lines, '\t', 0.01, last_lines=last_lines)
+		inf = file(fname,'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf, header=True, header_name_processor=maxQuantHeader)
+		header = fp.getHeader()
+		while not fp.atEnd():
+			flds = fp.next()
+		inf.close()
+		os.remove(fname)
+		return True
+
+class test012:
+	"""comment as last line"""
+	def run(self):
+		# Comment as last line
+		n_lines = 10
+		header_list = ["str","float","int","str"]
+		fname = "tmp_commend_last.txt"
+		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
+		inf = file(fname, 'a')
+		inf.write("# comment\n")
+		inf.close()
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf)
+		while not fp.atEnd():
+			flds = fp.nextDict()
+		inf.close()
+		os.remove(fname)
+		return True
+
+class test013:
+	"""no headers but call to nextDict"""
+	def run(self):
+		# No headers but call to nextDict
+		n_lines = 10
+		fname = "tmp_no_header.txt"
+		field_types = "sfds"
+		makeFile(fname, None, field_types, n_lines, '\t', 0.0)
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf, header=False)
+		while not fp.atEnd():
+			flds = fp.nextDict()
+			assert set(flds.keys()) == set(range(len(field_types)))
+		inf.close()
+		os.remove(fname)
+		return True
 
 
 def randString():
@@ -904,18 +932,19 @@ def readTable(fname, header=True, sep='\t', header_name_processor=defaultHeader)
 if __name__=="__main__":
 	# Utility function tests
 	test_printTiming('test')
+	harness = TestHarness()
 	# DelimitedLineReader tests
-	test001()
-	test002()
-	test003()
-	test004()
-	test005()
-	test006()
-	test007()
-	test008()
-	test009()
-	test010()
-	test011()
-	test012()
-	test013()
-	print "** All tests passed **"
+	harness.add(test001())
+	harness.add(test002())
+	harness.add(test003())
+	harness.add(test004())
+	harness.add(test005())
+	harness.add(test006())
+	harness.add(test007())
+	harness.add(test008())
+	harness.add(test009())
+	harness.add(test010())
+	harness.add(test011())
+	harness.add(test012())
+	harness.add(test013())
+	harness.run()
