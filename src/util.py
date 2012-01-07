@@ -135,13 +135,22 @@ def dictParser(x, entry_sep=';', key_sep='='):
 
 ##########################
 # Simple testing framework
+#
+# Example usage:
+# if __name__=='__main__':
+#	harness = util.TestHarness()
+#	harness.add(AnExampleTestCase())
+#	harness.run()
 ##########################
 
 class AnExampleTestCase(object):
-	"""Example test case"""
+	"""Example test case."""
 	def run(self):
+		# Because this function returns False, it will declare that it failed.
+		# Returning True would suppress the failure message and produce success.
+		this_test_passed = False
 		self.message = "Goodness, I failed!"
-		return False
+		return this_test_passed
 
 class TestHarness(object):
 	"""A simple framework for registering and running tests."""
@@ -154,11 +163,15 @@ class TestHarness(object):
 		self.testcases.append(test)
 	
 	def run(self, stream=sys.stdout):
+	"""Run the registered tests. Defaults to sending information to sys.stdout; pass in stream=file(fname,'w') for file output.
+	@return a tuple containing the number of tests, the number that passed, and the total time elapsed.
+	"""
 		# Run the tests, time them, and keep track of the results.
 		n_tests = 0
 		n_passed = 0
 		total_time = 0.0
 		for test in self.testcases:
+			# Report on the test
 			stream.write("Test {} ({}): {}...".format(n_tests+1, test.__class__.__name__, test.__doc__))
 			# Store the current time again, in seconds
 			t1 = time.clock()
@@ -184,6 +197,7 @@ class TestHarness(object):
 		# Write out a brief summary of the test results.
 		stream.write("-"*40 + "\n")
 		stream.write("{0} test{1} completed, {2} passed, {3:.1f} seconds.\n".format(n_tests, "s" if n_tests>1 else "", n_passed, total_time))
+		return (n_tests, n_passed, total_time)
 		
 #########################
 # DelimitedLineReader
