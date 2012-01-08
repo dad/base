@@ -22,39 +22,52 @@ for (k,v) in transform_inverses.items():
 	transform_inverses[v] = k
 
 class Parameter(object):
-	def __init__(self, name, value=None, transform=None):
+	"""A parameter in an optimization scheme. Given a transform function and an inverse, can have the transformed value be optimized."""
+	def __init__(self, name, value=None, transform=None, inverse_transform=None):
 		self._name = name
 		self._value = value
 		self._transform = transform
-		# DAD: catch error here?
-		self._inv_transform = transform_inverses[self._transform]
+		# DAD: catch error here if there's no known inverse? For now, allow error to propagate normally.
+		if inverse_transform is None:
+			self._inv_transform = transform_inverses[self._transform]
+		else:
+			self._inv_transform = inverse_transform
 	
 	@property
 	def value(self):
+		"""Get the value of the parameter"""
 		return self._value
 
 	@value.setter
 	def value(self, v):
+		"""Set the value of the parameter"""
 		self._value = v
 	
 	@property
 	def name(self):
+		"""Get the parameter's name"""
 		return self._name
 	
 	@property
 	def transform(self):
+		"""Get the transfom function"""
 		return self._transform
 	
 	@property
 	def optvalue(self):
+		"""Get the optimizer-prepared value"""
 		return self._transform(self._value)
 	
 	@optvalue.setter
 	def optvalue(self, ov):
-		"""Retrieve the untransformed value from the optimizer-prepared value"""
+		"""Store the untransformed value given the optimizer-prepared value"""
 		self._value = self._inv_transform(ov)
 	
+	def __str__(self):
+		return "{0} ({1})".format(self.value, self.optvalue)
+	
 class ParameterTable(object):
+	"""A collection of parameters"""
 	def __init__(self, parameter_list=[]):
 		self._parameter_dict = dict([(p.name,p) for p in parameter_list])
 		self._parameter_names = sorted(self._parameter_dict.keys())
@@ -67,7 +80,7 @@ class ParameterTable(object):
 		return self._parameter_dict.get(param_name,default)
 	
 	def __getitem__(self, param_name):
-		return self._parameter_dict[param_name]
+		return self._parameter_dict[param_name].value
 	
 	def toOptimizer(self):
 		opt_params = [self._parameter_dict[id].optvalue for id in self._parameter_names]
@@ -93,11 +106,18 @@ class ParameterTable(object):
 	@property
 	def optvalues(self):
 		return [self._parameter_dict[k].optvalue for k in self.names]
+	
+	def __str__(self):
+		s = ''
+		for k in self._parameter_names:
+			p = self.get(k)
+			s += '{0}\t{1}\t({2})\n'.format(k, p.value, p.optvalue)
+		return s[:-1]
 
 class LogLikelihoodManager(object):
-	"""Generic base object for LogLikehood wrapping"""
+	"""Generic base object for LogLikehood wrapping. Contains parameters, and has methods for fitting and calculating log-likelihood."""
 	def __init__(self):
-		self._parameters = ml.ParameterTable()
+		self._parameters = ParameterTable()
 	
 	def getParameter(self, id, default=None):
 		return self._parameters.get(id,default)
@@ -106,18 +126,24 @@ class LogLikelihoodManager(object):
 		return self.getParameter(id).value
 
 	def updateParameters(self, params):
+		"""Pull parameters from the optimizer-ready list"""
 		self._parameters.fromOptimizer(params)
 			
 	@property
 	def parameters(self):
+		"""Get the parameters"""
 		return self._parameters
 		
-	def logLikelihood(self, params):
-		self.updateParameters(params)
+	def logLikelihood(self, opt_param_list):
+		"""Compute the log-likelihood given a list of parameters"""
+		# First, pull parameters from optimizer.
+		self.updateParameters(opt_param_list)
+		# Then, compute log likelihood, however that is done.
 		raise Exception, "The logLikelihood() method must be overridden!"
 	
 	def fit(self):
+		"""Fit the specified model"""
 		starting_params = self.parameters.toOptimizer()
-		fitted_params = sp.optimize.fmin(self.logLikelihood, starting_params, disp=False, maxiter=1e6, maxfun=1e7)
+		fitted_params = sp.optimize.fmin(self.logLikelihood, starting_params, disp=False)
 		self.updateParameters(fitted_params)
 		return self.parameters
