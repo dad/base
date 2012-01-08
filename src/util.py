@@ -89,6 +89,8 @@ def dictParser(x, entry_sep=';', key_sep='='):
 # if __name__=='__main__':
 #	harness = util.TestHarness()
 #	harness.add(AnExampleTestCase())
+#	harness.add(TestWrapper(anExampleTestFunction, "hello", "hello"))
+#	harness.add(TestWrapper(anExampleTestFunction, "hello", "world"))
 #	harness.run()
 ##########################
 
@@ -103,16 +105,21 @@ class AnExampleTestCase(object):
 
 def anExampleTestFunction(arg1,arg2):
 	"""An example test function."""
-	return True
+	return arg1==arg2
 
-class TestFunctionWrapper(object):
-	def __init__(self, fun, args):
+class TestWrapper(object):
+	"""A wrapper class which allows any function returning a bool to be used as a test."""
+	def __init__(self, fun, *args):
 		self.fun = fun
 		self.args = args
 		self.__doc__ = fun.__doc__
+	
+	@property
+	def name(self):
+		return self.fun.__name__
 
 	def run(self):
-		return self.fun(self.args)
+		return self.fun(*(self.args))
 
 class TestHarness(object):
 	"""A simple framework for registering and running tests."""
@@ -136,7 +143,10 @@ class TestHarness(object):
 			stream.write("Running {} tests\n".format(len(self.testcases)) + "-"*40 + "\n")
 			for test in self.testcases:
 				# Report on the test
-				stream.write("{} ({}): {}...".format(n_tests+1, test.__class__.__name__, test.__doc__))
+				test_name = test.__class__.__name__
+				if test_name == 'TestWrapper':
+					test_name = test.name
+				stream.write("{} ({}): {}...".format(n_tests+1, test_name, test.__doc__))
 				stream.flush()
 				# Store the current time again, in seconds
 				t1 = time.clock()
@@ -970,5 +980,5 @@ if __name__=="__main__":
 	harness.add(test012())
 	harness.add(test013())
 	harness.add(test014())
-	harness.add(TestFunctionWrapper(anExampleTestFunction, ("hello","world")))
+	harness.add(TestWrapper(anExampleTestFunction, "hello", "hello"))
 	harness.run()
