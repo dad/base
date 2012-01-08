@@ -123,9 +123,10 @@ class TestWrapper(object):
 
 class TestHarness(object):
 	"""A simple framework for registering and running tests."""
-	def __init__(self):
+	def __init__(self, verbose=True):
 		# Maintain a list of tests.
 		self.testcases = []
+		self._verbose = verbose
 	
 	def add(self, test):
 		# Add a test to the list.
@@ -139,15 +140,18 @@ class TestHarness(object):
 		n_tests = 0
 		n_passed = 0
 		total_time = 0.0
+		results = []
 		if len(self.testcases) > 0:
-			stream.write("Running {} tests\n".format(len(self.testcases)) + "-"*40 + "\n")
+			if self._verbose:
+				stream.write("Running {} tests\n".format(len(self.testcases)) + "-"*40 + "\n")
 			for test in self.testcases:
 				# Report on the test
 				test_name = test.__class__.__name__
 				if test_name == 'TestWrapper':
 					test_name = test.name
-				stream.write("{} ({}): {}...".format(n_tests+1, test_name, test.__doc__))
-				stream.flush()
+				if self._verbose:
+					stream.write("{} ({}): {}...".format(n_tests+1, test_name, test.__doc__))
+					stream.flush()
 				# Store the current time again, in seconds
 				t1 = time.clock()
 				# Run the test and store the result.
@@ -164,6 +168,8 @@ class TestHarness(object):
 				timing = '[{:.1f} sec]'.format(t2-t1)
 				# Update the total time
 				total_time += (t2-t1)
+				# Store the outcome: name, result, time
+				results.append((test_name, test_result, t2-t1))
 				# One more test done...
 				n_tests += 1
 				if not test_result:
@@ -173,15 +179,19 @@ class TestHarness(object):
 						failure_message = test.message
 					if not failure_message == '':
 						line += "\t{}\n".format(failure_message)
-					stream.write(line)
+					if self._verbose:
+						stream.write(line)
 				else:
 					# If test passed, update passed test count and print the timing.
 					n_passed += 1
-					stream.write("passed {}\n".format(timing))
+					if self._verbose:
+						stream.write("passed {}\n".format(timing))
 			# Write out a brief summary of the test results.
-			stream.write("-"*40 + "\n")
-			stream.write("{0} test{1} completed, {2} passed, {3:.1f} seconds.\n".format(n_tests, "" if n_tests==1 else "s", n_passed, total_time))
-		return (n_tests, n_passed, total_time)
+			if self._verbose:
+				stream.write("-"*40 + "\n")
+				stream.write("{0} test{1} completed, {2} passed, {3:.1f} seconds.\n".format(n_tests, "" if n_tests==1 else "s", n_passed, total_time))
+		# Return a report of the results: list of tuples of (name, outcome, time)
+		return results
 		
 #########################
 # DelimitedLineReader
@@ -973,7 +983,7 @@ def readTable(fname, header=True, sep='\t', header_name_processor=defaultHeader)
 if __name__=="__main__":
 	# Utility function tests
 	test_printTiming('test')
-	harness = TestHarness()
+	harness = TestHarness(verbose=True)
 	# DelimitedLineReader tests
 	harness.add(test001())
 	harness.add(test002())
@@ -994,4 +1004,6 @@ if __name__=="__main__":
 		raise Exception, "this test should fail, and print a stack trace"
 	harness.add(TestWrapper(exceptionTest))
 	harness.add(TestWrapper(anExampleTestFunction, "hello", "hello"))
-	harness.run()
+	results = harness.run()
+	#for (name, res, t) in results:
+	#	print name, res, t
