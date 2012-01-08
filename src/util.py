@@ -991,7 +991,7 @@ if __name__=="__main__":
 	harness.add(test014())
 	def exceptionTest():
 		"""inline test function raising an exception"""
-		raise Exception, "this test should fail"
+		raise Exception, "this test should fail, and print a stack trace"
 	harness.add(TestWrapper(exceptionTest))
 	harness.add(TestWrapper(anExampleTestFunction, "hello", "hello"))
 	harness.run()
