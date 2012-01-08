@@ -102,13 +102,17 @@ class AnExampleTestCase(object):
 		return this_test_passed
 
 def anExampleTestFunction(arg1,arg2):
+	"""An example test function."""
 	return True
 
 class TestFunctionWrapper(object):
-	def __init__(self, fun):
+	def __init__(self, fun, args):
 		self.fun = fun
+		self.args = args
+		self.__doc__ = fun.__doc__
 
-	def 
+	def run(self):
+		return self.fun(self.args)
 
 class TestHarness(object):
 	"""A simple framework for registering and running tests."""
@@ -966,4 +970,5 @@ if __name__=="__main__":
 	harness.add(test012())
 	harness.add(test013())
 	harness.add(test014())
+	harness.add(TestFunctionWrapper(anExampleTestFunction, ("hello","world")))
 	harness.run()
