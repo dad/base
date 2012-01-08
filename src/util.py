@@ -151,7 +151,13 @@ class TestHarness(object):
 				# Store the current time again, in seconds
 				t1 = time.clock()
 				# Run the test and store the result.
-				test_result = test.run()
+				failure_message = ""
+				try:
+					test_result = test.run()
+				except Exception, e:
+					test_result = False
+					failure_message = str(e)
+					
 				# Store the current time again, in seconds
 				t2 = time.clock()
 				timing = '[{:.1f} sec]'.format(t2-t1)
@@ -163,7 +169,9 @@ class TestHarness(object):
 					# If test failed, print timing and its message, if any.
 					line = "failed. {}\n".format(timing)
 					if not getattr(test, "message", None) is None:
-						line += "\t{}\n".format(test.message)
+						failure_message = test.message
+					if not failure_message == '':
+						line += "\t{}\n".format(failure_message)
 					stream.write(line)
 				else:
 					# If test passed, update passed test count and print the timing.
@@ -981,4 +989,8 @@ if __name__=="__main__":
 	harness.add(test013())
 	harness.add(test014())
 	harness.add(TestWrapper(anExampleTestFunction, "hello", "hello"))
+	def exceptionTest():
+		"""inline test function raising an exception"""
+		raise Exception, "this test should fail"
+	harness.add(TestWrapper(exceptionTest))
 	harness.run()
