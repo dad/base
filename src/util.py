@@ -1,4 +1,4 @@
-import time, os, random, string, sys, math
+import time, os, random, string, sys, math, traceback
 import na
 
 # Float equality.  On my system (WinXP, Python 2.6), smallest distinguishable float difference is 7.45e-9.
@@ -156,7 +156,8 @@ class TestHarness(object):
 					test_result = test.run()
 				except Exception, e:
 					test_result = False
-					failure_message = str(e)
+					tb = traceback.format_exc()
+					failure_message = str(e) + '\n' + tb
 					
 				# Store the current time again, in seconds
 				t2 = time.clock()
@@ -988,9 +989,9 @@ if __name__=="__main__":
 	harness.add(test012())
 	harness.add(test013())
 	harness.add(test014())
-	harness.add(TestWrapper(anExampleTestFunction, "hello", "hello"))
 	def exceptionTest():
 		"""inline test function raising an exception"""
 		raise Exception, "this test should fail"
 	harness.add(TestWrapper(exceptionTest))
+	harness.add(TestWrapper(anExampleTestFunction, "hello", "hello"))
 	harness.run()
