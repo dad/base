@@ -50,16 +50,6 @@ class OutStreams:
 		for outs in self.streams:
 			outs.flush()
 
-def isBlank(s):
-	return s.strip() == ''
-
-def isComment(s, comment_char='#'):
-	st = s.strip()
-	res = False
-	if len(st) > 0:
-		res = st[0] == comment_char
-	return res
-
 def isNA(x):
 	print "util.isNA() should be updated to na.isNA()"
 	return na.isNA(x)
@@ -87,6 +77,100 @@ class FieldFormatter:
 			res = na.NA
 		return res
 
+
+def dictParser(x, entry_sep=';', key_sep='='):
+	entries = x.split(entry_sep)
+	return dict([entry.split(key_sep) for entry in entries])
+
+##########################
+# Simple testing framework
+#
+# Example usage:
+# if __name__=='__main__':
+#	harness = util.TestHarness()
+#	harness.add(AnExampleTestCase())
+#	harness.run()
+##########################
+
+class AnExampleTestCase(object):
+	"""Example test case."""
+	def run(self):
+		# Because this function returns False, it will declare that it failed.
+		# Returning True would suppress the failure message and produce success.
+		this_test_passed = False
+		self.message = "Goodness, I failed!"
+		return this_test_passed
+
+def anExampleTestFunction(arg1,arg2):
+	return True
+
+class TestFunctionWrapper(object):
+	def __init__(self, fun):
+		self.fun = fun
+
+	def 
+
+class TestHarness(object):
+	"""A simple framework for registering and running tests."""
+	def __init__(self):
+		# Maintain a list of tests.
+		self.testcases = []
+	
+	def add(self, test):
+		# Add a test to the list.
+		self.testcases.append(test)
+	
+	def run(self, stream=sys.stdout):
+		"""Run the registered tests. Defaults to sending information to sys.stdout; pass in stream=file(fname,'w') for file output.
+		@return a tuple containing the number of tests, the number that passed, and the total time elapsed.
+		"""
+		# Run the tests, time them, and keep track of the results.
+		n_tests = 0
+		n_passed = 0
+		total_time = 0.0
+		if len(self.testcases) > 0:
+			stream.write("Running {} tests\n".format(len(self.testcases)) + "-"*40 + "\n")
+			for test in self.testcases:
+				# Report on the test
+				stream.write("{} ({}): {}...".format(n_tests+1, test.__class__.__name__, test.__doc__))
+				stream.flush()
+				# Store the current time again, in seconds
+				t1 = time.clock()
+				# Run the test and store the result.
+				test_result = test.run()
+				# Store the current time again, in seconds
+				t2 = time.clock()
+				timing = '[{:.1f} sec]'.format(t2-t1)
+				# Update the total time
+				total_time += (t2-t1)
+				# One more test done...
+				n_tests += 1
+				if not test_result:
+					# If test failed, print timing and its message, if any.
+					line = "failed. {}\n".format(timing)
+					if not getattr(test, "message", None) is None:
+						line += "\t{}\n".format(test.message)
+					stream.write(line)
+				else:
+					# If test passed, update passed test count and print the timing.
+					n_passed += 1
+					stream.write("passed {}\n".format(timing))
+			# Write out a brief summary of the test results.
+			stream.write("-"*40 + "\n")
+			stream.write("{0} test{1} completed, {2} passed, {3:.1f} seconds.\n".format(n_tests, "" if n_tests==1 else "s", n_passed, total_time))
+		return (n_tests, n_passed, total_time)
+		
+#########################
+# DelimitedLineReader
+#########################
+
+def isBlank(s):
+	return s.strip() == ''
+
+def isComment(s, comment_char='#'):
+	st = s.strip()
+	res = st.startswith(comment_char)
+	return res
 
 def looseIntParser(x):
 	v = None
@@ -121,80 +205,6 @@ def naStringParser(x):
 	if not na.isNA(x):
 		v = str(x)
 	return v
-
-def dictParser(x, entry_sep=';', key_sep='='):
-	entries = x.split(entry_sep)
-	return dict([entry.split(key_sep) for entry in entries])
-
-##########################
-# Simple testing framework
-#
-# Example usage:
-# if __name__=='__main__':
-#	harness = util.TestHarness()
-#	harness.add(AnExampleTestCase())
-#	harness.run()
-##########################
-
-class AnExampleTestCase(object):
-	"""Example test case."""
-	def run(self):
-		# Because this function returns False, it will declare that it failed.
-		# Returning True would suppress the failure message and produce success.
-		this_test_passed = False
-		self.message = "Goodness, I failed!"
-		return this_test_passed
-
-class TestHarness(object):
-	"""A simple framework for registering and running tests."""
-	def __init__(self):
-		# Maintain a list of tests.
-		self.testcases = []
-	
-	def add(self, test):
-		# Add a test to the list.
-		self.testcases.append(test)
-	
-	def run(self, stream=sys.stdout):
-		"""Run the registered tests. Defaults to sending information to sys.stdout; pass in stream=file(fname,'w') for file output.
-		@return a tuple containing the number of tests, the number that passed, and the total time elapsed.
-		"""
-		# Run the tests, time them, and keep track of the results.
-		n_tests = 0
-		n_passed = 0
-		total_time = 0.0
-		for test in self.testcases:
-			# Report on the test
-			stream.write("Test {} ({}): {}...".format(n_tests+1, test.__class__.__name__, test.__doc__))
-			# Store the current time again, in seconds
-			t1 = time.clock()
-			# Run the test and store the result.
-			test_result = test.run()
-			# Store the current time again, in seconds
-			t2 = time.clock()
-			timing = '[{:.1f} sec]'.format(t2-t1)
-			# Update the total time
-			total_time += (t2-t1)
-			# One more test done...
-			n_tests += 1
-			if not test_result:
-				# If test failed, print timing and its message, if any.
-				line = "failed. {}\n".format(timing)
-				if not getattr(test, "message", None) is None:
-					line += "\t{}\n".format(test.message)
-				stream.write(line)
-			else:
-				# If test passed, update passed test count and print the timing.
-				n_passed += 1
-				stream.write("passed! {}\n".format(timing))
-		# Write out a brief summary of the test results.
-		stream.write("-"*40 + "\n")
-		stream.write("{0} test{1} completed, {2} passed, {3:.1f} seconds.\n".format(n_tests, "s" if n_tests>1 else "", n_passed, total_time))
-		return (n_tests, n_passed, total_time)
-		
-#########################
-# DelimitedLineReader
-#########################
 
 def maxQuantHeader(header_flds):
 	# Header line
@@ -788,7 +798,7 @@ class test012:
 		# Comment as last line
 		n_lines = 10
 		header_list = ["str","float","int","str"]
-		fname = "tmp_commend_last.txt"
+		fname = "tmp_comment_last.txt"
 		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
 		inf = file(fname, 'a')
 		inf.write("# comment\n")
@@ -820,13 +830,32 @@ class test013:
 		os.remove(fname)
 		return True
 
+class test014:
+	"""comments as first lines"""
+	def run(self):
+		n_lines = 10
+		header_list = ["str","float","int","str"]
+		fname = "tmp_comment_first.txt"
+		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0, first_lines="# first line comment\n# second line comment")
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = DelimitedLineReader(inf)
+		while not fp.atEnd():
+			flds = fp.nextDict()
+		inf.close()
+		os.remove(fname)
+		return True
+
 
 def randString():
 	return ''.join(random.sample(string.letters, 10))
+	
 def randInt():
 	return random.randint(1,10000)
+
 def randFloat():
 	return random.random()
+
 def makeFile(fname, headers, fld_types, n_lines, sep, na_prob, first_lines=None, last_lines=None):
 	dtype = {}
 	dtype['f'] = randFloat
@@ -918,9 +947,6 @@ def readTable(fname, header=True, sep='\t', header_name_processor=defaultHeader)
 	inf.close()
 	return LightDataFrame(header_flds, [data_dict[h] for h in header_flds])
 
-
-
-
 if __name__=="__main__":
 	# Utility function tests
 	test_printTiming('test')
@@ -939,4 +965,5 @@ if __name__=="__main__":
 	harness.add(test011())
 	harness.add(test012())
 	harness.add(test013())
+	harness.add(test014())
 	harness.run()
