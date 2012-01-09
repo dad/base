@@ -126,11 +126,14 @@ class TestHarness(object):
 	def __init__(self, verbose=True):
 		# Maintain a list of tests.
 		self.testcases = []
+		self.focal_testcases = []
 		self._verbose = verbose
 	
-	def add(self, test):
+	def add(self, test, focus=False):
 		# Add a test to the list.
 		self.testcases.append(test)
+		if focus:
+			self.focal_testcases.append(test)
 	
 	def run(self, stream=sys.stdout):
 		"""Run the registered tests. Defaults to sending information to sys.stdout; pass in stream=file(fname,'w') for file output.
@@ -142,9 +145,15 @@ class TestHarness(object):
 		total_time = 0.0
 		results = []
 		if len(self.testcases) > 0:
+			testcases = self.testcases
+			line = "Running {} tests:\n".format(len(self.testcases))
+			if len(self.focal_testcases)>0:
+				# Focus on these test cases only.
+				testcases = self.focal_testcases
+				line = "Running {0} focal tests (of {1} registered tests):\n".format(len(self.focal_testcases), len(self.testcases))
 			if self._verbose:
-				stream.write("Running {} tests\n".format(len(self.testcases)) + "-"*40 + "\n")
-			for test in self.testcases:
+				stream.write(line + "-"*40 + "\n")
+			for test in testcases:
 				# Report on the test
 				test_name = test.__class__.__name__
 				if test_name == 'TestWrapper':
@@ -993,7 +1002,7 @@ if __name__=="__main__":
 	harness.add(test006())
 	harness.add(test007())
 	harness.add(test008())
-	harness.add(test009())
+	harness.add(test009(), focus=False)
 	harness.add(test010())
 	harness.add(test011())
 	harness.add(test012())
