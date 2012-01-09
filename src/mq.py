@@ -121,14 +121,21 @@ class ProteinQuant(object):
 	
 	@property
 	def ratios(self):
-		for pep in self.getPeptides():
-			for r in pep.getHeavyLightRatios():
+		for pep in self.peptides:
+			for r in pep.ratios:
 				yield r
+	
+	@property
+	def ratio_count(self):
+		rc = 0
+		for pep in self.peptides:
+			rc += pep.ratio_count
+		return rc
 
 	@property
 	def normalized_ratios(self):
-		for pep in self.getPeptides():
-			for r in pep.getNormalizedHeavyLightRatios():
+		for pep in self.peptides:
+			for r in pep.normalized_ratios:
 				yield r
 	
 	@property
@@ -156,6 +163,7 @@ class PeptideDetectionEvent(object):
 		# Takes a property dictionary
 		self.prop_dict = prop_dict
 
+# DAD: Tons of NA checking here. Is any of it really necessary? Any reason not to catch NA's as they're added, and exclude them?
 class PeptideQuant(object):
 	def __init__(self, key):
 		self._key = key
@@ -251,6 +259,10 @@ class PeptideQuant(object):
 		if not na.isNA(med):
 			res = math.exp(med)
 		return res
+	
+	@property
+	def ratio_count(self):
+		return len(self.heavy_light_ratio_list)
 
 	def getIntensitySummary(self):
 		acc = stats.Accumulator(store=True)
@@ -314,10 +326,10 @@ class PeptideQuant(object):
 
 	def __str__(self):
 		line = self.key
-		line += '\n\tH/L      \t' + '\t'.join(["%1.4f" % r for r in self.heavy_light_ratio_list]) + '\n'
-		line += '\tH/L Normal.\t' + '\t'.join(["%1.4f" % r for r in self.heavy_light_normalized_ratio_list]) + '\n'
-		line += '\tIntensity H\t' + '\t'.join(["%1.0f" % r for r in self.intensity_h_list]) + '\n'
-		line += '\tIntensity L\t' + '\t'.join(["%1.0f" % r for r in self.intensity_l_list]) + '\n'
+		line += '\n\tH/L      \t' + '\t'.join(["{:1.4f}".format(r) for r in self.heavy_light_ratio_list]) + '\n'
+		line += '\tH/L Normal.\t' + '\t'.join(["{:1.4f}".format(r) for r in self.heavy_light_normalized_ratio_list]) + '\n'
+		line += '\tIntensity H\t' + '\t'.join(["{:1.0f}".format(r) for r in self.intensity_h_list]) + '\n'
+		line += '\tIntensity L\t' + '\t'.join(["{:1.0f}".format(r) for r in self.intensity_l_list]) + '\n'
 		line += '\tMS/MS Count\t{0:d}\n'.format(self.msms_count)
 		return line
 
@@ -374,7 +386,7 @@ class ExperimentEvidence(object):
 			self.experiment = flds[2]
 			res = os.path.isfile(os.path.expanduser(self.filename))
 			if not res:
-				print "# Evidence file not found: %s" % self.filename
+				print "# Evidence file not found: {me.filename}".format(me=self)
 		else:
 			res = False
 		return res
@@ -463,7 +475,7 @@ class ExperimentEvidence(object):
 			flds = dlr.nextDict()
 			self.parseFields(flds, orf_dict)
 		if line == max_lines:
-			print "# Warning: max_lines {0} exceeded in ExperimentEvidence.readData()".format(max_lines)
+			print "# Warning: max_lines ({0}) exceeded in ExperimentEvidence.readData()".format(max_lines)
 
 	@property
 	def peptides(self):
@@ -472,14 +484,14 @@ class ExperimentEvidence(object):
 	
 	@property
 	def proteins(self):
-		for p in self.protein_data.values():
-			yield p
+		for prot in self.protein_data.values():
+			yield prot
 	
-	#def getPeptideKeys(self):
-	#	return self.peptide_data.keys()
-
-	#def getProteinKeys(self):
-	#	return self.protein_data.keys()
+	def getProtein(self, prot_id, default=None):
+		return self.protein_data.get(prot_id, default)
+	
+	def getPeptide(self, pep_id, default=None):
+		return self.peptide_data.get(pep_id, default)
 
 	def normalizeRatiosBy(self, norm_prot):
 		ratio_stats = norm_prot.getHeavyLightRatioSummary()
@@ -610,11 +622,6 @@ class ExperimentEvidence(object):
 		line += '%d peptides, %d proteins' % (len(self.peptide_data), len(self.protein_data))
 		return line
 	
-	@property
-	def proteins(self):
-		for prot in self.protein_data.values():
-			yield prot
-
 class ExperimentEvidenceFactory(object):
 	"""Class that parses evidence files into multiple ExperimentEvidence objects.
 	"""
