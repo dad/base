@@ -23,15 +23,19 @@ for (k,v) in transform_inverses.items():
 
 class Parameter(object):
 	"""A parameter in an optimization scheme. Given a transform function and an inverse, can have the transformed value be optimized."""
-	def __init__(self, name, value=None, transform=None, inverse_transform=None):
+	def __init__(self, name, value=None, transform=None, deriv=None, hess=None):
 		self._name = name
 		self._value = value
-		self._transform = transform
+		self._transform = (transform,)[0]
 		# DAD: catch error here if there's no known inverse? For now, allow error to propagate normally.
-		if inverse_transform is None:
+		if len((transform,)) == 1:
 			self._inv_transform = transform_inverses[self._transform]
 		else:
-			self._inv_transform = inverse_transform
+			self._inv_transform = (transform,)[1]
+		self._deriv_fxn = deriv
+		self._hess_fxn = hess
+		self._optderiv = None
+		self._opthess = None
 	
 	@property
 	def value(self):
@@ -63,6 +67,19 @@ class Parameter(object):
 		"""Store the untransformed value given the optimizer-prepared value"""
 		self._value = self._inv_transform(ov)
 	
+	@property
+	def optderivative(self):
+		return self._optderiv #self._deriv_fxn(self.optvalue, data)
+	
+	@optderivative.setter
+	def optderivative(self, od):
+		"""Store the specified derivative of the optimizer-ready value"""
+		self._optderiv = od
+	
+	@property
+	def opthessian(self):
+		return self._opthess #self._hess_fxn(self.optvalue)
+	
 	def __str__(self):
 		return "{0} ({1})".format(self.value, self.optvalue)
 	
@@ -83,13 +100,23 @@ class ParameterTable(object):
 		return self._parameter_dict[param_name].value
 	
 	def toOptimizer(self):
-		opt_params = [self._parameter_dict[id].optvalue for id in self._parameter_names]
-		return opt_params
+		#opt_params = [self._parameter_dict[id].optvalue for id in self._parameter_names]
+		return self.optvalues
 	
 	def fromOptimizer(self, param_list):
 		assert len(param_list) == len(self._parameter_names)
 		for (id, v) in zip(self._parameter_names, param_list):
 			self._parameter_dict[id].optvalue = v
+	
+	@property
+	def optderivatives(self):
+		opt_deriv = [self._parameter_dict[id].optderivative for id in self._parameter_names]
+		return opt_deriv
+	
+	@property
+	def opthess(self):
+		opt_hess = [self._parameter_dict[id].hessian for id in self._parameter_names]
+		return opt_hess
 	
 	@property
 	def names(self):
@@ -108,6 +135,7 @@ class ParameterTable(object):
 		return [self._parameter_dict[k].optvalue for k in self.names]
 	
 	def __str__(self):
+		"""Write out the parameter name, value, and optimizer value in tabular form"""
 		s = ''
 		for k in self._parameter_names:
 			p = self.get(k)
@@ -125,9 +153,9 @@ class LogLikelihoodManager(object):
 	def __getitem__(self, id):
 		return self.getParameter(id).value
 
-	def updateParameters(self, params):
+	def updateParameters(self, opt_param_list):
 		"""Pull parameters from the optimizer-ready list"""
-		self._parameters.fromOptimizer(params)
+		self._parameters.fromOptimizer(opt_param_list)
 			
 	@property
 	def parameters(self):
@@ -140,6 +168,12 @@ class LogLikelihoodManager(object):
 		self.updateParameters(opt_param_list)
 		# Then, compute log likelihood, however that is done.
 		raise Exception, "The logLikelihood() method must be overridden!"
+	
+	def derivative(self, opt_param_list):
+		raise Exception, "The derivative() method must be overridden!"
+	
+	def hessian(self, opt_param_list):
+		raise Exception, "The hessian() method must be overridden!"
 	
 	def fit(self):
 		"""Fit the specified model"""
