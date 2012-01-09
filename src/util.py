@@ -1,4 +1,4 @@
-import time, os, random, string, sys, math, traceback
+import time, os, random, string, sys, math, traceback, unittest
 import na
 
 # Float equality.  On my system (WinXP, Python 2.6), smallest distinguishable float difference is 7.45e-9.
@@ -77,13 +77,14 @@ class FieldFormatter:
 			res = na.NA
 		return res
 
-
 def dictParser(x, entry_sep=';', key_sep='='):
 	entries = x.split(entry_sep)
 	return dict([entry.split(key_sep) for entry in entries])
 
+'''
 ##########################
 # Simple testing framework
+# Use unittest instead. :)
 #
 # Example usage:
 # if __name__=='__main__':
@@ -96,7 +97,7 @@ def dictParser(x, entry_sep=';', key_sep='='):
 
 class AnExampleTestCase(object):
 	"""Example test case."""
-	def run(self):
+	def test_run(self):
 		# Because this function returns False, it will declare that it failed.
 		# Returning True would suppress the failure message and produce success.
 		this_test_passed = False
@@ -118,7 +119,7 @@ class TestWrapper(object):
 	def name(self):
 		return self.fun.__name__
 
-	def run(self):
+	def test_run(self):
 		return self.fun(*(self.args))
 
 class TestHarness(object):
@@ -201,7 +202,8 @@ class TestHarness(object):
 				stream.write("{0} test{1} completed, {2} passed, {3:.1f} seconds.\n".format(n_tests, "" if n_tests==1 else "s", n_passed, total_time))
 		# Return a report of the results: list of tuples of (name, outcome, time)
 		return results
-		
+'''
+
 #########################
 # DelimitedLineReader
 #########################
@@ -605,9 +607,9 @@ class DelimitedLineReader:
 		except IndexError:
 			raise ReaderError, "Bad handler index %d" % handler_index
 
-class test001:
+class test001(unittest.TestCase):
 	"""infer header types"""
-	def run(self):
+	def test_run(self):
 		# Normal
 		n_lines = 100
 		header_list = ["str","float","int","str"]
@@ -628,9 +630,9 @@ class test001:
 		os.remove(fname)
 		return res
 
-class test002:
+class test002(unittest.TestCase):
 	"""read through"""
-	def run(self):
+	def test_run(self):
 		# Normal
 		n_lines = 100
 		header_list = ["str","float","int","str"]
@@ -645,9 +647,9 @@ class test002:
 		os.remove(fname)
 		return True
 
-class test003:
+class test003(unittest.TestCase):
 	"""header parsing"""
-	def run(self):
+	def test_run(self):
 		# Normal
 		n_lines = 100
 		header_list = ["str","float","int","anotherStr"]
@@ -662,9 +664,9 @@ class test003:
 		os.remove(fname)
 		return res
 
-class test004:
+class test004(unittest.TestCase):
 	"""infer header types 2"""
-	def run(self):
+	def test_run(self):
 		# Normal
 		n_lines = 100
 		header_list = ["str","float","int","str"]
@@ -685,9 +687,9 @@ class test004:
 		os.remove(fname)
 		return res
 
-class test005():
+class test005(unittest.TestCase):
 	"""lines read"""
-	def run(self):
+	def test_run(self):
 		# Normal
 		n_lines = random.randint(10,300)
 		header_list = ["str","float","int","str"]
@@ -704,9 +706,9 @@ class test005():
 		os.remove(fname)
 		return res
 
-class test006:
+class test006(unittest.TestCase):
 	"""infer header types with NA's"""
-	def run(self):
+	def test_run(self):
 		# NA's at some frequency -- infer types.
 		n_lines = 100
 		header_list = ["str","float","int","str"]
@@ -730,9 +732,9 @@ class test006:
 		os.remove(fname)
 		return res
 
-class test007:
+class test007(unittest.TestCase):
 	"""infer header types with NA's in every line"""
-	def run(self):
+	def test_run(self):
 		# NA's in every line -- infer types.
 		n_lines = 0
 		header_list = ["str","float","int","str"]
@@ -757,9 +759,9 @@ class test007:
 		os.remove(fname)
 		return res
 
-class test008:
+class test008(unittest.TestCase):
 	"""infer header types with NA's in one full column"""
-	def run(self):
+	def test_run(self):
 		# NA's in every line -- infer types.
 		n_lines = 0
 		header_list = ["str","float","int","str"]
@@ -775,9 +777,9 @@ class test008:
 		os.remove(fname)
 		return True
 
-class test009:
+class test009(unittest.TestCase):
 	"""header processing"""
-	def run(self):
+	def test_run(self):
 		# Header processing
 		n_lines = 100
 		header_list = ["int","int.1","int","int"]
@@ -796,9 +798,9 @@ class test009:
 		os.remove(fname)
 		return res
 
-class test010:
+class test010(unittest.TestCase):
 	"""header processing: custom header processor"""
-	def run(self):
+	def test_run(self):
 		# Header processing
 		n_lines = 100
 		header_list = ["Ratio (H/L)","float","int","This + That"]
@@ -815,9 +817,9 @@ class test010:
 		os.remove(fname)
 		return res
 
-class test011:
+class test011(unittest.TestCase):
 	"""adaptive handler updating"""
-	def run(self):
+	def test_run(self):
 		# Adaptive field redefinition
 		n_lines = 100
 		header_list = ["float","float","int","str"]
@@ -834,9 +836,9 @@ class test011:
 		os.remove(fname)
 		return True
 
-class test012:
+class test012(unittest.TestCase):
 	"""comment as last line"""
-	def run(self):
+	def test_run(self):
 		# Comment as last line
 		n_lines = 10
 		header_list = ["str","float","int","str"]
@@ -854,9 +856,9 @@ class test012:
 		os.remove(fname)
 		return True
 
-class test013:
+class test013(unittest.TestCase):
 	"""no headers but call to nextDict"""
-	def run(self):
+	def test_run(self):
 		# No headers but call to nextDict
 		n_lines = 10
 		fname = "tmp_no_header.txt"
@@ -872,9 +874,9 @@ class test013:
 		os.remove(fname)
 		return True
 
-class test014:
+class test014(unittest.TestCase):
 	"""comments as first lines"""
-	def run(self):
+	def test_run(self):
 		n_lines = 10
 		header_list = ["str","float","int","str"]
 		fname = "tmp_comment_first.txt"
@@ -990,29 +992,5 @@ def readTable(fname, header=True, sep='\t', header_name_processor=defaultHeader)
 	return LightDataFrame(header_flds, [data_dict[h] for h in header_flds])
 
 if __name__=="__main__":
-	# Utility function tests
-	test_printTiming('test')
-	harness = TestHarness(verbose=True)
-	# DelimitedLineReader tests
-	harness.add(test001())
-	harness.add(test002())
-	harness.add(test003())
-	harness.add(test004())
-	harness.add(test005())
-	harness.add(test006())
-	harness.add(test007())
-	harness.add(test008())
-	harness.add(test009(), focus=False)
-	harness.add(test010())
-	harness.add(test011())
-	harness.add(test012())
-	harness.add(test013())
-	harness.add(test014())
-	def exceptionTest():
-		"""inline test function raising an exception"""
-		raise Exception, "this test should fail, and print a stack trace"
-	harness.add(TestWrapper(exceptionTest))
-	harness.add(TestWrapper(anExampleTestFunction, "hello", "hello"))
-	results = harness.run()
-	#for (name, res, t) in results:
-	#	print name, res, t
+	unittest.main(verbosity=2)
+
