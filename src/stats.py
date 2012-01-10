@@ -7,6 +7,7 @@ Expanded and maintained by D. Allan Drummond, 2004-2012."""
 #
 import re, math, os, string, random
 import listrank, na
+import scipy as sp
 
 #---------------------------------------------------------------------------------
 class StatsError(Exception):
@@ -152,7 +153,7 @@ class Accumulator(object):
 	def median(self):
 		res = None
 		if self._store and self._n>0:
-			res = Median(self._data)
+			res = sp.median(self._data)
 		return res
 
 	@property
@@ -183,7 +184,7 @@ class Accumulator(object):
 		if self.n == 1:
 			res = 0.0
 		if self.n > 1:
-			res = math.sqrt(self.variance)
+			res = sp.sqrt(self.variance)
 		return res
 
 	@property
@@ -192,7 +193,7 @@ class Accumulator(object):
 			return 0.0
 		if self.n < 1:
 			return None
-		return self.sd/math.sqrt(self.n)
+		return self.sd/sp.sqrt(self.n)
 
 	def getSEConfidenceInterval(self, alpha):
 		assert False, "Not implemented yet"
@@ -282,92 +283,20 @@ def correctPValue(p_values, method="BH"):
 
 #---------
 def statsSummary(numlist):
-	n = len(numlist)
-	if n < 1:
-		return (None,None,None,None)
-	if n == 1:
-		return (1, numlist[0], 0.0, 0.0)
-	# n > 1 from here on
-	sum1 = sum2 = 0.0
-	n = 0
-	for x in numlist:
-		assert isinstance(x, int) or isinstance(x, float)
-		sum1 += x
-		sum2 += x * x
-		n += 1
-	assert n == len(numlist)
-	# sample variance
-	var = (1.0/(n-1.0))*(sum2 - (1.0/n)*sum1*sum1)
-	if var < 0.0:
-		var = 0.0 # Can happen, but only due to numerical problems
-	m = sum1/n
-	#print sum1, sum2, n, m, var
-	sd = math.sqrt(var)
-	se = sd/math.sqrt(n)
-	return (n, m, sd, se)
-
-def StatsSummary(numlist):
-	return statsSummary(numlist)
+	return summary(numlist)
 
 def summary(numlist):
-	return statsSummary(numlist)
-
-#----------------------------------------------------------------------------
-def StatsSummary2(numlist):
-    """Returns summary one-variable statistics for a list of numbers.
-
-    Call is: '(mean, median, sd, n) = StatsSummary2(numlist)'
-    Any entries of 'None' or '-' are removed.
-    If there are one or zero data points, just returns the number of
-    data points rather than the 4-tuple.
-    Returns a 4-tuple giving the mean, median, standard deviation, and
-    number of data points."""
-    n = len(numlist) - numlist.count(None) - numlist.count('-')
-    if n <= 1:
-		return n
-    return (Mean(numlist), Median(numlist), StandardDeviation(numlist), n)
+	acc = Accumulator(numlist, store=True)
+	return acc.summary
 #---------------------------------------------------------------------------------
 def median(numlist):
-    """Returns the median of a list of numbers.
-
-    If any entries of the list are 'None' or '-', they are removed first."""
-    assert isinstance(numlist, list)
-    xlist = []  # make a copy of the list
-    for x in numlist:
-		if isinstance(x, (int, float, long)):
-			xlist.append(x)
-		elif x in [None, '-']:
-			pass
-		else:
-			raise StatsError, "Invalid value of %r in list." % x
-    if len(xlist) == 0:
-		raise StatsError, "Empty list."
-    xlist.sort()
-    n = len(xlist)
-    if n % 2 == 0: # even length list, average two middle entries
-		med = xlist[n / 2] + xlist[n / 2 - 1]
-		med = float(med) / 2.0
-		return med
-    else: # odd length list, get middle entry
-		return xlist[n / 2]
+	return sp.median(numlist)
 
 def Median(numlist):
 	return median(numlist)
 #----------------------------------------------------------------------------------
 def mean(numlist):
-	"""Returns the mean of a list of numbers.
-
-	If any entries of the list are 'None' or '-', they are removed
-	first."""
-	mean = 0.0
-	n = 0
-	for x in numlist:
-		assert isinstance(x, (int, float))
-		mean += x
-		n += 1
-	if n <= 0:
-		return 0.0
-	return mean / float(n)
+	return sp.mean(numlist)
 
 def Mean(numlist):
 	return mean(numlist)
