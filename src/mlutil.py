@@ -81,7 +81,7 @@ class Parameter(object):
 		return self._opthess #self._hess_fxn(self.optvalue)
 	
 	def __str__(self):
-		return "{0} ({1})".format(self.value, self.optvalue)
+		return "{me.name} {me.value} ({me.optvalue}), f'={me.optderivative}".format(me=self)
 	
 class ParameterTable(object):
 	"""A collection of parameters"""
@@ -110,12 +110,12 @@ class ParameterTable(object):
 	
 	@property
 	def optderivatives(self):
-		opt_deriv = [self._parameter_dict[id].optderivative for id in self._parameter_names]
+		opt_deriv = sp.r_[[self._parameter_dict[id].optderivative for id in self._parameter_names]]
 		return opt_deriv
 	
 	@property
 	def opthess(self):
-		opt_hess = [self._parameter_dict[id].hessian for id in self._parameter_names]
+		opt_hess = sp.r_[[self._parameter_dict[id].hessian for id in self._parameter_names]]
 		return opt_hess
 	
 	@property
@@ -139,7 +139,7 @@ class ParameterTable(object):
 		s = ''
 		for k in self._parameter_names:
 			p = self.get(k)
-			s += '{0}\t{1}\t({2})\n'.format(k, p.value, p.optvalue)
+			s += str(p) + '\n'
 		return s[:-1]
 
 class LogLikelihoodManager(object):

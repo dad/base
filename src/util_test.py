@@ -1,6 +1,11 @@
 import time, os, random, string, sys, math, traceback, unittest
 import util, na
 
+@util.printTiming
+def test_printTiming():
+	time.sleep(0.5)
+	print 'The next message should show at least 500ms of wait time:\n\t',
+
 class test001(unittest.TestCase):
 	"""infer header types"""
 	def test_run(self):
@@ -323,4 +328,5 @@ def makeFile(fname, headers, fld_types, n_lines, sep, na_prob, first_lines=None,
 	return fname
 
 if __name__=="__main__":
+	test_printTiming()
 	unittest.main(verbosity=2)
