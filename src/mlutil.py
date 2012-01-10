@@ -110,13 +110,11 @@ class ParameterTable(object):
 	
 	@property
 	def optderivatives(self):
-		opt_deriv = sp.r_[[self._parameter_dict[id].optderivative for id in self._parameter_names]]
-		return opt_deriv
+		return = sp.r_[[self._parameter_dict[id].optderivative for id in self.names]]
 	
 	@property
 	def opthess(self):
-		opt_hess = sp.r_[[self._parameter_dict[id].hessian for id in self._parameter_names]]
-		return opt_hess
+		return = sp.r_[[self._parameter_dict[id].hessian for id in self.names]]
 	
 	@property
 	def names(self):
