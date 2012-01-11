@@ -590,7 +590,7 @@ def writeFASTADict(seq_dict, outfile):
 	return writeFASTA(seqs, outfile, headers=headers)
 
 #-----------------------------------------------------------------------------------
-def readFASTA(infile_name):
+def readFASTA(infile):
 	"""Reads the sequences and headers from a FASTA file.
 
 	'infile' is a FASTA file.  Reads a list of all of the headers in the FASTA file
@@ -599,10 +599,12 @@ def readFASTA(infile_name):
 	sequences[i].
 	Removes the '>' from the headers.
 	Returns None if there is a problem processing the file."""
-	infile_name = os.path.expanduser(infile_name)
-	if not os.path.isfile(infile_name):
-		raise BioFileError, "Cannot find the FASTA file %s." % infile_name
-	infile = file(infile_name, 'r')
+	if not isinstance(infile,file):
+		infile_name = os.path.expanduser(infile)
+		if not os.path.isfile(infile_name):
+			raise BioFileError, "Cannot find the FASTA file %s." % infile_name
+		else:
+			infile = file(infile_name, 'r')
 	seq = None
 	headers = []
 	sequences = []
