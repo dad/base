@@ -6,11 +6,19 @@
 # For pcor functions
 source("~/research/lib/pcor.R")
 
-dev.out <- function(fname, fdir="../figures/", width=7, height=7, pdf.figures=T) {
-	if (pdf.figures) ext = ".pdf" else ext = ".png"
-	full.fname = paste(fdir,fname,ext,sep="")
-	if (pdf.figures) pdf(full.fname, width=width, height=height, family="Helvetica")
-	else png(full.fname, width=width*(480/7), height=height*(480/7))
+dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="svg") {
+	if (output.type=='pdf') {
+		full.fname = paste(fdir,fname,".pdf",sep="")
+		pdf(full.fname, width=width, height=height, family="Helvetica")
+	}
+	else if (output.type=='svg') {	
+		full.fname = paste(fdir,fname,".svg",sep="")
+		svg(full.fname, width=width, height=height, family="Helvetica")
+	}
+	else if (output.type=='png') {
+		full.fname = paste(fdir,fname,".png",sep="")
+		png(full.fname, width=width*(480/7), height=height*(480/7))
+	}
 }
 
 ep <- function(x) {
