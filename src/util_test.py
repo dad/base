@@ -123,10 +123,9 @@ class test006(unittest.TestCase):
 			#print v
 			if not v[2] is None:
 				vals.append(v[2])
-		res = sum(vals) > n_lines
+		self.assertTrue(sum(vals) > n_lines)
 		inf.close()
 		os.remove(fname)
-		return res
 
 class test007(unittest.TestCase):
 	"""infer header types with NA's in every line"""
@@ -153,7 +152,6 @@ class test007(unittest.TestCase):
 		res = sum(vals) == 12
 		inf.close()
 		os.remove(fname)
-		return res
 
 class test008(unittest.TestCase):
 	"""infer header types with NA's in one full column"""
@@ -171,7 +169,6 @@ class test008(unittest.TestCase):
 		header = fp.getHeader()
 		inf.close()
 		os.remove(fname)
-		return True
 
 class test009(unittest.TestCase):
 	"""header processing"""
@@ -185,14 +182,12 @@ class test009(unittest.TestCase):
 		# Infer the types
 		fp = util.DelimitedLineReader(inf)
 		header = fp.getHeader()
-		res = True
-		res = res and header[0] == 'int'
-		res = res and header[1] == 'int.1'
-		res = res and header[2] == 'int.2'
-		res = res and header[3] == 'int.3'
+		self.assertTrue(header[0] == 'int')
+		self.assertTrue(header[1] == 'int.1')
+		self.assertTrue(header[2] == 'int.2')
+		self.assertTrue(header[3] == 'int.3')
 		inf.close()
 		os.remove(fname)
-		return res
 
 class test010(unittest.TestCase):
 	"""header processing: custom header processor"""
@@ -206,12 +201,10 @@ class test010(unittest.TestCase):
 		# Infer the types
 		fp = util.DelimitedLineReader(inf, header=True, header_name_processor=util.maxQuantHeader)
 		header = fp.getHeader()
-		res = True
-		res = res and header[0] == 'ratio.hl'
-		res = res and header[-1] == 'this.plus.that'
+		self.assertTrue(header[0] == 'ratio.hl')
+		self.assertTrue(header[-1] == 'this.plus.that')
 		inf.close()
 		os.remove(fname)
-		return res
 
 class test011(unittest.TestCase):
 	"""adaptive handler updating"""
@@ -230,7 +223,6 @@ class test011(unittest.TestCase):
 			flds = fp.next()
 		inf.close()
 		os.remove(fname)
-		return True
 
 class test012(unittest.TestCase):
 	"""comment as last line"""
@@ -250,7 +242,6 @@ class test012(unittest.TestCase):
 			flds = fp.nextDict()
 		inf.close()
 		os.remove(fname)
-		return True
 
 class test013(unittest.TestCase):
 	"""no headers but call to nextDict"""
@@ -265,10 +256,9 @@ class test013(unittest.TestCase):
 		fp = util.DelimitedLineReader(inf, header=False)
 		while not fp.atEnd():
 			flds = fp.nextDict()
-			assert set(flds.keys()) == set(range(len(field_types)))
+			self.assertTrue(set(flds.keys()) == set(range(len(field_types))))
 		inf.close()
 		os.remove(fname)
-		return True
 
 class test014(unittest.TestCase):
 	"""comments as first lines"""
@@ -284,7 +274,6 @@ class test014(unittest.TestCase):
 			flds = fp.nextDict()
 		inf.close()
 		os.remove(fname)
-		return True
 
 
 def randString():
