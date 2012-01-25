@@ -21,6 +21,14 @@ dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="s
 	}
 }
 
+# Make transparent colors easily
+tcol <- function(col,alpha,max=255) {
+	crgb <- col2rgb(col)
+	col <- c(as.vector(crgb), alpha)
+	rgb(col[1],col[2],col[3],col[4],max=max)
+}
+
+
 ep <- function(x) {
 	eval(parse(text=x))
 }
