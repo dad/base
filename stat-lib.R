@@ -28,7 +28,6 @@ tcol <- function(col,alpha,max=255) {
 	rgb(col[1],col[2],col[3],col[4],max=max)
 }
 
-
 ep <- function(x) {
 	eval(parse(text=x))
 }
@@ -1668,7 +1667,13 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 		  legend.names = as.character(1:length(x))
 		}
 		legend.cols <- col[1:min(length(x), length(col))]
-		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, cex=cex.legend, lwd=lwds)
+		if (fill) {
+			legend(legend.at[1], legend.at[2], legend=legend.names, fill=legend.cols, cex=cex.legend)
+		}
+		else {
+			legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, cex=cex.legend, lwd=lwds)
+		}
+
 	}
 }
 
