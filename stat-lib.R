@@ -21,6 +21,13 @@ dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="s
 	}
 }
 
+# Make transparent colors easily
+tcol <- function(col,alpha,max=255) {
+	crgb <- col2rgb(col)
+	crgb <- rbind(crgb, alpha=alpha)
+	apply(crgb, 2, function(m){rgb(m[1],m[2],m[3],m[4], max=max)})
+}
+
 ep <- function(x) {
 	eval(parse(text=x))
 }
@@ -145,17 +152,6 @@ barplot.err <- function(x, x.lower=x, x.upper=x, ylim=NULL, ...) {
 	segments(bp, x.lower, bp, x.upper)
 	bp
 }
-
-#barplot.err <- function(x, x.err, ...) {
-#	f.args <- list(...)
-#	if (is.null(f.args$ylim)) {
-#		f.args$ylim <- c(min(x-x.err,na.rm=T),max(x+x.err,na.rm=T))
-#		##print(f.args$ylim)
-#	}
-#	bp <- barplot(x, ylim=f.args$ylim, ...)
-#	segments(bp, x-x.err, bp, x+x.err)
-#}
-
 
 plot.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, add=FALSE, log='', bar.col=NULL, type='l', ...) {
 	if (is.null(x.lower)) x.lower = x
@@ -579,8 +575,6 @@ rcor <- function(x, y=NULL, ...) {
 	}
 	return(res)
 }
-
-
 
 cov.estimate <- function(x, meas.names, wts=NULL, na.rm=TRUE, use="pairwise.complete.obs", cov.fxn=rcov, trans.fxn=NULL, regularize=TRUE) {
 	# Create
@@ -1509,7 +1503,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 
 ## Takes a list of variables, plots kernel densities
 multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
-	equal.height=FALSE, relative.heights=NULL, max.height=1.0, xlab="x", ylab="Density", weight.list=NULL, cex.legend=1, points=FALSE, points.pch=NA, ...) {
+	equal.height=FALSE, relative.heights=NULL, max.height=1.0, xlab="x", ylab="Density", yaxs='i', weight.list=NULL, cex.legend=1, bty.legend="o", points=FALSE, points.pch=NA, ...) {
 	extra.args <- list(...)
 	log.transform <- log
 	if (is.data.frame(x) || is.matrix(x)) {
@@ -1625,7 +1619,7 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 
 	## Actually plot the data
 	d <- densities[[1]]
-	plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, ...)
+	plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, ...)
 	if (use.log.axis) {
 		my.axis(1, xlim, log=TRUE, expand.range=FALSE)
 	}
@@ -1655,12 +1649,18 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 	## cat("h6\n")
 	## Legend
 	if (!is.null(legend.at)) {
-		legend.names = names(x)
-		if (is.null(legend.names)) {
-		  legend.names = as.character(1:length(x))
+		names.legend = names(x)
+		if (is.null(names.legend)) {
+		  names.legend = as.character(1:length(x))
 		}
-		legend.cols <- col[1:min(length(x), length(col))]
-		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, cex=cex.legend, lwd=lwds)
+		cols.legend <- col[1:min(length(x), length(col))]
+		if (fill) {
+			legend(legend.at[1], legend.at[2], legend=names.legend, fill=cols.legend, cex=cex.legend, bty=bty.legend)
+		}
+		else {
+			legend(legend.at[1], legend.at[2], col=cols.legend, legend=names.legend, lty=ltys, cex=cex.legend, bty=bty.legend, lwd=lwds)
+		}
+
 	}
 }
 

@@ -488,37 +488,44 @@ class LightDataFrame:
 		self._data = data
 		self._header_lookup = dict([(h, self._headers.index(h)) for h in self._headers])
 
-	def getRow(self, row_index):
+	def row(self, row_index):
 		return [d[row_index] for d in self._data]
 
-	def getRowDict(self, row_index):
-		return dict(zip(self._headers,self.getRow(row_index)))
+	def rowDict(self, row_index):
+		return dict(zip(self._headers,self.row(row_index)))
 
-	def getCol(self, col_index):
+	def col(self, column_key):
 		"""Index by column, given by column_key"""
 		col_index = self._header_lookup[column_key]
-		return [d[col_index] for d in self._data]
+		return self.coli(col_index)
+	
+	def coli(self, column_index):
+		return self._data[column_index]
 
 	def __getitem__(self, column_key):
 		"""Index by column, given by column_key"""
 		col_index = self._header_lookup[column_key]
 		return self._data[col_index]
 
-	def getNumRows(self):
+	@property
+	def nrows(self):
 		return len(self._data[0])
 
-	def getNumCols(self):
+	@property
+	def ncols(self):
 		return len(self._data)
 
-	def getHeaders(self):
+	@property
+	def headers(self):
 		return self._headers
 
 	def __str__(self):
-		return "** not implemented **"
-
-	nrow = property(getNumRows)
-	ncol = property(getNumCols)
-	headers = property(getHeaders)
+		s = "\t".join(self.headers)+"\n"
+		for ri in range(self.nrows):
+			for h in self.headers:
+				s += '\t' + str(self.rowDict(ri)[h])
+			s += '\n'
+		return s
 
 
 def readTable(fname, header=True, sep='\t', header_name_processor=defaultHeader):

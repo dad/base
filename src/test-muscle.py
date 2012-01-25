@@ -1,4 +1,4 @@
-import sys, os, math, string, random
+import sys, os, math, string, random, stats
 import muscle, translate, util
 
 def mut(x, pmut, pgap):
@@ -20,7 +20,7 @@ def test001():
 	return True
 
 def test002():
-	s1 = ''.join(util.sample_wr(translate.AAs(), 100))
+	s1 = ''.join(stats.sample_wr(translate.AAs(), 100))
 	others = [''.join([mut(x, 0.2,0.1) for x in s1]) for i in range(9)]
 	seqs = [s1]+others
 	res = False
