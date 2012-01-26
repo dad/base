@@ -1501,6 +1501,12 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 	densities
 }
 
+# Make a polygon with a flat bottom.
+flatpolygon <- function(x,y,miny=0, ...) {
+	polygon(c(min(x,na.rm=T),x,max(x,na.rm=T)), c(miny,y,miny), ...)
+}
+
+
 ## Takes a list of variables, plots kernel densities
 multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
 	equal.height=FALSE, relative.heights=NULL, max.height=1.0, xlab="x", ylab="Density", yaxs='i', weight.list=NULL, cex.legend=1, bty.legend="o", points=FALSE, points.pch=NA, ...) {
