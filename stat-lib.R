@@ -1509,7 +1509,7 @@ flatpolygon <- function(x,y,miny=0, ...) {
 
 ## Takes a list of variables, plots kernel densities
 multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
-	equal.height=FALSE, relative.heights=NULL, max.height=1.0, xlab="x", ylab="Density", yaxs='i', weight.list=NULL, cex.legend=1, bty.legend="o", points=FALSE, points.pch=NA, ...) {
+	equal.height=FALSE, relative.heights=NULL, max.height=1.0, xlab="x", ylab="Density", yaxs='i', weight.list=NULL, legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, ...) {
 	extra.args <- list(...)
 	log.transform <- log
 	if (is.data.frame(x) || is.matrix(x)) {
@@ -1636,8 +1636,7 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 			height.div <- data.max.heights[[i]]
 		}
 		if (fill) {
-			# Put tails on either side so that density goes to zero and polygon has a flat bottom.
-			polygon(inv.trans(c(min(d$x),d$x,max(d$x))), abs.max.heights[[i]]*c(0,d$y/data.max.heights[[i]],0), col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
+			flatpolygon(inv.trans(d$x), abs.max.heights[[i]]*d$y/data.max.heights[[i]], col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
 		}
 		else {
 			lines(inv.trans(d$x), abs.max.heights[[i]]*d$y/data.max.heights[[i]], col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
@@ -1655,16 +1654,16 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 	## cat("h6\n")
 	## Legend
 	if (!is.null(legend.at)) {
-		names.legend = names(x)
-		if (is.null(names.legend)) {
-		  names.legend = as.character(1:length(x))
+		legend.names = names(x)
+		if (is.null(legend.names)) {
+		  legend.names = as.character(1:length(x))
 		}
-		cols.legend <- col[1:min(length(x), length(col))]
+		legend.cols <- col[1:min(length(x), length(col))]
 		if (fill) {
-			legend(legend.at[1], legend.at[2], legend=names.legend, fill=cols.legend, cex=cex.legend, bty=bty.legend)
+			legend(legend.at[1], legend.at[2], legend=legend.names, fill=legend.cols, cex=legend, bty=legend.bty)
 		}
 		else {
-			legend(legend.at[1], legend.at[2], col=cols.legend, legend=names.legend, lty=ltys, cex=cex.legend, bty=bty.legend, lwd=lwds)
+			legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, cex=legend.cex, bty=legend.bty, lwd=lwds)
 		}
 
 	}

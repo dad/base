@@ -62,7 +62,7 @@ class CodingExonRecord:
 		print self
 
 	def __repr__(self):
-		return "%s %s %s %s %s %s %i %i %i %i" % ( self.chromosome, self.gene_ID, self.transcript_ID, self.peptide_ID,
+		return "{} {} {} {} {} {} {} {} {} {}".format( self.chromosome, self.gene_ID, self.transcript_ID, self.peptide_ID,
 												   self.exon_ID, self.strand, self.exon_start, self.exon_end, self.coding_start, self.coding_end )
 
 class CodingSequence:
@@ -602,7 +602,7 @@ def readFASTA(infile):
 	if not isinstance(infile,file):
 		infile_name = os.path.expanduser(infile)
 		if not os.path.isfile(infile_name):
-			raise BioFileError, "Cannot find the FASTA file %s." % infile_name
+			raise BioFileError, "Cannot find the FASTA file {}.".format(infile_name)
 		else:
 			infile = file(infile_name, 'r')
 	seq = None
@@ -630,7 +630,7 @@ def readFASTA(infile):
 		frag = ''.join(seq)
 		sequences.append(frag.upper())
 	infile.close()
-	assert len(headers) == len(sequences), "Error, headers and sequences have different lengths."
+	assert len(headers) == len(sequences), "Error, headers and sequences have different lengths, {} != {}.".format(len(headers), len(sequences))
 	return (headers, sequences)
 
 def firstField(x):
