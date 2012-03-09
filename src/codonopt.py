@@ -8,10 +8,13 @@ if __name__=='__main__':
 	parser.add_option("-r", "--reverse-translate", dest="reverse_translate", action="store_true", help="interpret sequences as amino acids, and convert back to codons?")
 	parser.add_option("--species", dest="species", type="string", default="scer", help="species for identifying optimal codons")
 	parser.add_option("--min-ra", dest="min_rel_adapt", type="float", default=1.0, help="minimum relative adaptiveness for optimization")
+	parser.add_option("-s", "--seed", dest="seed", type="int", default=111, help="random-number generator seed")
 	parser.add_option("-p", "--optimize", dest="optimize", action="store_true", default=False, help="optimize the codons?")
 
 	(options, args) = parser.parse_args()
 	seq = args[0].upper()
+	
+	random.seed(options.seed)
 
 	# Start up output
 	info_outs = util.OutStreams([sys.stdout])
@@ -45,6 +48,7 @@ if __name__=='__main__':
 	info_outs.write("# Using optimal codons for %s\n" % options.species)
 	opt_codons = cai.getOptimalCodons(options.species)
 	relad_dict = cai.getRelativeAdaptivenessValues(options.species)
+	cai_fxn = cai.getCAIFunction(options.species)
 	# DAD: cai.getCAI takes only log-transformed relative adaptiveness values.
 	# Here, knowing that some values are == 0, add half of the minimum nonzero value.
 	# Should be using some sort of better estimator!
@@ -56,7 +60,7 @@ if __name__=='__main__':
 
 	# Assay the provided sequences
 	for (id, seq) in seqs:
-		line = "{0} Fop = {1:.4f}, CAI = {2:.4f}, GC = {3:.2f}\n".format(id, cai.getFop(seq, opt_codons), cai.getCAI(seq, ln_relad_dict), cai.getGC(seq))
+		line = "{0} Fop = {1:.4f}, CAI = {2:.4f}, GC = {3:.2f}\n".format(id, cai.getFop(seq, opt_codons), cai_fxn(seq), cai.getGC(seq))
 		info_outs.write(line)
 
 	# If optimization is desired, do it.
@@ -81,7 +85,7 @@ if __name__=='__main__':
 					#opt_seq += opt_codon_dict[aa] #random.choice(codons[aa])
 					opt_seq += random.choice(codons[aa])
 				assert translate.translate(opt_seq) == prot_seq
-				header_line = "{0} Fop = {1:.4f}, CAI = {2:.4f}, GC = {3:.2f}".format(id, cai.getFop(opt_seq, opt_codons), cai.getCAI(opt_seq, ln_relad_dict), cai.getGC(opt_seq))
+				header_line = "{0} Fop = {1:.4f}, CAI = {2:.4f}, GC = {3:.2f}".format(id, cai.getFop(opt_seq, opt_codons), cai_fxn(opt_seq), cai.getGC(opt_seq))
 				info_outs.write("# Optimized %s\n" % header_line)
 				opt_headers.append(header_line)
 				opt_seqs.append(opt_seq)
