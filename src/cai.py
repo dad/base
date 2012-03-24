@@ -588,6 +588,29 @@ def getAkashi2x2TablesForORF(conservationFxn, aligned_cdna, aligned_prot, other_
 			gene_codon_tables[codon].append(tuple(table))
 	return gene_codon_tables
 
+def getAkashi2x2TablesForORFRefCodon(conservationFxn, reference_codon_dict, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount, n_terminal_start):
+	# Now build the tables for this gene
+	# Compute conserved--preferred association using each codon as preferred in turn
+	gc = translate.geneticCode(rna=False)
+	(conserved_codon_counts, variable_codon_counts) = getCodonCounts(conservationFxn, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, n_terminal_start)
+	gene_codon_tables = {}
+	for codon in translate.AADNACodons():
+		gene_codon_tables[codon] = []
+	for aa in translate.degenerateAAs():
+		codons = translate.getCodonsForAA(aa, rna=False)
+		for codon in codons:
+			# Get contingency table for each codon
+			# cons-pref, cons-un, var-pref, var-un
+			# Get reference codon
+			ref_codon = reference_codon_dict[codon]
+			# Add the pseudocount to each entry
+			table = [conserved_codon_counts[codon]+pseudocount,
+					 conserved_codon_counts[ref_codon]+pseudocount,
+					 variable_codon_counts[codon]+pseudocount,
+					 variable_codon_counts[ref_codon]+pseudocount]
+			gene_codon_tables[codon].append(tuple(table))
+	return gene_codon_tables
+
 
 def getFractionRare(gene, rel_adapt, cutoff):
 	"""Returns the proportion of genes with codons below a cutoff of relative adaptiveness"""
