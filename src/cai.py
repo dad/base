@@ -576,7 +576,8 @@ def getAkashi2x2TablesForORF(conservationFxn, aligned_cdna, aligned_prot, other_
 	gene_codon_tables = {}
 	for codon in translate.AADNACodons():
 		gene_codon_tables[codon] = []
-	for aa in translate.degenerateAAs():
+	#for aa in translate.degenerateAAs():
+	for aa in translate.AAs():
 		codons = translate.getCodonsForAA(aa, rna=False)
 		for codon in codons:
 			# Get contingency table for each codon
