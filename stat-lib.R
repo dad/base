@@ -55,8 +55,20 @@ log.nz <- log.nozero
 
 # Matrix multiplication that is gentler with NAs.
 raw.mmult <- function(x,y) {
-  ints <- lapply(1:ncol(y), function(v) {x * matrix(rep(y[,v], each=nrow(x)), nrow=nrow(x), ncol=ncol(x))})
-  sapply(ints, rowSums, na.rm=T)
+  dy <- dim(y)
+  dy <- if (is.null(dy)) {c(length(y),1)} else {dy}
+  dx <- dim(x)
+  dx <- if (is.null(dx)) {c(length(x),1)} else {dx}
+  if (dy[2]==1) {
+    # p.n x n.1 dimensional array
+    ints <- x * matrix(rep(y, each=dx[1]), nrow=dx[1], ncol=dx[2])
+  }
+  else {
+    # p.n x n.1 dimensional array
+    ints <- sapply(1:(dy[2]), function(v) {x * matrix(rep(y[,v], each=dx[1]), nrow=dx[1], ncol=dx[2])})
+  }
+  #sapply(ints, rowSums, na.rm=T)
+  rowSums(ints, na.rm=T)
 }
 
 mmult <- function(x, y) {
