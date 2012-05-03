@@ -17,7 +17,9 @@ dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="s
 	}
 	else if (output.type=='png') {
 		full.fname = paste(fdir,fname,".png",sep="")
-		png(full.fname, width=width*(480/7), height=height*(480/7))
+		# Assume 300dpi -- 
+		dpi <- 300
+		png(full.fname, width=width*dpi, height=height*dpi, units='px', pointsize=12*72, bg=tcol('white',0))
 	}
 }
 
