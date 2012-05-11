@@ -310,9 +310,7 @@ class DelimitedLineReader:
 			flds[-1] = flds[-1].strip() # Get rid of \n
 			if apply_handlers:
 				if len(flds) > len(self.handlers):
-					print len(flds), len(self.handlers)
-					print flds
-					sys.exit()
+					raise ReaderError, "Line {} has {} fields, but only {} expected".format(self.n_lines_read, len(flds), len(self.handlers))
 				assert len(flds) <= len(self.handlers)
 				if not self.handlers:
 					# Infer handlers are strings
