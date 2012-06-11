@@ -24,10 +24,12 @@ dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="s
 }
 
 # Make transparent colors easily
-tcol <- function(col,alpha,max=255) {
+tcol <- function(col,alpha=0.5) {
+	stopifnot(alpha <= 1.0)
+	stopifnot(alpha >= 0.0)
 	crgb <- col2rgb(col)
-	crgb <- rbind(crgb, alpha=alpha)
-	apply(crgb, 2, function(m){rgb(m[1],m[2],m[3],m[4], max=max)})
+	crgb <- rbind(crgb, alpha=alpha*255)
+	apply(crgb, 2, function(m){rgb(m[1],m[2],m[3],m[4], max=255)})
 }
 
 ep <- function(x) {
