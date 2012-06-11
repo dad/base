@@ -6,20 +6,20 @@
 # For pcor functions
 source("~/research/lib/pcor.R")
 
-dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="svg") {
+dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="svg", ...) {
 	if (output.type=='pdf') {
 		full.fname = paste(fdir,fname,".pdf",sep="")
-		pdf(full.fname, width=width, height=height, family="Helvetica")
+		pdf(full.fname, width=width, height=height, family="Helvetica", ...)
 	}
 	else if (output.type=='svg') {	
 		full.fname = paste(fdir,fname,".svg",sep="")
-		svg(full.fname, width=width, height=height, family="Helvetica")
+		svg(full.fname, width=width, height=height, family="Helvetica", ...)
 	}
 	else if (output.type=='png') {
 		full.fname = paste(fdir,fname,".png",sep="")
 		# Assume 300dpi -- 
 		dpi <- 300
-		png(full.fname, width=width*dpi, height=height*dpi, units='px', pointsize=12*72, bg=tcol('white',0))
+		png(full.fname, width=width*dpi, height=height*dpi, units='px', pointsize=12*72, bg=tcol('white',0), ...)
 	}
 }
 
@@ -156,16 +156,25 @@ barplot.ci <- function(x, param.name, ylim=NULL, ...) {
 }
 
 # DAD: may wish to combine these two functions.
-barplot.err <- function(x, x.lower=x, x.upper=x, ylim=NULL, ...) {
-	if (is.null(ylim)) {
-		ylim <- c(min(x.lower,na.rm=T),max(x.upper,na.rm=T))
+barplot.err <- function(x, lower=x, upper=x, xlim=NULL, ylim=NULL, horiz=FALSE, reverse=horiz, names.arg=NULL, ...) {
+	rfxn <- noop
+	if (reverse) { rfxn <- rev }
+	if (is.null(ylim) & !horiz) {
+		ylim <- c(min(lower,na.rm=T),max(upper,na.rm=T))
 	}
-	if (is.null(x.upper)) {
-		## Interpret x.lower as delta.
-		x.upper <- x + (x-x.lower)
+	if (is.null(xlim) & horiz) {
+		xlim <- c(min(lower,na.rm=T),max(upper,na.rm=T))
 	}
-	bp <- barplot(x, ylim=ylim, ...)
-	segments(bp, x.lower, bp, x.upper)
+	if (!is.null(names.arg) & reverse) {
+		names.arg <- rev(names.arg)
+	}
+	bp <- barplot(rfxn(x), ylim=ylim, xlim=xlim, horiz=horiz, names.arg=names.arg, ...)
+	if (!horiz) {
+		segments(bp, rfxn(lower), bp, rfxn(upper))
+	}
+	else {
+		segments(rfxn(lower), bp, rfxn(upper), bp)
+	}
 	bp
 }
 
