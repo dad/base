@@ -154,23 +154,24 @@ barplot.ci <- function(x, param.name, ylim=NULL, ...) {
 }
 
 # DAD: may wish to combine these two functions.
-barplot.err <- function(x, lower=x, upper=x, xlim=NULL, ylim=NULL, horiz=FALSE, ...) {
-	if (is.null(ylim)) {
-		if (!horiz) {
-			ylim <- c(min(lower,na.rm=T),max(upper,na.rm=T))
-		}
+barplot.err <- function(x, lower=x, upper=x, xlim=NULL, ylim=NULL, horiz=FALSE, reverse=horiz, names.arg=NULL, ...) {
+	rfxn <- noop
+	if (reverse) { rfxn <- rev }
+	if (is.null(ylim) & !horiz) {
+		ylim <- c(min(lower,na.rm=T),max(upper,na.rm=T))
 	}
-	if (is.null(xlim)) {
-		if (horiz) {
-			xlim <- c(min(lower,na.rm=T),max(upper,na.rm=T))
-		}
+	if (is.null(xlim) & horiz) {
+		xlim <- c(min(lower,na.rm=T),max(upper,na.rm=T))
 	}
-	bp <- barplot(x, ylim=ylim, xlim=xlim, horiz=horiz, ...)
+	if (!is.null(names.arg) & reverse) {
+		names.arg <- rev(names.arg)
+	}
+	bp <- barplot(rfxn(x), ylim=ylim, xlim=xlim, horiz=horiz, names.arg=names.arg, ...)
 	if (!horiz) {
-		segments(bp, lower, bp, upper)
+		segments(bp, rfxn(lower), bp, rfxn(upper))
 	}
 	else {
-		segments(lower, bp, upper, bp)
+		segments(rfxn(lower), bp, rfxn(upper), bp)
 	}
 	bp
 }
