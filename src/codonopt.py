@@ -1,18 +1,17 @@
-import sys, os, math, string, random
+import sys, os, math, string, random, argparse
 import cai, translate, util, biofile
-from optparse import OptionParser
 
 if __name__=='__main__':
-	parser = OptionParser(usage="%prog [options] <sequence|FASTA filename>")
-	parser.add_option("-o", "--out", dest="out_fname", type="string", default=None, help="output filename")
-	parser.add_option("-r", "--reverse-translate", dest="reverse_translate", action="store_true", help="interpret sequences as amino acids, and convert back to codons?")
-	parser.add_option("--species", dest="species", type="string", default="scer", help="species for identifying optimal codons")
-	parser.add_option("--min-ra", dest="min_rel_adapt", type="float", default=1.0, help="minimum relative adaptiveness for optimization")
-	parser.add_option("-s", "--seed", dest="seed", type="int", default=111, help="random-number generator seed")
-	parser.add_option("-p", "--optimize", dest="optimize", action="store_true", default=False, help="optimize the codons?")
-
-	(options, args) = parser.parse_args()
-	seq = args[0].upper()
+	parser = argparse.ArgumentParser(description="Assay/optimize codon sequences", usage="%(prog)s [options]")
+	parser.add_argument("sequence", default="", help="sequence to be assayed/optimized")
+	parser.add_argument("-o", "--out", dest="out_fname", default=None, help="output filename")
+	parser.add_argument("-r", "--reverse-translate", dest="reverse_translate", action="store_true", help="interpret sequences as amino acids, and convert back to codons?")
+	parser.add_argument("--species", dest="species", default="scer", help="species for identifying optimal codons")
+	parser.add_argument("--min-ra", dest="min_rel_adapt", type=float, default=1.0, help="minimum relative adaptiveness for optimization")
+	parser.add_argument("-s", "--seed", dest="seed", type=int, default=111, help="random-number generator seed")
+	parser.add_argument("-p", "--optimize", dest="optimize", action="store_true", default=False, help="optimize the codons?")
+	options = parser.parse_args()
+	seq = options.sequence.upper()
 	
 	random.seed(options.seed)
 
