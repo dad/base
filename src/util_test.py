@@ -272,6 +272,31 @@ class test014(unittest.TestCase):
 		fp = util.DelimitedLineReader(inf)
 		while not fp.atEnd():
 			flds = fp.nextDict()
+		# if we make it this far, we did not throw an error.
+		self.assertTrue(True)
+		inf.close()
+		os.remove(fname)
+
+class test015(unittest.TestCase):
+	"""multiple delimiters -- spaces -- with sep=None"""
+	def test_run(self):
+		n_lines = 10
+		header_list = ["str","float","int","str"]
+		fname = "tmp_comment_first.txt"
+		inf = file(fname, 'w')
+		inf.write("one\ttwo\tthree\n")
+		inf.write("  a  b c\n")
+		inf.write(" a   b  c\n")
+		inf.close()
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = util.DelimitedLineReader(inf, header=True, sep=None)
+		while not fp.atEnd():
+			flds = fp.nextDict()
+			self.assertTrue(flds['one']=='a')
+			self.assertTrue(flds['two']=='b')
+			self.assertTrue(flds['three']=='c')
+			self.assertFalse(flds['three']=='b')
 		inf.close()
 		os.remove(fname)
 
@@ -296,7 +321,7 @@ def makeFile(fname, headers, fld_types, n_lines, sep, na_prob, first_lines=None,
 			outf.write(line)
 	if headers:
 		assert len(headers) == len(fld_types)
-		outf.write("%s\n" % sep.join(headers))
+		outf.write("{}\n".format(sep.join(headers)))
 	for li in range(n_lines):
 		line = ''
 		if random.random() < na_prob:
@@ -309,7 +334,7 @@ def makeFile(fname, headers, fld_types, n_lines, sep, na_prob, first_lines=None,
 					line = sep.join([line, "NA"])
 				else:
 					line = sep.join([line, str(dtype[f]())])
-		outf.write("%s\n" % line)
+		outf.write("{}\n".format(line))
 	if last_lines:
 		for line in last_lines:
 			outf.write(line)
