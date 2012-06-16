@@ -42,15 +42,25 @@ def alignGeneFromProtein(gene, prot_align):
 		else:
 			gene_align.append(gene[j : 3 + j])
 			j += 3
-	return string.join(gene_align,'')
+	return ''.join(gene_align)
+
+def alignProteinFromProtein(prot, prot_align):
+	j = 0
+	out_align = ""
+	for i in range(len(prot_align)):
+		if prot_align[i] == '-':
+			out_align += "-"
+		else:
+			out_align += prot[j]
+			j += 1
+	return out_align
 
 if __name__=='__main__':
-	parser = OptionParser(usage="%prog [options] <evidence filename>")
-	#parser.add_option("-i", "--in", dest="in_fname", type="string", default=None, help="input filename")
-	parser.add_option("-t", "--translate", dest="translate", action="store_true", default=False, help="translate the input sequences?")
-	parser.add_option("-o", "--out", dest="out_fname", type="string", default=None, help="output filename")
-	(options, args) = parser.parse_args()
-	in_file = args[0]
+	parser = argparse.ArgumentParser(description="Muscle alignment")
+	parser.add_argument("in_fname", help="input filename")
+	parser.add_argument("-t", "--translate", dest="translate", action="store_true", default=False, help="translate the input sequences?")
+	parser.add_argument("-o", "--out", dest="out_fname", type="string", default=None, help="output filename")
+	options = parser.parse_args()
 	
 	outs = util.OutStreams()
 	if not options.out_fname is None:
@@ -59,7 +69,7 @@ if __name__=='__main__':
 	else:
 		outs.addStream(sys.stdout)
 	
-	(headers, seqs) = biofile.readFASTA(file(in_file,'r'))
+	(headers, seqs) = biofile.readFASTA(file(options.in_fname,'r'))
 	seqs_to_align = seqs
 	if options.translate:
 		seqs_to_align = [translate.translate(s) for s in seqs]
