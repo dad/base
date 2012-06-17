@@ -155,10 +155,19 @@ barplot.ci <- function(x, param.name, ylim=NULL, ...) {
   segments(pts, upper.cis, pts, lower.cis)
 }
 
+mrev <- function(x) {
+	if (is.null(dim(x))) {
+		res <- rev(x)
+	} else {
+		res <- x[,ncol(x):1]
+	}
+	res
+}
+
 # DAD: may wish to combine these two functions.
 barplot.err <- function(x, lower=x, upper=x, xlim=NULL, ylim=NULL, horiz=FALSE, reverse=horiz, names.arg=NULL, ...) {
 	rfxn <- noop
-	if (reverse) { rfxn <- rev }
+	if (reverse) { rfxn <- mrev }
 	if (is.null(ylim) & !horiz) {
 		ylim <- c(min(lower,na.rm=T),max(upper,na.rm=T))
 	}
