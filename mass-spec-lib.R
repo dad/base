@@ -31,7 +31,7 @@ load.ms.data <- function(fname, invert=FALSE) {
 	d <- data.frame(d.raw[zd,], yeast$avg[zy,], yeast$raw[zy,yeast$fields$abund], yeast$bg[zy,c('gene','desc')])
 	y <- yeast$raw
 	intensity.fld <- 'intensity'
-	abund.fld <- 'abund.1'
+	abund.fld <- 'abund.degodoy'
 	d$ratio.significance.corrected <- p.adjust(d$ratio.significance, "fdr")
 	d$intensity.proportion <- d[,intensity.fld]/sum(as.numeric(d[,intensity.fld]), na.rm=T)
 	tot.abund <- colSums(na.omit(d[,c(abund.fld,intensity.fld)]))
