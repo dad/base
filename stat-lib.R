@@ -57,6 +57,69 @@ log.nozero <- function(x, log.fxn=log){
 
 log.nz <- log.nozero
 
+
+# From psych library
+count.pairwise <- function (x, y = NULL) {
+	if (is.null(y)) {
+		n <- t(!is.na(x)) %*% (!is.na(x))
+	}
+	else {
+		n <- t(!is.na(x)) %*% (!is.na(y))
+	}
+	return(n)
+}
+
+# Spearman's correction for attenuation in a correlation coefficient.
+rcorr.sp <- function(x, y, method='pearson', use='pairwise.complete.obs', within.x=colnames(x), within.y=colnames(y)) {
+	x.pairnames <- combn(colnames(x),2)
+	y.pairnames <- combn(colnames(y),2)
+	within.x.pairnames <- combn(within.x,2)
+	within.y.pairnames <- combn(within.y,2)
+	res.r <- matrix(NA, nrow=ncol(x.pairnames), ncol=ncol(y.pairnames))
+	rownames(res.r) <- pair.names(colnames(x))
+	colnames(res.r) <- pair.names(colnames(y))
+	res.n <- res.r
+	res.rel <- res.r
+	res.relx <- res.r
+	res.rely <- res.r
+	res.within <- res.r
+	res.unc <- res.r
+	res.id <- res.r
+	# Prepare
+	r.x <- cor(x, method=method, use=use)
+	r.y <- cor(y, method=method, use=use)
+	r.xy <- cor(x, y, method=method, use=use)
+	r.n <- count.pairwise(x, y)
+	
+	for (xi in 1:ncol(x.pairnames)) {
+		for (yj in 1:ncol(y.pairnames)) {
+			xrow <- x.pairnames[,xi]
+			xwith <- within.x.pairnames[,xi]
+			#print(xrow)
+			ycol <- y.pairnames[,yj]
+			ywith <- within.y.pairnames[,yj]
+			#rxy <- mean(c(r.xy[xrow[1], ycol[1]], r.xy[xrow[1], ycol[2]], r.xy[xrow[2], ycol[1]], r.xy[xrow[2], ycol[2]]))
+			# Geometric mean of observed correlations
+			rxy <- (prod(c(r.xy[xrow[1], ycol[1]], r.xy[xrow[1], ycol[2]], r.xy[xrow[2], ycol[1]], r.xy[xrow[2], ycol[2]])))^(0.25)
+			# Reliability of X
+			rxx <- r.x[xrow[1], xrow[2]]
+			# Reliability of Y
+			ryy <- r.y[ycol[1], ycol[2]]
+			#rsp <- rcorr.spearman.pair(x[,x.pairnames[1,xi]], x[,x.pairnames[2,xi]], y[,y.pairnames[1,yj]], y[,y.pairnames[2,yj]], method=method)
+			res.r[xi,yj] <- rxy/sqrt(rxx*ryy)
+			res.unc[xi,yj] <- rxy
+			res.rel[xi,yj] <- sqrt(rxx*ryy)
+			res.relx[xi,yj] <- rxx
+			res.rely[xi,yj] <- ryy
+			res.within[xi,yj] <- ((xwith[1]==xwith[2]) | (ywith[1]==ywith[2]))
+			res.n[xi,yj] <- (prod(c(r.n[xrow[1], ycol[1]], r.n[xrow[1], ycol[2]], r.n[xrow[2], ycol[1]], r.n[xrow[2], ycol[2]])))^(0.25)
+			res.id[xi,yj] <- paste(paste(xrow),paste(ycol),collapse=' ')
+		}
+	}
+	list(r=res.r, n=res.n, r.unc=res.unc, rel=res.rel, relx=res.relx, rely=res.rely, within=res.within, id=res.id)
+}
+
+
 # Matrix multiplication that is gentler with NAs.
 raw.mmult <- function(x,y) {
   dy <- dim(y)
@@ -1536,8 +1599,13 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 }
 
 # Make a polygon with a flat bottom.
-flatpolygon <- function(x,y,miny=0, ...) {
-	polygon(c(min(x,na.rm=T),x,max(x,na.rm=T)), c(miny,y,miny), ...)
+flatpolygon <- function(x, y, min=0, horiz=TRUE, ...) {
+	if (horiz) {
+		polygon(c(min(x,na.rm=TRUE),x,max(x,na.rm=TRUE)), c(min,y,min), ...)
+	}
+	else {
+		polygon(c(min,x,min), c(min(y,na.rm=TRUE),y,min(y,na.rm=TRUE)), ...)
+	}
 }
 
 
@@ -1712,4 +1780,70 @@ multi.lm <- function(response, predictors, data, rank=FALSE, na.last=TRUE){
 	adds <- paste(predictors,collapse="+",sep="")
 	f = paste(response,"~",adds,sep="")
 	lm(formula(f),data=data)
+}
+
+barscatterplot <- function(x, horiz=TRUE, dispersion=0.02, col=tcol('black',0.7), pch=rep(18,length(x)), las=1, 
+						   midfxn=NULL, density=FALSE, density.col=col, max.pts=NULL, pad=0.5, ...) {
+	x <- as.list(x)
+	n <- length(x)
+	
+	# Lengths
+	if (length(col)<n){
+		col <- rep(col,n)
+	}
+	if (length(density.col)<n){
+		density.col <- rep(density.col,n)
+	}
+	max.data <- max(sapply(x,max, na.rm=T))
+	min.data <- min(sapply(x,min, na.rm=T))
+	if (!is.null(midfxn)){
+		mids <- sapply(x, midfxn)
+	}
+	if (density) {
+		dens <- lapply(x, density, na.rm=T, kernel='r')
+		
+	}
+	
+	if (!is.null(max.pts)) {
+		# Subsample. Crucial that density and statistics come before this.
+		x.disp <- lapply(x,function(d){
+			if (length(na.omit(d))>max.pts) sample(d,size=max.pts,replace=F) else d
+		})
+	} else {
+		x.disp <- x
+	}
+	
+	
+	
+	if (horiz) {
+		xlim <- c(min.data,max.data)
+		ylim <- c(1-pad,n+pad)
+		plot(xlim, ylim, type='n', las=las, yaxt='n', ylab='', ...)
+		for (xi in 1:n) {
+			if (density) {
+				d <- dens[[xi]]
+				max.dy <- max(d$y)
+				flatpolygon(d$x, xi+pad*d$y/max.dy, min=xi, col=density.col[[xi]], ...)
+			}
+			if (!is.null(midfxn)) {
+				segments(mids[xi], xi-pad, mids[xi], xi+pad)
+			}
+			points(x.disp[[xi]], xi+rnorm(x.disp[[xi]],sd=dispersion), col=col[[xi]], pch=pch[[xi]], ...)
+		}
+		mtext(names(x), side=2, at=1:n, las=las, line=1)
+	}
+	else {
+		ylim <- c(min.data,max.data)
+		xlim <- c(1-pad,n+pad)
+		plot(xlim, ylim, type='n', las=las, xaxt='n', xlab='', ...)
+		for (xi in 1:n) {
+			if (density) {
+				d <- dens[[xi]]
+				max.dy <- max(d$y)
+				flatpolygon(d$x, xi+pad*d$y/max.dy, min=xi, col=density.col[[xi]], ...)
+			}
+			points(xi+rnorm(x.disp[[xi]],sd=dispersion), x.disp[[xi]], col=col[[xi]], pch=pch[[xi]], ...)
+		}
+		mtext(names(x), side=1, at=1:n, las=las, line=1)
+	}
 }
