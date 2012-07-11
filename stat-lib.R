@@ -1782,8 +1782,8 @@ multi.lm <- function(response, predictors, data, rank=FALSE, na.last=TRUE){
 	lm(formula(f),data=data)
 }
 
-barscatterplot <- function(x, horiz=TRUE, dispersion=0.02, col=tcol('black',0.7), pch=rep(18,length(x)), las=1, 
-						   midfxn=NULL, density=FALSE, density.col=col, max.pts=NULL, pad=0.5, ...) {
+barscatterplot <- function(x, horiz=TRUE, names.arg=names(x), dispersion=0.02, col=tcol('black',0.7), pch=rep(18,length(x)), las=1, 
+						   density=FALSE, density.col=col, density.height=0.8, max.pts=NULL, pad=0.5, ...) {
 	x <- as.list(x)
 	n <- length(x)
 	
@@ -1796,12 +1796,8 @@ barscatterplot <- function(x, horiz=TRUE, dispersion=0.02, col=tcol('black',0.7)
 	}
 	max.data <- max(sapply(x,max, na.rm=T))
 	min.data <- min(sapply(x,min, na.rm=T))
-	if (!is.null(midfxn)){
-		mids <- sapply(x, midfxn)
-	}
 	if (density) {
 		dens <- lapply(x, density, na.rm=T, kernel='r')
-		
 	}
 	
 	if (!is.null(max.pts)) {
@@ -1813,37 +1809,32 @@ barscatterplot <- function(x, horiz=TRUE, dispersion=0.02, col=tcol('black',0.7)
 		x.disp <- x
 	}
 	
-	
-	
 	if (horiz) {
 		xlim <- c(min.data,max.data)
-		ylim <- c(1-pad,n+pad)
+		ylim <- c(1-pad,n+density.height+pad)
 		plot(xlim, ylim, type='n', las=las, yaxt='n', ylab='', ...)
 		for (xi in 1:n) {
 			if (density) {
 				d <- dens[[xi]]
 				max.dy <- max(d$y)
-				flatpolygon(d$x, xi+pad*d$y/max.dy, min=xi, col=density.col[[xi]], ...)
-			}
-			if (!is.null(midfxn)) {
-				segments(mids[xi], xi-pad, mids[xi], xi+pad)
+				flatpolygon(d$x, xi+density.height*d$y/max.dy, min=xi, col=density.col[[xi]], ...)
 			}
 			points(x.disp[[xi]], xi+rnorm(x.disp[[xi]],sd=dispersion), col=col[[xi]], pch=pch[[xi]], ...)
 		}
-		mtext(names(x), side=2, at=1:n, las=las, line=1)
+		mtext(names.arg, side=2, at=1:n, las=las, line=1)
 	}
 	else {
 		ylim <- c(min.data,max.data)
-		xlim <- c(1-pad,n+pad)
+		xlim <- c(1-pad,n+density.height+pad)
 		plot(xlim, ylim, type='n', las=las, xaxt='n', xlab='', ...)
 		for (xi in 1:n) {
 			if (density) {
 				d <- dens[[xi]]
 				max.dy <- max(d$y)
-				flatpolygon(d$x, xi+pad*d$y/max.dy, min=xi, col=density.col[[xi]], ...)
+				flatpolygon(d$x, xi+density.height*d$y/max.dy, min=xi, col=density.col[[xi]], ...)
 			}
 			points(xi+rnorm(x.disp[[xi]],sd=dispersion), x.disp[[xi]], col=col[[xi]], pch=pch[[xi]], ...)
 		}
-		mtext(names(x), side=1, at=1:n, las=las, line=1)
+		mtext(names.arg, side=1, at=1:n, las=las, line=1)
 	}
 }
