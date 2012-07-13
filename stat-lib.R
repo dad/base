@@ -1782,8 +1782,8 @@ multi.lm <- function(response, predictors, data, rank=FALSE, na.last=TRUE){
 	lm(formula(f),data=data)
 }
 
-barscatterplot <- function(x, horiz=TRUE, names.arg=names(x), dispersion=0.02, col=tcol('black',0.7), pch=rep(18,length(x)), las=1, 
-						   density=FALSE, density.col=col, density.height=0.8, max.pts=NULL, pad=0.5, ...) {
+barscatterplot <- function(x, horiz=TRUE, names.arg=names(x), dispersion=0.02, col=tcol('black',0.5), pch=rep(18,length(x)), las=1, 
+						   density=FALSE, density.col=col, density.height=if (density) 0.8 else 0, density.lty='blank', max.pts=NULL, pad=0.5, ...) {
 	x <- as.list(x)
 	n <- length(x)
 	
@@ -1817,7 +1817,7 @@ barscatterplot <- function(x, horiz=TRUE, names.arg=names(x), dispersion=0.02, c
 			if (density) {
 				d <- dens[[xi]]
 				max.dy <- max(d$y)
-				flatpolygon(d$x, xi+density.height*d$y/max.dy, min=xi, col=density.col[[xi]], ...)
+				flatpolygon(d$x, xi+density.height*d$y/max.dy, min=xi, col=density.col[[xi]], horiz=horiz, lty=density.lty, ...)
 			}
 			points(x.disp[[xi]], xi+rnorm(x.disp[[xi]],sd=dispersion), col=col[[xi]], pch=pch[[xi]], ...)
 		}
@@ -1831,7 +1831,7 @@ barscatterplot <- function(x, horiz=TRUE, names.arg=names(x), dispersion=0.02, c
 			if (density) {
 				d <- dens[[xi]]
 				max.dy <- max(d$y)
-				flatpolygon(d$x, xi+density.height*d$y/max.dy, min=xi, col=density.col[[xi]], ...)
+				flatpolygon(xi+density.height*d$y/max.dy, d$x, min=xi, col=density.col[[xi]], horiz=horiz, lty=density.lty, ...)
 			}
 			points(xi+rnorm(x.disp[[xi]],sd=dispersion), x.disp[[xi]], col=col[[xi]], pch=pch[[xi]], ...)
 		}
