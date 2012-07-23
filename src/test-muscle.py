@@ -1,5 +1,5 @@
 import sys, os, math, string, random, stats
-import muscle, translate, util
+import muscle, translate, status
 
 def mut(x, pmut, pgap):
 	res = x
@@ -10,7 +10,7 @@ def mut(x, pmut, pgap):
 	return res
 
 def test001():
-	s1 = ''.join(util.sample_wr(translate.AAs(), 100))
+	s1 = ''.join(stats.sample_wr(translate.AAs(), 100))
 	others = [''.join([mut(x, 0.2,0.1) for x in s1]) for i in range(9)]
 	seqs = [s1]+others
 	als = muscle.alignSequences(seqs)
@@ -25,7 +25,7 @@ def test002():
 	seqs = [s1]+others
 	res = False
 	try:
-		als = muscle.alignSequences(seqs, exepath="~/develop/muscle3.8.13/muscle")
+		als = muscle.alignSequences(seqs, exepath=os.path.expanduser("~/develop/muscle3.8.13/muscle"))
 	except muscle.MuscleError, me:
 		res = True
 	return res

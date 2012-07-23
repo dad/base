@@ -122,7 +122,7 @@ def translateRaw(seq, genetic_code=_genetic_code, bad_aa = 'x'):
 		prot += aa
 	return prot
 
-def reverseTranslate(prot, bad_codon ='xxx'):
+def reverseTranslate(prot, rna=False, bad_codon ='---'):
 	gene = ""
 	rev_code = dict([(aa,codon) for (codon,aa) in _genetic_code.items() if not 'U' in codon])
 	for aa in prot:
@@ -132,10 +132,6 @@ def reverseTranslate(prot, bad_codon ='xxx'):
 			gene += bad_codon
 	assert(len(gene)==3*len(prot))
 	return gene
-
-def ReverseTranslate(prot, bad_codon ='xxx'):
-	return reverseTranslate(prot, bad_codon)
-
 
 # Test the reverse translator
 def __test_reverseTranslate():
@@ -147,7 +143,7 @@ def __test_reverseTranslate():
 		newprot = translate(gene)
 		assert(prot == newprot)
 
-def randomReverseTranslate(prot, rna=False):
+def randomReverseTranslate(prot, rna=False, bad_codon='---'):
 	"""
 	Translates a protein into codons, choosing codons randomly instead of
 	deterministically.
@@ -157,7 +153,7 @@ def randomReverseTranslate(prot, rna=False):
 	for aa in letters:
 		codon_choices[aa] = get_codons_for_aa(aa, rna=rna)
 		if len(codon_choices[aa])==0:
-			codon_choices[aa] = ['---']
+			codon_choices[aa] = [bad_codon]
 	gene = ''
 	#print prot
 	for aa in prot:
@@ -165,6 +161,17 @@ def randomReverseTranslate(prot, rna=False):
 		gene += codon
 	#print sequenceDiffs(prot, translate.TranslateRaw(gene))
 	return gene
+
+# Test the reverse translator
+def __test_randomReverseTranslate():
+	N = 1000
+	aas = 'ACDEFGHIKLMNPQRSTVWY'
+	for i in range(N):
+		prot = ''.join([random.choice(aas) for xi in range(100)])
+		gene = randomReverseTranslate(prot)
+		newprot = translate(gene)
+		assert(prot == newprot)
+
 
 _three_letter_codes = {
 	'A':'Ala', 'C':'Cys', 'D':'Asp', 'E':'Glu', 'F':'Phe', 'G':'Gly', 'H':'His', 'I':'Ile', 'K':'Lys', 'L':'Leu', 'M':'Met', 'N':'Asn', 'P':'Pro', 'Q':'Gln', 'R':'Arg', 'S':'Ser', 'T':'Thr', 'V':'Val', 'W':'Trp', 'Y':'Tyr'}
@@ -281,4 +288,7 @@ def AADNACodons():
 def AARNACodons():
 	return _aa_rna_codons
 
-# End translate.py
+
+if __name__=='__main__':
+	__test_reverseTranslate()
+	__test_randomReverseTranslate()

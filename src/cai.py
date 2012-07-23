@@ -1,8 +1,8 @@
 #!/usr/bin/python
 """Module for manipulating aspects of codon bias.
 
-Original version by Jesse Bloom, 2004.
-Augmented by D. Allan Drummond, 2004-2010."""
+By D. Allan Drummond, 2004-2012, incorporating material by Jesse Bloom, 2004.
+"""
 
 import re, os, sys, string, math, random
 import translate, stats

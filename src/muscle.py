@@ -2,7 +2,7 @@
 
 import sys, os, random, string
 from optparse import OptionParser
-import biofile, util, translate
+import biofile, util, translate, stats
 
 class MuscleError(Exception):
 	"""MUSCLE alignment error"""
