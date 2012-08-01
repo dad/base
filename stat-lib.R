@@ -1769,6 +1769,8 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 		}
 
 	}
+	names(densities) <- names(x)
+	densities
 }
 
 multidens <- multi.density
