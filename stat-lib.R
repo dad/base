@@ -1610,7 +1610,7 @@ flatpolygon <- function(x, y, min=0, horiz=TRUE, ...) {
 
 
 ## Takes a list of variables, plots kernel densities
-multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
+multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0', col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
 	equal.height=FALSE, relative.heights=NULL, max.height=1.0, xlab="x", ylab="Density", yaxs='i', weight.list=NULL, legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, ...) {
 	extra.args <- list(...)
 	log.transform <- log
@@ -1681,96 +1681,98 @@ multi.density <- function(x, log=FALSE, kernel="rectangular", bw='nrd0', col=NUL
 		abs.max.heights <- max.height*abs.max.heights/max(abs.max.heights,na.rm=T)
 	}
 
-	if (is.null(ylim)) {
-		ylim = c(0,1.05*max(abs.max.heights))
-	}
-
-	## X limits
-	if (is.null(xlim)) {
-		## Make xlims
-		valid.x <- x
-		if (log) {
-			valid.x <- lapply(x, function(y) {y[y>0]})
+	if (!(type=='n')){
+		
+		if (is.null(ylim)) {
+			ylim = c(0,1.05*max(abs.max.heights))
 		}
-		xmin <- min(sapply(valid.x,min,na.rm=T),na.rm=T)
-		xlim <- c(xmin, max(sapply(x,max,na.rm=T),na.rm=T))
-	}
-
-	## Infer X and Y labels, if not passed in
-	if (missing(xlab) | is.null(xlab)) {
-		if (!is.null(names(x)[1])) {
-			xlab <- names(x)[1]
-		}
-		else {
-			xlab <- "x"
-		}
-	}
-	if (missing(ylab) | is.null(ylab)) {
-		if (equal.height | set.rel.heights | set.max.height) {
-			ylab <- "Peak-normalized density"
-		}
-		else {
-			ylab <- "Density"
-		}
-	}
-
-	# Use prettier log axis if xaxt is unset
-	use.log.axis <- FALSE
-	xaxt <- extra.args$xaxt
-	if (is.null(xaxt) & log.transform) {
-		use.log.axis <- TRUE
-		xaxt <- 'n'
-	}
-
-	## Plot the first dataset
-	if (log) {log.str <- "x"} else {log.str <- ""}
-
-	## Actually plot the data
-	d <- densities[[1]]
-	plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, ...)
-	if (use.log.axis) {
-		my.axis(1, xlim, log=TRUE, expand.range=FALSE)
-	}
-	for (i in 1:length(x)) {
-		d <- densities[[i]]
-		height.div <- 1.0
-		if (equal.height) {
-			height.div <- data.max.heights[[i]]
-		}
-		if (fill) {
-			flatpolygon(inv.trans(d$x), abs.max.heights[[i]]*d$y/data.max.heights[[i]], col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
-		}
-		else {
-			lines(inv.trans(d$x), abs.max.heights[[i]]*d$y/data.max.heights[[i]], col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
-		}
-	}
-
-	## Plot points if requested
-	#if (points) {
-	#	if (length(points.pch)
-	#	for (i in 1:length(x)) {
-	##	}
-	#	points(
-	#}
-
-	## cat("h6\n")
-	## Legend
-	if (!is.null(legend.at)) {
-		legend.names = names(x)
-		if (is.null(legend.names)) {
-		  legend.names = as.character(1:length(x))
-		}
-		legend.cols <- col[1:min(length(x), length(col))]
-		if (fill) {
-			legend(legend.at[1], legend.at[2], legend=legend.names, fill=legend.cols, cex=legend.cex, bty=legend.bty)
-		}
-		else {
-			legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, cex=legend.cex, bty=legend.bty, lwd=lwds)
+	
+		## X limits
+		if (is.null(xlim)) {
+			## Make xlims
+			valid.x <- x
+			if (log) {
+				valid.x <- lapply(x, function(y) {y[y>0]})
+			}
+			xmin <- min(sapply(valid.x,min,na.rm=T),na.rm=T)
+			xlim <- c(xmin, max(sapply(x,max,na.rm=T),na.rm=T))
 		}
 
+		## Infer X and Y labels, if not passed in
+		if (missing(xlab) | is.null(xlab)) {
+			if (!is.null(names(x)[1])) {
+				xlab <- names(x)[1]
+			}
+			else {
+				xlab <- "x"
+			}
+		}
+		if (missing(ylab) | is.null(ylab)) {
+			if (equal.height | set.rel.heights | set.max.height) {
+				ylab <- "Peak-normalized density"
+			}
+			else {
+				ylab <- "Density"
+			}
+		}
+
+		# Use prettier log axis if xaxt is unset
+		use.log.axis <- FALSE
+		xaxt <- extra.args$xaxt
+		if (is.null(xaxt) & log.transform) {
+			use.log.axis <- TRUE
+			xaxt <- 'n'
+		}
+	
+		## Plot the first dataset
+		if (log) {log.str <- "x"} else {log.str <- ""}
+	
+		## Actually plot the data
+		d <- densities[[1]]
+		plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, ...)
+		if (use.log.axis) {
+			my.axis(1, xlim, log=TRUE, expand.range=FALSE)
+		}
+		for (i in 1:length(x)) {
+			d <- densities[[i]]
+			height.div <- 1.0
+			if (equal.height) {
+				height.div <- data.max.heights[[i]]
+			}
+			if (fill) {
+				flatpolygon(inv.trans(d$x), abs.max.heights[[i]]*d$y/data.max.heights[[i]], col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
+			}
+			else {
+				lines(inv.trans(d$x), abs.max.heights[[i]]*d$y/data.max.heights[[i]], col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
+			}
+		}
+	
+		## Plot points if requested
+		#if (points) {
+		#	if (length(points.pch)
+		#	for (i in 1:length(x)) {
+		##	}
+		#	points(
+		#}
+	
+		## cat("h6\n")
+		## Legend
+		if (!is.null(legend.at)) {
+			legend.names = names(x)
+			if (is.null(legend.names)) {
+			  legend.names = as.character(1:length(x))
+			}
+			legend.cols <- col[1:min(length(x), length(col))]
+			if (fill) {
+				legend(legend.at[1], legend.at[2], legend=legend.names, fill=legend.cols, cex=legend.cex, bty=legend.bty)
+			}
+			else {
+				legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, cex=legend.cex, bty=legend.bty, lwd=lwds)
+			}
+		}
 	}
 	names(densities) <- names(x)
-	densities
+	return(invisible(densities))
 }
 
 multidens <- multi.density
