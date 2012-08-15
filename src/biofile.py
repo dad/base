@@ -609,16 +609,19 @@ class MultipleFASTAReader(object):
 			# Read header
 			header = self.nextLine()
 			exon_list = []
+			at_least_one_exon = False
 			while header != '' and not self.atEnd():
-				print "${}^".format(header)
+				#print "${}^".format(header)
 				head = self._header_class(header)
 				id = head.id
 				if target_id is None:
 					target_id = head.id
 				seq = self.nextLine()
 				exon_list.append((head, seq))
+				at_least_one_exon = True
 				header = self.nextLine()
-			yield exon_list
+			if at_least_one_exon:
+				yield exon_list
 	
 	def nextLine(self):
 		return self._cache.pop().strip()
