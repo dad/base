@@ -1,6 +1,6 @@
 import sys, os, math, string
 # DAD: right now, translate is only for CodingSequence's call to reverseTranslate.
-import translate
+import translate, util
 
 class BioFileError:
 	"""Class for packaging errors reading biological data from files"""
@@ -571,6 +571,80 @@ class VCFRecord:
 	start = property(getReferenceStart, None, None, None)
 	end = property(getReferenceEnd, None, None, None)
 	
+#-----------------------------------
+# Multiple-alignment FASTA reader
+
+def firstField(x):
+	h = x.split()[0].strip()
+	return h
+
+
+class UCSCMultipleFASTAHeader(object):
+	def __init__(self, header):
+		header_flds = header[1:].split()
+		id_flds = header_flds[0].split('_')
+		self.id = id_flds[0]
+		self.exon_total = id_flds[-1]
+		self.exon_number = id_flds[-2]
+		self.other_header_info = ' '.join(header_flds[1:])
+
+class NoExonFASTAHeader(object):
+	def __init__(self, header, header_fxn=firstField):
+		self.id = header_fxn(header[1:])
+		self.exon_total = 1
+		self.exon_number = 1
+		self.other_header_info = header
+
+class MultipleFASTAReader(object):
+	def __init__(self, file_instance, header_class):
+		self._file = file_instance
+		self._header_class = header_class
+		self._cache = util.LineCache(file_instance)
+	
+	def exons(self):
+		"""Return a list of exon alignments"""
+		id = None
+		target_id = None
+		while target_id == id:
+			# Read header
+			header = self.nextLine()
+			exon_list = []
+			while header != '' and not self.atEnd():
+				print "${}^".format(header)
+				head = self._header_class(header)
+				id = head.id
+				if target_id is None:
+					target_id = head.id
+				seq = self.nextLine()
+				exon_list.append((head, seq))
+				header = self.nextLine()
+			yield exon_list
+	
+	def nextLine(self):
+		return self._cache.pop().strip()
+		
+	def atEnd(self):
+		return self._cache.isEmpty()
+	
+	def CDSs(self):
+		while not self.atEnd():
+			cds = ''
+			cds_list = []
+			id = None
+			for ex_header, ex in self.exons():
+				head = self._header_class(ex_header)
+				if id is None:
+					id = head.id
+				assert id == head.id
+				cds_list.append((head.exon_number, ex))
+			cds_list.sort()
+			assert len(cds_list) == head.exon_total
+			cds = ''.join([ex for (n,ex) in cds_list])
+			new_header = '{h.id} {h.other_header_info} {h.exon_total}'
+			yield new_header, cds
+	
+	
+		
 
 #-----------------------------------
 
@@ -633,9 +707,6 @@ def readFASTA(infile):
 	assert len(headers) == len(sequences), "Error, headers and sequences have different lengths, {} != {}.".format(len(headers), len(sequences))
 	return (headers, sequences)
 
-def firstField(x):
-	h = x.split()[0].strip()
-	return h
 
 def getPeptideID(header):
 	try:
