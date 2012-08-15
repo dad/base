@@ -591,7 +591,18 @@ class UCSCExonHeader(object):
 		self.species = id_flds[1]
 		self.exon_total = id_flds[-1]
 		self.exon_number = id_flds[-2]
-		self.other_header_info = ' '.join(header_flds[1:])
+		self.other_header_info = ' '.join(header_flds[2:])
+		self.original_header = header
+
+	def __str__(self):
+		return self.exonHeader()
+		
+	def exonHeader(self):
+		return self.original_header
+	
+	def CDSHeader(self):
+		return "{h.id}_{h.species} {h.other_header_info}".format(h=self)
+		
 
 class NoExonFASTAHeader(object):
 	def __init__(self, header, header_fxn=firstField):
@@ -599,6 +610,17 @@ class NoExonFASTAHeader(object):
 		self.exon_total = 1
 		self.exon_number = 1
 		self.other_header_info = header
+		self.original_header = header
+	
+	def __str__(self):
+		return self.exonHeader()
+
+	def exonHeader(self):
+		return self.original_header
+	
+	def CDSHeader(self):
+		return self.original_header
+		
 
 class MultipleFASTAReader(object):
 	def __init__(self, file_instance, header_class):
@@ -610,12 +632,14 @@ class MultipleFASTAReader(object):
 		"""Return a list of exon alignments"""
 		id = None
 		target_id = None
-		while target_id == id:
+		while target_id == id and not self.atEnd():
 			# Read header
 			header = self.nextLine()
 			exon_list = []
 			at_least_one_exon = False
 			# A blank line separates exons
+			#while header == '':
+			#	header = self.nextLine()
 			while header != '' and not self.atEnd():
 				#print "${}^".format(header)
 				head = self._header_class(header)
@@ -624,8 +648,9 @@ class MultipleFASTAReader(object):
 				if target_id is None:
 					target_id = head.id
 				seq = self.nextLine()
-				exon_list.append(FASTAEntry(head, seq))
-				at_least_one_exon = True
+				if len(seq)>0:
+					exon_list.append(FASTAEntry(head, seq))
+					at_least_one_exon = True
 				if not self.atEnd():
 					header = self.nextLine()
 			if at_least_one_exon and target_id == id:
@@ -645,6 +670,8 @@ class MultipleFASTAReader(object):
 			cds = ''
 			cds_list = []
 			ex_alignment_lists = [x for x in self.exons()]
+			if len(ex_alignment_lists)==0:
+				continue
 			#print len(ex_alignment_lists), len(ex_alignment_lists[0])
 			sentinel_entry = ex_alignment_lists[0][0]
 			head = sentinel_entry.header
@@ -654,6 +681,7 @@ class MultipleFASTAReader(object):
 			# Then assemble CDS for each species by matching species ids
 			# 
 			species = [entry.header.species for entry in ex_alignment_lists[0]]
+			species_headers = dict([(entry.header.species, entry.header) for entry in ex_alignment_lists[0]])
 			species_cds = dict([(s,'') for s in species])
 			for exon_list in ex_alignment_lists:
 				for entry in exon_list:
@@ -661,8 +689,9 @@ class MultipleFASTAReader(object):
 			cds_list = []
 			for spec in species:
 				cds = species_cds[spec]
-				new_header = '{h.id} {species} {h.other_header_info} {h.exon_total}'.format(h=head, species=spec)
-				cds_list.append(FASTAEntry(new_header, cds))
+				head = species_headers[spec]
+				#new_header = '{h.id} {species} {h.other_header_info} {h.exon_total}'.format(h=head, species=spec)
+				cds_list.append(FASTAEntry(head, cds))
 			yield cds_list
 	
 	
