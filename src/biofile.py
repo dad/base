@@ -578,12 +578,17 @@ def firstField(x):
 	h = x.split()[0].strip()
 	return h
 
+class FASTAEntry(object):
+	def __init__(self, header, sequence):
+		self.header = header
+		self.sequence = sequence
 
-class UCSCMultipleFASTAHeader(object):
+class UCSCExonHeader(object):
 	def __init__(self, header):
 		header_flds = header[1:].split()
 		id_flds = header_flds[0].split('_')
 		self.id = id_flds[0]
+		self.species = id_flds[1]
 		self.exon_total = id_flds[-1]
 		self.exon_number = id_flds[-2]
 		self.other_header_info = ' '.join(header_flds[1:])
@@ -610,14 +615,16 @@ class MultipleFASTAReader(object):
 			header = self.nextLine()
 			exon_list = []
 			at_least_one_exon = False
+			# A blank line separates exons
 			while header != '' and not self.atEnd():
 				#print "${}^".format(header)
 				head = self._header_class(header)
 				id = head.id
+				# Initialize target ID if we don't have one yet
 				if target_id is None:
 					target_id = head.id
 				seq = self.nextLine()
-				exon_list.append((head, seq))
+				exon_list.append(FASTAEntry(head, seq))
 				at_least_one_exon = True
 				if not self.atEnd():
 					header = self.nextLine()
@@ -637,18 +644,26 @@ class MultipleFASTAReader(object):
 		while not self.atEnd():
 			cds = ''
 			cds_list = []
-			id = None
-			for ex_header, ex in self.exons():
-				head = self._header_class(ex_header)
-				if id is None:
-					id = head.id
-				assert id == head.id
-				cds_list.append((head.exon_number, ex))
-			cds_list.sort()
-			assert len(cds_list) == head.exon_total
-			cds = ''.join([ex for (n,ex) in cds_list])
-			new_header = '{h.id} {h.other_header_info} {h.exon_total}'
-			yield new_header, cds
+			ex_alignment_lists = [x for x in self.exons()]
+			#print len(ex_alignment_lists), len(ex_alignment_lists[0])
+			sentinel_entry = ex_alignment_lists[0][0]
+			head = sentinel_entry.header
+			#print head.id
+			# First sort the CDS entries by exon number
+			# DAD: assume that they are in sorted order for now
+			# Then assemble CDS for each species by matching species ids
+			# 
+			species = [entry.header.species for entry in ex_alignment_lists[0]]
+			species_cds = dict([(s,'') for s in species])
+			for exon_list in ex_alignment_lists:
+				for entry in exon_list:
+					species_cds[entry.header.species] += entry.sequence
+			cds_list = []
+			for spec in species:
+				cds = species_cds[spec]
+				new_header = '{h.id} {species} {h.other_header_info} {h.exon_total}'.format(h=head, species=spec)
+				cds_list.append(FASTAEntry(new_header, cds))
+			yield cds_list
 	
 	
 		

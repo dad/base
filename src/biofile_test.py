@@ -1,16 +1,29 @@
 import time, os, random, string, sys, math, traceback, unittest
 import biofile
 
-class test001(unittest.TestCase):
-	def test_run(self):
-		mfr = biofile.MultipleFASTAReader(file('./test-biofile/test-multiple-fasta-001.fa', 'r'), biofile.UCSCMultipleFASTAHeader)
-		n = None
+class testExons(unittest.TestCase):
+	def test_reading(self):
+		mfr = biofile.MultipleFASTAReader(file('./test-biofile/test-multiple-fasta-001.fa', 'r'), biofile.UCSCExonHeader)
+		n = 15
 		while not mfr.atEnd():
 			for ex_list in mfr.exons():
-				if n is None:
-					n = len(ex_list)
-				print ex_list[0][0].id, len(ex_list), n
+				#print ex_list[0][0].id, len(ex_list), n
 				self.assertTrue(len(ex_list) == n)
+			#print ''
+	
+class testCDS(unittest.TestCase):
+	def test_reading(self):
+		mfr = biofile.MultipleFASTAReader(file('./test-biofile/test-multiple-fasta-001.fa', 'r'), biofile.UCSCExonHeader)
+		ct = 0
+		target_ct = 10
+		for cds_alignment in mfr.CDSs():
+			L = None
+			for entry in cds_alignment:
+				if L is None:
+					L = len(entry.sequence)
+				#print entry.header, entry.sequence
+				self.assertTrue(len(entry.sequence)==L)
+				
 
 if __name__=="__main__":
 	unittest.main(verbosity=2)
