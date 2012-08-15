@@ -9,7 +9,7 @@ class test001(unittest.TestCase):
 			for ex_list in mfr.exons():
 				if n is None:
 					n = len(ex_list)
-				#print ex_list[0][0].id, ex_list[0][1], len(ex_list), n
+				print ex_list[0][0].id, len(ex_list), n
 				self.assertTrue(len(ex_list) == n)
 
 if __name__=="__main__":
