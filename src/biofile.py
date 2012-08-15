@@ -635,24 +635,34 @@ class MultipleFASTAReader(object):
 		while target_id == id and not self.atEnd():
 			# Read header
 			header = self.nextLine()
+			while header == '' and not self.atEnd():
+				header = self.nextLine()
 			exon_list = []
 			at_least_one_exon = False
-			# A blank line separates exons
+			# A blank line separates exons; two blank lines separates CDS
 			#while header == '':
 			#	header = self.nextLine()
-			while header != '' and not self.atEnd():
+			while  target_id == id and header != '' and not self.atEnd():
 				#print "${}^".format(header)
 				head = self._header_class(header)
 				id = head.id
 				# Initialize target ID if we don't have one yet
 				if target_id is None:
 					target_id = head.id
-				seq = self.nextLine()
-				if len(seq)>0:
-					exon_list.append(FASTAEntry(head, seq))
-					at_least_one_exon = True
-				if not self.atEnd():
-					header = self.nextLine()
+				if id == target_id:
+					seq = self.nextLine()
+					if len(seq)>0:
+						exon_list.append(FASTAEntry(head, seq))
+						at_least_one_exon = True
+					if not self.atEnd():
+						header = self.nextLine()
+				else:
+					# Put back header
+					#print "putting back", header
+					self._cache.push(header)
+					#print "end of cache", self._cache.cache[0]
+					#print "end of cache pop", self._cache.pop().strip()
+					#print "next line", self.nextLine()
 			if at_least_one_exon and target_id == id:
 				#if target_id != head.id:
 				#	# Put back last line
@@ -660,7 +670,8 @@ class MultipleFASTAReader(object):
 				yield exon_list
 	
 	def nextLine(self):
-		return self._cache.pop().strip()
+		line = self._cache.pop().strip()
+		return line
 		
 	def atEnd(self):
 		return self._cache.isEmpty()

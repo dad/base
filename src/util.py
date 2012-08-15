@@ -145,11 +145,11 @@ def defaultHeader(header_flds):
 
 
 class LineCache:
-	"""Class for caching lines read by DelimitedLineReader."""
+	"""Class for caching lines."""
 	def __init__(self, instream, comment_str='#'):
 		self.cache = []
 		self.instream = instream
-		self.cache_size = 100
+		self.cache_size = 100 # lines
 		self.comment_str = comment_str
 		self.refill()
 
@@ -157,7 +157,7 @@ class LineCache:
 		self.cache.append(line)
 
 	def push(self, line):
-		self.add(line)
+		self.cache = [line] + self.cache
 
 	def pop(self):
 		# Use standard Python queue pattern
@@ -168,6 +168,7 @@ class LineCache:
 
 	def refill(self):
 		# Refill the cache
+		# Presently only guarantees reading self.cache_size lines -- if these are all comments, no data will be read.
 		eof = False
 		for li in range(self.cache_size):
 			line = self.instream.readline()

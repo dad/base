@@ -14,8 +14,6 @@ class testExons(unittest.TestCase):
 class testCDS(unittest.TestCase):
 	def test_reading(self):
 		mfr = biofile.MultipleFASTAReader(file('./test-biofile/test-multiple-fasta-001.fa', 'r'), biofile.UCSCExonHeader)
-		ct = 0
-		target_ct = 10
 		for cds_alignment in mfr.CDSs():
 			L = None
 			for entry in cds_alignment:
@@ -23,7 +21,15 @@ class testCDS(unittest.TestCase):
 					L = len(entry.sequence)
 				#print entry.header, entry.sequence
 				self.assertTrue(len(entry.sequence)==L)
-				
+	
+	def test_length(self):
+		mfr = biofile.MultipleFASTAReader(file('./test-biofile/test-multiple-fasta-002.fa', 'r'), biofile.UCSCExonHeader)
+		for cds_alignment in mfr.CDSs():
+			#print len(cds_alignment[0].sequence)
+			for entry in cds_alignment:
+				if entry.header.id == "CG17540-RC" and entry.header.species == 'dm3':
+					#print len(entry.sequence)
+					self.assertTrue(len(entry.sequence)==1092)
 
 if __name__=="__main__":
 	unittest.main(verbosity=2)
