@@ -156,6 +156,9 @@ class LineCache:
 	def add(self, line):
 		self.cache.append(line)
 
+	def push(self, line):
+		self.add(line)
+
 	def pop(self):
 		# Use standard Python queue pattern
 		res = self.cache.pop(0)

@@ -619,8 +619,12 @@ class MultipleFASTAReader(object):
 				seq = self.nextLine()
 				exon_list.append((head, seq))
 				at_least_one_exon = True
-				header = self.nextLine()
-			if at_least_one_exon:
+				if not self.atEnd():
+					header = self.nextLine()
+			if at_least_one_exon and target_id == id:
+				#if target_id != head.id:
+				#	# Put back last line
+				#	self._cache.push(header)
 				yield exon_list
 	
 	def nextLine(self):
