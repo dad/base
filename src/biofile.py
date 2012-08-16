@@ -602,7 +602,6 @@ class UCSCExonHeader(object):
 	
 	def CDSHeader(self):
 		return "{h.id}_{h.species} {h.other_header_info}".format(h=self)
-		
 
 class NoExonFASTAHeader(object):
 	def __init__(self, header, header_fxn=firstField):
@@ -621,15 +620,48 @@ class NoExonFASTAHeader(object):
 	def CDSHeader(self):
 		return self.original_header
 		
+class GeneSpeciesHeader(object):
+	# Header of the style > gene_id species_id other_stuff
+	def __init__(self, header):
+		header_flds = header[1:].strip().split()
+		self.id = header_flds[0]
+		self.species = header_flds[1]
+		self.exon_total = 1
+		self.exon_number = 1
+		self.other_header_info = ''
+		if len(header_flds)>2:
+			self.other_header_info = ' '.join(header_flds[2:])
+		self.original_header = header
+	
+	def __str__(self):
+		return self.exonHeader()
+
+	def exonHeader(self):
+		return self.original_header
+	
+	def CDSHeader(self):
+		return self.original_header
+		
 
 class MultipleFASTAReader(object):
+	"""Allows iteration over exons and CDSs from a multiple-alignment FASTA file.
+	
+	This implementation never loads the entire file into memory.
+	"""
 	def __init__(self, file_instance, header_class):
 		self._file = file_instance
 		self._header_class = header_class
 		self._cache = util.LineCache(file_instance)
 	
+	def nextLine(self):
+		line = self._cache.pop().strip()
+		return line
+		
+	def atEnd(self):
+		return self._cache.isEmpty()
+
 	def exons(self):
-		"""Return a list of exon alignments"""
+		"""Iterates over a list of exon alignments"""
 		id = None
 		target_id = None
 		while target_id == id and not self.atEnd():
@@ -669,14 +701,8 @@ class MultipleFASTAReader(object):
 				#	self._cache.push(header)
 				yield exon_list
 	
-	def nextLine(self):
-		line = self._cache.pop().strip()
-		return line
-		
-	def atEnd(self):
-		return self._cache.isEmpty()
-	
 	def CDSs(self):
+		"""Iterates over a list of coding sequences (CDSs)"""
 		while not self.atEnd():
 			cds = ''
 			cds_list = []
@@ -684,15 +710,15 @@ class MultipleFASTAReader(object):
 			if len(ex_alignment_lists)==0:
 				continue
 			#print len(ex_alignment_lists), len(ex_alignment_lists[0])
+			sentinel_list = ex_alignment_lists[0]
 			sentinel_entry = ex_alignment_lists[0][0]
 			head = sentinel_entry.header
 			#print head.id
 			# First sort the CDS entries by exon number
 			# DAD: assume that they are in sorted order for now
 			# Then assemble CDS for each species by matching species ids
-			# 
-			species = [entry.header.species for entry in ex_alignment_lists[0]]
-			species_headers = dict([(entry.header.species, entry.header) for entry in ex_alignment_lists[0]])
+			species = [entry.header.species for entry in sentinel_list]
+			species_headers = dict([(entry.header.species, entry.header) for entry in sentinel_list])
 			species_cds = dict([(s,'') for s in species])
 			for exon_list in ex_alignment_lists:
 				for entry in exon_list:

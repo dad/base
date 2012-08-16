@@ -20,6 +20,7 @@ class testCDS(unittest.TestCase):
 				if L is None:
 					L = len(entry.sequence)
 				#print entry.header, entry.sequence
+				# Check that every entry in the alignment has the same length
 				self.assertTrue(len(entry.sequence)==L)
 	
 	def test_length(self):
@@ -27,6 +28,7 @@ class testCDS(unittest.TestCase):
 		for cds_alignment in mfr.CDSs():
 			#print len(cds_alignment[0].sequence)
 			for entry in cds_alignment:
+				# Check that the second gene has the right length
 				if entry.header.id == "CG17540-RC" and entry.header.species == 'dm3':
 					#print len(entry.sequence)
 					self.assertTrue(len(entry.sequence)==1092)
