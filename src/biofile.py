@@ -631,7 +631,7 @@ class GeneSpeciesHeader(object):
 		self.other_header_info = ''
 		if len(header_flds)>2:
 			self.other_header_info = ' '.join(header_flds[2:])
-		self.original_header = header
+		self.original_header = header.strip()[1:]
 	
 	def __str__(self):
 		return self.exonHeader()
