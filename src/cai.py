@@ -589,7 +589,7 @@ def getAkashi2x2TablesForORF(conservationFxn, aligned_cdna, aligned_prot, other_
 			gene_codon_tables[codon].append(tuple(table))
 	return gene_codon_tables
 
-def getAkashi2x2TablesForORFRefCodon(conservationFxn, reference_codon_dict, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount, n_terminal_start):
+def getAkashi2x2TablesForORFRefCodon(conservationFxn, reference_codon_dict, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount=0, n_terminal_start=0):
 	# Now build the tables for this gene
 	# Compute conserved--preferred association using each codon as preferred in turn
 	gc = translate.geneticCode(rna=False)
@@ -612,7 +612,7 @@ def getAkashi2x2TablesForORFRefCodon(conservationFxn, reference_codon_dict, alig
 			gene_codon_tables[codon].append(tuple(table))
 	return gene_codon_tables
 
-def getAkashi2x2TablesForORFAllCodonPairs(conservationFxn, codon_pair_list, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount, n_terminal_start):
+def getAkashi2x2TablesForORFAllCodonPairs(conservationFxn, codon_pair_list, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount=0, n_terminal_start=0):
 	# Now build the tables for this gene
 	# Compute conserved--preferred association using each codon as preferred in turn
 	gc = translate.geneticCode(rna=False)
