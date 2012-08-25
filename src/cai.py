@@ -568,7 +568,7 @@ def getCodonCounts(conservationFxn, master_cdna, master_prot, other_cdnas, other
 			continue
 	return conserved_codon_counts, variable_codon_counts
 
-def getAkashi2x2TablesForORF(conservationFxn, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount, n_terminal_start):
+def getAkashi2x2TablesForORF(conservationFxn, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount, n_terminal_start=0):
 	# Now build the tables for this gene
 	# Compute conserved--preferred association using each codon as preferred in turn
 	gc = translate.geneticCode(rna=False)
