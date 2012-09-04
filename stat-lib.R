@@ -216,6 +216,7 @@ barplot.ci <- function(x, param.name, ylim=NULL, ...) {
   }
   pts <- barplot(params, ylim=ylim, ...)
   segments(pts, upper.cis, pts, lower.cis)
+  invisible(pts)
 }
 
 mrev <- function(x) {
@@ -247,7 +248,7 @@ barplot.err <- function(x, lower=x, upper=x, xlim=NULL, ylim=NULL, horiz=FALSE, 
 	else {
 		segments(rfxn(lower), bp, rfxn(upper), bp)
 	}
-	bp
+	invisible(bp)
 }
 
 plot.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, add=FALSE, log='', bar.col=NULL, type='l', ...) {
