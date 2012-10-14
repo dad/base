@@ -82,7 +82,8 @@ rcorr.sp <- function(x, y, method='pearson', use='pairwise.complete.obs', within
 	res.rel <- res.r
 	res.relx <- res.r
 	res.rely <- res.r
-	res.within <- res.r
+	res.withinx <- res.r
+	res.withiny <- res.r
 	res.unc <- res.r
 	res.id <- res.r
 	# Prepare
@@ -111,12 +112,13 @@ rcorr.sp <- function(x, y, method='pearson', use='pairwise.complete.obs', within
 			res.rel[xi,yj] <- sqrt(rxx*ryy)
 			res.relx[xi,yj] <- rxx
 			res.rely[xi,yj] <- ryy
-			res.within[xi,yj] <- ((xwith[1]==xwith[2]) | (ywith[1]==ywith[2]))
+			res.withinx[xi,yj] <- (xwith[1]==xwith[2])
+			res.withiny[xi,yj] <- (ywith[1]==ywith[2])
 			res.n[xi,yj] <- (prod(c(r.n[xrow[1], ycol[1]], r.n[xrow[1], ycol[2]], r.n[xrow[2], ycol[1]], r.n[xrow[2], ycol[2]])))^(0.25)
 			res.id[xi,yj] <- paste(paste(xrow),paste(ycol),collapse=' ')
 		}
 	}
-	list(r=res.r, n=res.n, r.unc=res.unc, rel=res.rel, relx=res.relx, rely=res.rely, within=res.within, id=res.id)
+	list(r=res.r, n=res.n, r.unc=res.unc, rel=res.rel, relx=res.relx, rely=res.rely, withinx=res.withinx, withiny=res.withiny, id=res.id)
 }
 
 
