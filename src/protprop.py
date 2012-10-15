@@ -1,7 +1,7 @@
 #! python
 
 import sys, os, math, random, datetime
-from optparse import OptionParser
+from argparse import ArgumentParser
 import util, biofile, translate
 
 # pK values from http://helixweb.nih.gov/emboss/html/iep.html
@@ -80,13 +80,13 @@ class ProteinProperties(object):
 		
 
 if __name__=='__main__':
-	parser = OptionParser(usage="%prog [-i fasta] [-s sequence]")
-	parser.add_option("-o", "--out", dest="out_fname", type="string", default=None, help="output filename")
-	parser.add_option("-i", "--in", dest="in_fname", type="string", default=None, help="input FASTA filename")
-	parser.add_option("-s", "--seq", dest="sequence", type="string", default=None, help="input sequence")
-	parser.add_option("-t", "--translate", dest="translate", action="store_true", default=False, help="translate the input sequences?")
-	parser.add_option("--pH", dest="pH", type="float", default=7.2, help="pH for charge determination")
-	(options, args) = parser.parse_args()
+	parser = ArgumentParser(usage="%prog [-i fasta] [-s sequence]")
+	parser.add_argument("-o", "--out", dest="out_fname", default=None, help="output filename")
+	parser.add_argument("-i", "--in", dest="in_fname", default=None, help="input FASTA filename")
+	parser.add_argument("-s", "--seq", dest="sequence", default=None, help="input sequence")
+	parser.add_argument("-t", "--translate", dest="translate", action="store_true", default=False, help="translate the input sequences?")
+	parser.add_argument("--pH", dest="pH", type=float, default=7.2, help="pH for charge determination")
+	options = parser.parse_args()
 	
 	outs = util.OutStreams()
 	if not options.out_fname is None:
