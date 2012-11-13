@@ -86,7 +86,7 @@ rcorr.sp <- function(x, y, method='pearson', use='pairwise.complete.obs', within
 	res.withiny <- res.r
 	res.unc <- res.r
 	res.id <- res.r
-	# Prepare
+	# Prepare correlation matrices from which we'll assemble estimates
 	r.x <- cor(x, method=method, use=use)
 	r.y <- cor(y, method=method, use=use)
 	r.xy <- cor(x, y, method=method, use=use)
@@ -106,7 +106,6 @@ rcorr.sp <- function(x, y, method='pearson', use='pairwise.complete.obs', within
 			rxx <- r.x[xrow[1], xrow[2]]
 			# Reliability of Y
 			ryy <- r.y[ycol[1], ycol[2]]
-			#rsp <- rcorr.spearman.pair(x[,x.pairnames[1,xi]], x[,x.pairnames[2,xi]], y[,y.pairnames[1,yj]], y[,y.pairnames[2,yj]], method=method)
 			res.r[xi,yj] <- rxy/sqrt(rxx*ryy)
 			res.unc[xi,yj] <- rxy
 			res.rel[xi,yj] <- sqrt(rxx*ryy)
