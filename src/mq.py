@@ -20,7 +20,7 @@ class ProteinQuant(object):
 		# Merge non-destructively
 		id = self.id
 		if protein_quant.id != self.id:
-			id = "%s+%s" % (self.id, protein_quant.id)
+			id = "{}+{}".format(self.id, protein_quant.id)
 		merge_pq = ProteinQuant(id)
 		# Copy my peptides; merge others
 		merge_pq.peptide_dict = dict(self.peptide_dict.items())
@@ -142,14 +142,29 @@ class ProteinQuant(object):
 	def key(self):
 		return self.id
 
-
 class PeptideData(object):
 	def __init__(self):
 		self.ratio_hl = None
 		self.ratio_hl_normalized = None
 		self.intensity_l = None
 		self.intensity_h = None
-		self._slice = None
+		self._fraction = None
+		self.sequence = None
+		self.mods = None
+		self._msms_count = None
+
+class PeptideData3(object):
+	def __init__(self):
+		self.ratio_hl = None
+		self.ratio_hl_normalized = None
+		self.ratio_hm = None
+		self.ratio_hm_normalized = None
+		self.ratio_ml = None
+		self.ratio_ml_normalized = None
+		self.intensity_l = None
+		self.intensity_h = None
+		self.intensity_m = None
+		self._fraction = None
 		self.sequence = None
 		self.mods = None
 		self._msms_count = None
@@ -175,7 +190,7 @@ class PeptideQuant(object):
 		self.intensity_h_list = []
 		self._msms_count = 0
 		self._parent_proteins = set()
-		self._slices = set()
+		self._fractions = set()
 
 	@property
 	def key(self):
@@ -191,7 +206,7 @@ class PeptideQuant(object):
 		self.intensity_l_list.append(pep_data.intensity_l)
 		self.intensity_h_list.append(pep_data.intensity_h)
 		self.msms_count += pep_data.msms_count
-		self._slices.add(pep_data._slice)
+		self._fractions.add(pep_data._fraction)
 
 	def addProtein(self, id):
 		self._parent_proteins.add(id)
@@ -208,7 +223,7 @@ class PeptideQuant(object):
 		pep.intensity_h_list = self.intensity_h_list + pep_quant.intensity_h_list
 		pep._parent_proteins = self._parent_proteins.union(pep_quant._parent_proteins)
 		pep.msms_count = self.msms_count + pep_quant.msms_count
-		pep._slices = self._slices.union(pep_quant._slices)
+		pep._fractions = self._fractions.union(pep_quant._fractions)
 		return pep
 
 	def copy(self):
@@ -219,7 +234,7 @@ class PeptideQuant(object):
 		pep.intensity_h_list = self.intensity_h_list[:]
 		pep._parent_proteins = set(list(self._parent_proteins))
 		pep.msms_count = self.msms_count
-		pep._slices = set(list(self._slices))
+		pep._fractions = set(list(self._fractions))
 		return pep
 
 	def normalizeRatiosBy(self, ratio, norm_ratio):
@@ -317,12 +332,12 @@ class PeptideQuant(object):
 
 	@property
 	def slices(self):
-		for s in self._slices:
+		for s in self._fractions:
 			yield s
 	
 	@property
-	def n_slices(self):
-		return len(self._slices)
+	def n_fractions(self):
+		return len(self._fractions)
 
 	def __str__(self):
 		line = self.key
@@ -332,6 +347,25 @@ class PeptideQuant(object):
 		line += '\tIntensity L\t' + '\t'.join(["{:1.0f}".format(r) for r in self.intensity_l_list]) + '\n'
 		line += '\tMS/MS Count\t{0:d}\n'.format(self.msms_count)
 		return line
+
+class PeptideQuant3(PeptideQuant):
+	def __init__(self, key):
+		PeptideQuant.__init__(self, key)
+		self.heavy_medium_ratio_list = []
+		self.heavy_medium_normalized_ratio_list = []
+		self.medium_light_ratio_list = []
+		self.medium_light_normalized_ratio_list = []
+		self.intensity_m_list = []
+
+	def add(self, pep_data):
+		PeptideQuant.add(self, pep_data)
+		self.heavy_medium_ratio_list.append(pep_data.ratio_hm)
+		self.heavy_medium_normalized_ratio_list.append(pep_data.ratio_hm_normalized)
+		self.medium_light_ratio_list.append(pep_data.ratio_ml)
+		self.medium_light_normalized_ratio_list.append(pep_data.ratio_ml_normalized)
+		self.intensity_m_list = []
+		
+
 
 class EvidenceDescriptor(object):
 	def __init__(self):
@@ -428,7 +462,7 @@ class ExperimentEvidence(object):
 					pep_data.intensity_h = flds['intensity.h']
 					pep_data.intensity_l = flds['intensity.l']
 				try:
-					pep_data._slice = flds['gel.slice']
+					pep_data._fraction = flds['gel.slice']
 				except KeyError:
 					pass
 				pep_data.sequence = flds['sequence']
