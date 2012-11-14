@@ -126,6 +126,8 @@ def maxQuantHeader(header_flds):
 	header_line = '\t'.join(header_flds)
 	header_line = header_line.lower()
 	header_line = header_line.replace("h/l", "hl")
+	header_line = header_line.replace("h/m", "hm")
+	header_line = header_line.replace("m/l", "ml")
 	header_line = header_line.replace(" ", ".")
 	header_line = header_line.replace("(", ".")
 	header_line = header_line.replace(".[%]", "")

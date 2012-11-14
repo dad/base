@@ -20,8 +20,8 @@ class ProteinQuant(object):
 		# Merge non-destructively
 		id = self.id
 		if protein_quant.id != self.id:
-			id = "%s+%s" % (self.id, protein_quant.id)
-		merge_pq = ProteinQuant(id)
+			id = "{}+{}".format(self.id, protein_quant.id)
+		merge_pq = self.__class__(id)
 		# Copy my peptides; merge others
 		merge_pq.peptide_dict = dict(self.peptide_dict.items())
 		for k in protein_quant.peptide_dict.keys():
@@ -35,7 +35,7 @@ class ProteinQuant(object):
 
 	def copy(self):
 		# Merge non-destructively
-		pq = ProteinQuant(self.id)
+		pq = self.__class__(self.id)
 		pq.peptide_dict = dict(self.peptide_dict.items())
 		return pq
 
@@ -142,6 +142,87 @@ class ProteinQuant(object):
 	def key(self):
 		return self.id
 
+class ProteinQuant3(ProteinQuant):
+	def __init__(self, id):
+		ProteinQuant.__init__(self, id)
+		self._ratio_getters = {"hl":self.getHeavyLightRatioSummary, "hm":self.getHeavyMediumRatioSummary, "ml":self.getMediumLightRatioSummary}
+		self._normalized_ratio_getters = {"hl":self.getNormalizedHeavyLightRatioSummary, "hm":self.getNormalizedHeavyMediumRatioSummary, "ml":self.getNormalizedMediumLightRatioSummary}
+
+	def getRatioSummary(self, ratio_string):
+		# Dispatch
+		return self._ratio_getters[ratio_string]()
+
+	def getNormalizedRatioSummary(self, ratio_string):
+		# Dispatch
+		return self._normalized_ratio_getters[ratio_string]()
+
+	def getHeavyMediumRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		for pep in self.peptides:
+			acc.addAll(pep.heavy_medium_ratio_list)
+		return acc.summary
+
+	@property
+	def ratio_hm(self):
+		res = None
+		med = self.getHeavyMediumRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	def getMediumLightRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		for pep in self.peptides:
+			acc.addAll(pep.medium_light_ratio_list)
+		return acc.summary
+
+	@property
+	def ratio_ml(self):
+		res = None
+		med = self.getMediumLightRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	def getNormalizedHeavyMediumRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		for pep in self.peptides:
+			acc.addAll(pep.heavy_medium_normalized_ratio_list)
+		return acc.summary
+
+	@property
+	def normalized_ratio_hm(self):
+		res = None
+		med = self.getNormalizedHeavyMediumRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	def getNormalizedMediumLightRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		for pep in self.peptides:
+			acc.addAll(pep.medium_light_normalized_ratio_list)
+		return acc.summary
+
+	@property
+	def normalized_ratio_ml(self):
+		res = None
+		med = self.getNormalizedMediumLightRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	def getMediumIntensitySummary(self):
+		acc = stats.Accumulator(store=True)
+		acc.addAll([pep.medium_intensity for pep in self.peptides])
+		return acc.summary
+
+	@property
+	def medium_intensity(self):
+		return self.getMediumIntensitySummary().sum
+
+		
+	
 
 class PeptideData(object):
 	def __init__(self):
@@ -149,7 +230,23 @@ class PeptideData(object):
 		self.ratio_hl_normalized = None
 		self.intensity_l = None
 		self.intensity_h = None
-		self._slice = None
+		self._fraction = None
+		self.sequence = None
+		self.mods = None
+		self._msms_count = None
+
+class PeptideData3(object):
+	def __init__(self):
+		self.ratio_hl = None
+		self.ratio_hl_normalized = None
+		self.ratio_hm = None
+		self.ratio_hm_normalized = None
+		self.ratio_ml = None
+		self.ratio_ml_normalized = None
+		self.intensity_l = None
+		self.intensity_h = None
+		self.intensity_m = None
+		self._fraction = None
 		self.sequence = None
 		self.mods = None
 		self._msms_count = None
@@ -175,7 +272,7 @@ class PeptideQuant(object):
 		self.intensity_h_list = []
 		self._msms_count = 0
 		self._parent_proteins = set()
-		self._slices = set()
+		self._fractions = set()
 
 	@property
 	def key(self):
@@ -191,7 +288,7 @@ class PeptideQuant(object):
 		self.intensity_l_list.append(pep_data.intensity_l)
 		self.intensity_h_list.append(pep_data.intensity_h)
 		self.msms_count += pep_data.msms_count
-		self._slices.add(pep_data._slice)
+		self._fractions.add(pep_data._fraction)
 
 	def addProtein(self, id):
 		self._parent_proteins.add(id)
@@ -201,25 +298,25 @@ class PeptideQuant(object):
 		key = self.key
 		if pep_quant.key != self.key:
 			key = "{0}+{1}".format(self.key, pep_quant.key)
-		pep = PeptideQuant(key)
+		pep = self.__class__(key)
 		pep.heavy_light_ratio_list = self.heavy_light_ratio_list + pep_quant.heavy_light_ratio_list
 		pep.heavy_light_normalized_ratio_list = self.heavy_light_normalized_ratio_list + pep_quant.heavy_light_normalized_ratio_list
 		pep.intensity_l_list = self.intensity_l_list + pep_quant.intensity_l_list
 		pep.intensity_h_list = self.intensity_h_list + pep_quant.intensity_h_list
 		pep._parent_proteins = self._parent_proteins.union(pep_quant._parent_proteins)
 		pep.msms_count = self.msms_count + pep_quant.msms_count
-		pep._slices = self._slices.union(pep_quant._slices)
+		pep._fractions = self._fractions.union(pep_quant._fractions)
 		return pep
 
 	def copy(self):
-		pep = PeptideQuant(self.key)
+		pep = self.__class__(self.key)
 		pep.heavy_light_ratio_list = self.heavy_light_ratio_list[:]
 		pep.heavy_light_normalized_ratio_list = self.heavy_light_normalized_ratio_list[:]
 		pep.intensity_l_list = self.intensity_l_list[:]
 		pep.intensity_h_list = self.intensity_h_list[:]
 		pep._parent_proteins = set(list(self._parent_proteins))
 		pep.msms_count = self.msms_count
-		pep._slices = set(list(self._slices))
+		pep._fractions = set(list(self._fractions))
 		return pep
 
 	def normalizeRatiosBy(self, ratio, norm_ratio):
@@ -240,7 +337,7 @@ class PeptideQuant(object):
 		return acc.summary
 
 	@property
-	def ratio(self):
+	def ratio_hl(self):
 		res = None
 		med = self.getHeavyLightRatioSummary().median
 		if not na.isNA(med):
@@ -253,7 +350,7 @@ class PeptideQuant(object):
 		return acc.summary
 
 	@property
-	def normalized_ratio(self):
+	def normalized_ratio_hl(self):
 		res = None
 		med = self.getNormalizedHeavyLightRatioSummary().median
 		if not na.isNA(med):
@@ -261,7 +358,7 @@ class PeptideQuant(object):
 		return res
 	
 	@property
-	def ratio_count(self):
+	def ratio_count_hl(self):
 		return len(self.heavy_light_ratio_list)
 
 	def getIntensitySummary(self):
@@ -317,12 +414,12 @@ class PeptideQuant(object):
 
 	@property
 	def slices(self):
-		for s in self._slices:
+		for s in self._fractions:
 			yield s
 	
 	@property
-	def n_slices(self):
-		return len(self._slices)
+	def n_fractions(self):
+		return len(self._fractions)
 
 	def __str__(self):
 		line = self.key
@@ -332,6 +429,119 @@ class PeptideQuant(object):
 		line += '\tIntensity L\t' + '\t'.join(["{:1.0f}".format(r) for r in self.intensity_l_list]) + '\n'
 		line += '\tMS/MS Count\t{0:d}\n'.format(self.msms_count)
 		return line
+
+class PeptideQuant3(PeptideQuant):
+	def __init__(self, key):
+		PeptideQuant.__init__(self, key)
+		self.heavy_medium_ratio_list = []
+		self.heavy_medium_normalized_ratio_list = []
+		self.medium_light_ratio_list = []
+		self.medium_light_normalized_ratio_list = []
+		self.intensity_m_list = []
+		self._ratio_getters = {"hl":self.getHeavyLightRatioSummary, "hm":self.getHeavyMediumRatioSummary, "ml":self.getMediumLightRatioSummary}
+		self._normalized_ratio_getters = {"hl":self.getNormalizedHeavyLightRatioSummary, "hm":self.getNormalizedHeavyMediumRatioSummary, "ml":self.getNormalizedMediumLightRatioSummary}
+
+	def add(self, pep_data):
+		PeptideQuant.add(self, pep_data)
+		self.heavy_medium_ratio_list.append(pep_data.ratio_hm)
+		self.heavy_medium_normalized_ratio_list.append(pep_data.ratio_hm_normalized)
+		self.medium_light_ratio_list.append(pep_data.ratio_ml)
+		self.medium_light_normalized_ratio_list.append(pep_data.ratio_ml_normalized)
+		self.intensity_m_list.append(pep_data.intensity_m)
+		
+	def getRatioSummary(self, ratio_string):
+		# Dispatch
+		return self._ratio_getters[ratio_string]()
+
+	def getNormalizedRatioSummary(self, ratio_string):
+		# Dispatch
+		return self._normalized_ratio_getters[ratio_string]()
+
+	def getHeavyMediumRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		acc.addAll(self.heavy_medium_ratio_list)
+		return acc.summary
+
+	@property
+	def ratio_hm(self):
+		res = None
+		med = self.getHeavyMediumRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	@property
+	def ratio_count_hm(self):
+		return len(self.heavy_medium_ratio_list)
+
+	def getMediumLightRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		acc.addAll(self.medium_light_ratio_list)
+		return acc.summary
+
+	@property
+	def ratio_ml(self):
+		res = None
+		med = self.getMediumLightRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	@property
+	def ratio_count_ml(self):
+		return len(self.medium_light_ratio_list)
+
+	def getNormalizedHeavyMediumRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		acc.addAll(self.heavy_medium_normalized_ratio_list)
+		return acc.summary
+
+	@property
+	def normalized_ratio_hm(self):
+		res = None
+		med = self.getNormalizedHeavyMediumRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	def getNormalizedMediumLightRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		acc.addAll(self.medium_light_normalized_ratio_list)
+		return acc.summary
+
+	@property
+	def normalized_ratio_ml(self):
+		res = None
+		med = self.getNormalizedMediumLightRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	def getIntensitySummary(self):
+		acc = stats.Accumulator(store=True)
+		for (h_int, m_int, l_int) in zip(self.intensity_h_list, self.intensity_m_list, self.intensity_l_list):
+			acc.add(h_int+m_int+l_int)
+		return acc.summary
+
+	@property
+	def intensity(self):
+		return self.light_intensity + self.heavy_intensity + self.medium_intensity
+
+	def getMediumIntensitySummary(self):
+		acc = stats.Accumulator(store=True)
+		acc.addAll(self.intensity_m_list)
+		return acc.summary
+
+	@property
+	def medium_intensity(self):
+		return self.getMediumIntensitySummary().sum
+
+		
+	def __str__(self):
+		line = PeptideQuant.__str__(self)
+		# DAD: implement
+		return line
+
 
 class EvidenceDescriptor(object):
 	def __init__(self):
@@ -352,7 +562,7 @@ class ExperimentEvidence(object):
 									   "ratio.hl.variability","ratio.hl.count","intensity","intensity.h","intensity.l"]
 	# Fields that should be carried over
 	carryover_flds = ["peptides.seq","razor.peptides.seq","unique.peptides.seq","intensity",\
-					  "ratio.hl","ratio.hl.normalized","intensity.h","intensity.l"]
+					  "ratio.hl","ratio.hl.normalized","intensity.h","intensity.m","intensity.l"]
 	# Fields that need to be renamed to indicate, e.g., the meaning of h and l (Heavy and Light...)
 	rename_flds = ["ratio.hl.significance.a","ratio.hl.significance.b","ratio.hl.variability",\
 				   "ratio.hl.count","intensity.h","intensity.l"]
@@ -396,7 +606,6 @@ class ExperimentEvidence(object):
 		# Return True if we decided to parse this line
 		parsed = False
 		if self.experiment is None or not flds.has_key('experiment') or self.experiment == "{0}".format(flds['experiment']):
-		#if not na.isNA(self.experiment) and flds["experiment"] == self.experiment:
 			# Process this line
 			# Skip lines corresponding to reverse or contaminant peptide matches.
 			if flds['reverse'] == '+' or flds['contaminant'] == '+':
@@ -409,28 +618,21 @@ class ExperimentEvidence(object):
 				id_flds = flds["leading.razor.protein"].split(';')  # To get the "most likely" protein, in the sense of a protein whose identification is uniquely supported by at least one peptide
 				n_prots = len(id_flds)
 
-				ratio_hl = flds['ratio.hl']
-				ratio_hl_normalized = flds['ratio.hl.normalized']
 				# Get intensities and ratio
-				pep_data = PeptideData()
-				#intensity = flds['intensity']
-				# Invert the H/L ratios if needed
-				if self.invert:
-					if not na.isNA(ratio_hl):
-						pep_data.ratio_hl = 1.0/ratio_hl
-					if not na.isNA(ratio_hl_normalized):
-						pep_data.ratio_hl_normalized = 1.0/ratio_hl_normalized
-					pep_data.intensity_h = flds['intensity.l']
-					pep_data.intensity_l = flds['intensity.h']
-				else:
-					pep_data.ratio_hl = ratio_hl
-					pep_data.ratio_hl_normalized = ratio_hl_normalized
-					pep_data.intensity_h = flds['intensity.h']
-					pep_data.intensity_l = flds['intensity.l']
-				try:
-					pep_data._slice = flds['gel.slice']
-				except KeyError:
-					pass
+				pep_data = PeptideData3()
+				for rat in ['hl','ml','hm']:
+					rat_str = 'ratio.{}'.format(rat)
+					rat_norm_str = 'ratio.{}.normalized'.format(rat)
+					ratio = flds.get(rat_str)
+					ratio_normalized = flds.get(rat_norm_str)
+					if self.invert:
+						raise "Inverting of triple-ratios not implemented yet"
+					setattr(pep_data, 'ratio_{}'.format(rat), ratio)
+					setattr(pep_data, 'ratio_{}_normalized'.format(rat), ratio_normalized)
+				pep_data.intensity_h = flds.get('intensity.h')
+				pep_data.intensity_m = flds.get('intensity.m')
+				pep_data.intensity_l = flds.get('intensity.l')
+				pep_data._fraction = flds.get('fraction')
 				pep_data.sequence = flds['sequence']
 				pep_data.msms_count = flds['ms.ms.count']
 				pep_data.mods = flds['modifications']
@@ -443,7 +645,7 @@ class ExperimentEvidence(object):
 				try:
 					pep_entry = self.peptide_data[pep_key]
 				except KeyError:
-					pep_entry = PeptideQuant(pep_key)
+					pep_entry = PeptideQuant3(pep_key)
 					self.peptide_data[pep_key] = pep_entry
 				pep_entry.add(pep_data)
 				# Add this peptide to all identified proteins
@@ -458,7 +660,7 @@ class ExperimentEvidence(object):
 						try:
 							prot_entry = self.protein_data[orf]
 						except KeyError:
-							prot_entry = ProteinQuant(orf)
+							prot_entry = ProteinQuant3(orf)
 							self.protein_data[orf] = prot_entry
 						prot_entry.add(pep_entry)
 				parsed = True
@@ -492,7 +694,8 @@ class ExperimentEvidence(object):
 	
 	def getPeptide(self, pep_id, default=None):
 		return self.peptide_data.get(pep_id, default)
-
+	
+	'''
 	def normalizeRatiosBy(self, norm_prot):
 		ratio_stats = norm_prot.getHeavyLightRatioSummary()
 		ratio_norm_stats = norm_prot.getNormalizedHeavyLightRatioSummary()
@@ -537,7 +740,7 @@ class ExperimentEvidence(object):
 			p = self.peptide_data[p_key]
 			p.normalizeHeavyIntensity(median_h)
 			p.normalizeLightIntensity(median_l)
-
+	'''
 	def isTrackedModification(self, mods):
 		# DAD: implement
 		return False
@@ -618,8 +821,8 @@ class ExperimentEvidence(object):
 			hl_str = 'H/L->H/L'
 			if self.invert:
 				hl_str = 'H/L->L/H'
-			line += "%s\t%s\t%s, " % (self.filename, hl_str, self.experiment)
-		line += '%d peptides, %d proteins' % (len(self.peptide_data), len(self.protein_data))
+			line += "{}\t{}\t{}, ".format(self.filename, hl_str, self.experiment)
+		line += '{} peptides, {} proteins'.format(len(self.peptide_data), len(self.protein_data))
 		return line
 	
 class ExperimentEvidenceFactory(object):
@@ -662,7 +865,7 @@ class ExperimentEvidenceFactory(object):
 						evidence_fnames[ed.filename] = [exev]
 		for fname in evidence_fnames.keys():
 			exp_fname = os.path.expanduser(fname)
-			assert os.path.isfile(exp_fname), "# No file found for %s\n" % exp_fname
+			assert os.path.isfile(exp_fname), "# No file found for {}\n".format(exp_fname)
 			inf = file(exp_fname,'r')
 			dlr = util.DelimitedLineReader(inf, strip=False, header_name_processor=util.maxQuantHeader)
 			#print dlr.headers
@@ -672,7 +875,7 @@ class ExperimentEvidenceFactory(object):
 			while not dlr.atEnd() and line < max_lines:
 				line += 1
 				flds = dlr.nextDict()
-				# Let all the experiments  try to parse this line
+				# Let all the experiments try to parse this line
 				relevant_experiments = evidence_fnames[exp_fname]
 				for ex in relevant_experiments:
 					res = ex.parseFields(flds, orf_dict)
