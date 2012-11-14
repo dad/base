@@ -365,6 +365,10 @@ class PeptideQuant3(PeptideQuant):
 		self.medium_light_normalized_ratio_list.append(pep_data.ratio_ml_normalized)
 		self.intensity_m_list = []
 		
+	def __str__(self):
+		line = PeptideQuant.__str__(self)
+		# DAD: implement
+		return line
 
 
 class EvidenceDescriptor(object):
