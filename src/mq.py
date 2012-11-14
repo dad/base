@@ -628,7 +628,7 @@ class ExperimentEvidence(object):
 					if self.invert:
 						raise "Inverting of triple-ratios not implemented yet"
 					setattr(pep_data, 'ratio_{}'.format(rat), ratio)
-					setattr(pep_data, 'ratio_{}_normalized'.format(rat), ratio)
+					setattr(pep_data, 'ratio_{}_normalized'.format(rat), ratio_normalized)
 				pep_data.intensity_h = flds.get('intensity.h')
 				pep_data.intensity_m = flds.get('intensity.m')
 				pep_data.intensity_l = flds.get('intensity.l')
