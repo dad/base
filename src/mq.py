@@ -536,7 +536,10 @@ class PeptideQuant3(PeptideQuant):
 	def medium_intensity(self):
 		return self.getMediumIntensitySummary().sum
 
-		
+	def normalizeMediumIntensity(self, weight):
+		new_int = [intens/weight for intens in self.intensity_m_list if not na.isNA(intens)]
+		self.intensity_m_list = new_int
+
 	def __str__(self):
 		line = PeptideQuant.__str__(self)
 		# DAD: implement
@@ -695,7 +698,7 @@ class ExperimentEvidence(object):
 	def getPeptide(self, pep_id, default=None):
 		return self.peptide_data.get(pep_id, default)
 	
-	'''
+	
 	def normalizeRatiosBy(self, norm_prot):
 		ratio_stats = norm_prot.getHeavyLightRatioSummary()
 		ratio_norm_stats = norm_prot.getNormalizedHeavyLightRatioSummary()
@@ -729,18 +732,22 @@ class ExperimentEvidence(object):
 		# DAD: implement
 		target_peps = [self.peptide_data[k] for k in peptide_keys]
 		h_acc = stats.Accumulator(store=True)
+		m_acc = stats.Accumulator(store=True)
 		l_acc = stats.Accumulator(store=True)
 		for p in target_peps:
 			h_acc.addAll(p.intensity_h_list)
+			m_acc.addAll(p.intensity_m_list)
 			l_acc.addAll(p.intensity_l_list)
 		median_h = h_acc.median
+		median_m = m_acc.median
 		median_l = l_acc.median
 		# Normalize all peptides
 		for p_key in self.peptide_data.keys():
 			p = self.peptide_data[p_key]
 			p.normalizeHeavyIntensity(median_h)
+			p.normalizeMediumIntensity(median_m)
 			p.normalizeLightIntensity(median_l)
-	'''
+	
 	def isTrackedModification(self, mods):
 		# DAD: implement
 		return False
