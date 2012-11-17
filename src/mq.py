@@ -413,7 +413,7 @@ class PeptideQuant(object):
 			yield x
 
 	@property
-	def slices(self):
+	def fractions(self):
 		for s in self._fractions:
 			yield s
 	

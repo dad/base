@@ -119,7 +119,7 @@ class Summary:
 
 
 class Accumulator(object):
-	def __init__(self, store=True):
+	def __init__(self, x=None, store=True):
 		self._sum = 0.0
 		self._sum_sq = 0.0
 		self._n = 0
@@ -127,6 +127,8 @@ class Accumulator(object):
 		self._na = 0
 		if self._store:
 			self._data = []
+		if not x is None:
+			self.addAll(x)
 
 	def add(self, x):
 		if not na.isNA(x):
@@ -177,7 +179,7 @@ class Accumulator(object):
 	@property
 	def na(self):
 		return self._na
-
+	
 	@property
 	def sd(self):
 		res = None
@@ -185,6 +187,14 @@ class Accumulator(object):
 			res = 0.0
 		if self.n > 1:
 			res = sp.sqrt(self.variance)
+		return res
+
+	@property
+	def cv(self):
+		# Coefficient of variation, sd/mean
+		res = 0.0
+		if self.n >= 1:
+			res = self.sd/self.mean
 		return res
 
 	@property
