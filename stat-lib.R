@@ -86,6 +86,10 @@ rcorr.sp <- function(x, y, method='pearson', use='pairwise.complete.obs', within
 	res.withiny <- res.r
 	res.unc <- res.r
 	res.id <- res.r
+	res.id.x1 <- res.r
+	res.id.x2 <- res.r
+	res.id.y1 <- res.r
+	res.id.y2 <- res.r
 	# Prepare correlation matrices from which we'll assemble estimates
 	r.x <- cor(x, method=method, use=use)
 	r.y <- cor(y, method=method, use=use)
@@ -116,9 +120,16 @@ rcorr.sp <- function(x, y, method='pearson', use='pairwise.complete.obs', within
 			res.n[xi,yj] <- (prod(c(r.n[xrow[1], ycol[1]], r.n[xrow[1], ycol[2]], r.n[xrow[2], ycol[1]], r.n[xrow[2], ycol[2]])))^(0.25)
 			res.n[xi,yj] <- min(c(r.n[xrow[1], ycol[1]], r.n[xrow[1], ycol[2]], r.n[xrow[2], ycol[1]], r.n[xrow[2], ycol[2]]))
 			res.id[xi,yj] <- paste(paste(xrow),paste(ycol),collapse=' ')
+			res.id.x1[xi,yj] <- xrow[1]
+			res.id.x2[xi,yj] <- xrow[2]
+			res.id.y1[xi,yj] <- ycol[1]
+			res.id.y2[xi,yj] <- ycol[2]
 		}
 	}
-	list(r=res.r, n=res.n, r.unc=res.unc, rel=res.rel, relx=res.relx, rely=res.rely, withinx=res.withinx, withiny=res.withiny, id=res.id)
+	data.frame(r=as.vector(res.r), n=as.vector(res.n), r.unc=as.vector(res.unc), rel=as.vector(res.rel), 
+		relx=as.vector(res.relx), rely=as.vector(res.rely), 
+		withinx=as.vector(res.withinx), withiny=as.vector(res.withiny), 
+		id=as.vector(res.id), id.x1=as.vector(res.id.x1), id.x2=as.vector(res.id.x2), id.y1=as.vector(res.id.y1), id.y2=as.vector(res.id.y2))
 }
 
 
