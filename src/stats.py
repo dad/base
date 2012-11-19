@@ -230,9 +230,9 @@ class Accumulator(object):
 		return s
 
 class LogAccumulator(Accumulator):
-	def __init__(self,store=True):
+	def __init__(self, x=None, store=True):
 		self._nolog_sum = 0.0
-		super(LogAccumulator,self).__init__(store)
+		super(LogAccumulator,self).__init__(x, store)
 	
 	def add(self, x):
 		if not na.isNA(x):
