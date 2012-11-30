@@ -1141,7 +1141,7 @@ pvec <- function(vraw,dotprod,nreps=1000) {
 }
 
 pcor <- function(c, prefix="") {
-	cat(prefix, c$data.name, "r =", format(c$estimate,digits=3), "P =", format(c$p.value,digits=3), "\n", sep=" ")
+	cat(prefix, c$data.name, ": r=", format(c$estimate,digits=3), ", P=", format(c$p.value,digits=3), ", N=", c$N, "\n", sep="")
 }
 
 pstat <- function(c, prefix="") {
@@ -1151,6 +1151,7 @@ pstat <- function(c, prefix="") {
 cortest <- function(x,y, meth="spearman", exact=FALSE, ...) {
 	c <- cor.test(x, y, method=meth, exact=exact, ...)
 	c$data.name <- paste(deparse(substitute(x)), "and", deparse(substitute(y)))
+	c$N = nrow(na.omit(data.frame(x,y)))
 	c
 }
 
