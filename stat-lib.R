@@ -17,9 +17,9 @@ dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="s
 	}
 	else if (output.type=='png') {
 		full.fname = paste(fdir,fname,".png",sep="")
-		# Assume 300dpi -- 
+		# Assume dots per inch
 		dpi <- 300
-		png(full.fname, width=width*dpi, height=height*dpi, units='px', pointsize=12*72, bg=tcol('white',0), ...)
+		png(full.fname, width=width*dpi, res=dpi, height=height*dpi, units='px', pointsize=12, bg=tcol('white',0), ...)
 	}
 }
 
