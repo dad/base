@@ -1626,7 +1626,7 @@ flatpolygon <- function(x, y, min=0, horiz=TRUE, ...) {
 
 ## Takes a list of variables, plots kernel densities
 multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0', col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
-	equal.height=FALSE, relative.heights=NULL, max.height=1.0, xlab="x", ylab="Density", yaxs='i', weight.list=NULL, legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, ...) {
+	equal.height=FALSE, relative.heights=NULL, max.height=1.0, xlab="x", ylab="Density", yaxs='i', weight.list=NULL, legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, logodds=FALSE, ...) {
 	extra.args <- list(...)
 	log.transform <- log
 	if (is.data.frame(x) || is.matrix(x)) {
@@ -1637,6 +1637,10 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 	if (!is.list(x)) {
 		x <- list(x)
 	}
+	
+	# Logodds: say we are doing a density for a proportion, which must lie between 0 and 1. We would like to avoid having density outside that interval.
+	# Solution: transform p in to log(p/1-p) (the log odds), do density, then transform the density axis back to p by r/1+r.
+	
 	#cat("h1\n")
 	## Colors
 	if (is.null(col)) {col <- rainbow(length(x))}
@@ -1648,6 +1652,10 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 	if (log.transform) {
 		trans <- log10
 		inv.trans <- function(y) {10^y}
+	}
+	else if (logodds) {
+		trans <- function(p) {log(p/(1-p))}
+		inv.trans <- function(r){exp(r)/(1+exp(r))}
 	}
 	else {
 		trans <- noop
