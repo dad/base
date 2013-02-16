@@ -572,13 +572,14 @@ class ExperimentEvidence(object):
 	# Fields that may need to be inverted if invert = true
 	invert_flds = ["ratio.hl","ratio.hl.normalized"]
 
-	def __init__(self):
+	def __init__(self, unique_matches=False):
 		self.filename = None
 		self.invert = False
 		self.experiment = None
 		self.protein_data = {}
 		self.peptide_data = {}
 		self.tracked_modifications = None
+		self.unique_matches_only = unique_matches
 
 	def initFrom(self, ex_desc):
 		self.filename = ex_desc.filename
@@ -617,7 +618,9 @@ class ExperimentEvidence(object):
 			else:
 				# Process this line
 				# First get list of protein accessions and split into id_flds variable
-				#id_flds = flds["proteins"].split(';')  # To get all proteins to which this peptide could belong, even if they are not uniquely supported by at least one peptide (e.g., they are paralogs which share this peptide)
+				all_id_flds = flds["proteins"].split(';')  # To get all proteins to which this peptide could belong, even if they are not uniquely supported by at least one peptide (e.g., they are paralogs which share this peptide)
+				if self.unique_matches_only and len(all_id_flds)>1:
+					return False
 				id_flds = flds["leading.razor.protein"].split(';')  # To get the "most likely" protein, in the sense of a protein whose identification is uniquely supported by at least one peptide
 				n_prots = len(id_flds)
 
@@ -850,7 +853,7 @@ class ExperimentEvidenceFactory(object):
 		self.experiments = None
 		self.learn_experiments = False
 
-	def load(self, evidence_descs, filter_tags, filter_experiments, orf_dict):
+	def load(self, evidence_descs, filter_tags, filter_experiments, unique_matches, orf_dict):
 		# evidence_descs is a list of EvidenceDescriptor variables
 		# Read experiments
 		# Filter based on tags
@@ -863,7 +866,7 @@ class ExperimentEvidenceFactory(object):
 				shared_tags = list(tag_set.intersection(set(ed.tags)))
 				if len(filter_tags) == 0 or len(shared_tags) > 0:
 					# This experiment should be included
-					exev = ExperimentEvidence()
+					exev = ExperimentEvidence(unique_matches)
 					exev.initFrom(ed)
 					self.experiments.append(exev)
 					try:
