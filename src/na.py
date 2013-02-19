@@ -15,7 +15,7 @@ def isNA(x):
 
 def strNA(x):
 	if isNA(x):
-		return na.NA
+		return NA
 	else:
 		return str(x)
 
@@ -28,12 +28,12 @@ def formatNA(x, format="{0}", sep=None):
 		res = []
 		for i in range(len(x)):
 			if isNA(x[i]):
-				res.append(na.NA)
+				res.append(NA)
 			else:
 				res.append(flds[i].format(x[i]))
 		return sep.join(res)
 	else:
 		if isNA(x):
-			return na.NA
+			return NA
 		else:
 			return format.format(x)

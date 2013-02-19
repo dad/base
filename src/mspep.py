@@ -23,7 +23,8 @@ if __name__=='__main__':
 
 	# Pull out target protein
 	target_prot = orf_dict[options.target_orf]
-	print target_prot
+	if target_prot[-1] == '*':
+		target_prot = target_prot[0:-1]
 
 	evidences = []
 	for fi in range(len(options.evidence_fnames)):
@@ -85,8 +86,31 @@ if __name__=='__main__':
 		info_outs.write("# Merging {0} experiments into one.\n".format(len(experiments)))
 		for ex in experiments[1:]:
 			merged_ex = merged_ex.merge(ex, options.normalize_intensity)
+
 	
+	outs = util.OutStreams()
+	if not options.out_fname is None:
+		outf = file(os.path.expanduser(options.out_fname),'w')
+		outs.addStream(outf)
+	else:
+		outs.addStream(sys.stdout)
+
+	outs.write(">{}\n{}\n".format(options.target_orf, target_prot))
+
 	prot_rec = merged_ex.getProtein(options.target_orf)
+	pep_list = []
 	for pep in prot_rec.peptides:
-		print pep
+		pos = target_prot.find(pep.sequence)
+		if pos>-1:
+			pep_list.append((pos, pep.sequence))
+	pep_list.sort()
+	gap = '-'
+	len_prot = len(target_prot)
+	n_peps = 0
+	for (pos, pep) in pep_list:
+		n_peps += 1
+		pepid = "{}-{}".format(options.target_orf, n_peps)
+		line = gap*pos + pep + gap*(len_prot-(len(pep)+pos))
+		outs.write(">{}\n{}\n".format(pepid, line))
+			
 	

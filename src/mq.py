@@ -423,10 +423,11 @@ class PeptideQuant(object):
 
 	def __str__(self):
 		line = self.key
-		line += '\n\tH/L      \t' + '\t'.join(["{:1.4f}".format(r) for r in self.heavy_light_ratio_list]) + '\n'
-		line += '\tH/L Normal.\t' + '\t'.join(["{:1.4f}".format(r) for r in self.heavy_light_normalized_ratio_list]) + '\n'
-		line += '\tIntensity H\t' + '\t'.join(["{:1.0f}".format(r) for r in self.intensity_h_list]) + '\n'
-		line += '\tIntensity L\t' + '\t'.join(["{:1.0f}".format(r) for r in self.intensity_l_list]) + '\n'
+		floatformat = "{:1.4f}"
+		line += '\n\tH/L      \t' + '\t'.join([na.formatNA(r,format=floatformat) for r in self.heavy_light_ratio_list]) + '\n'
+		line += '\tH/L Normal.\t' + '\t'.join([na.formatNA(r,format=floatformat) for r in self.heavy_light_normalized_ratio_list]) + '\n'
+		line += '\tIntensity H\t' + '\t'.join([na.formatNA(r,format=floatformat) for r in self.intensity_h_list]) + '\n'
+		line += '\tIntensity L\t' + '\t'.join([na.formatNA(r,format=floatformat) for r in self.intensity_l_list]) + '\n'
 		line += '\tMS/MS Count\t{0:d}\n'.format(self.msms_count)
 		return line
 
