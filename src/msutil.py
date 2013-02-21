@@ -71,6 +71,8 @@ class MSConstants:
 		'Y' : "C9H9O2N",
 		'*' : ""
 		}
+	
+	water = "H2O"
 
 	residues = sorted(residue_formula.keys())
 	residues_w_brackets = residues + ['[', ']']
@@ -83,6 +85,23 @@ class MSConstants:
 # fragmentation calculations should all be monoisotopic, and we can always
 # widen the parent tolerance window a bit.
 
+def formulaComponents(formula):
+    # parts for glycine = ['C', '2', 'H', '3', 'O', '1', 'N', '1']
+    parts = [ p or '1' for p in re.split(r'([A-Z][a-z]*)', formula)[1:] ]
+    return dict([(parts[i],int(parts[i+1])) for i in range(0,len(parts),2)])
+
+def peptideComponents(aa_sequence):
+	component_counts = dict([(component, 0) for component in MSConstants.monoisotopic_atomic_mass.keys()])
+	if aa_sequence != '':
+		for aa in aa_sequence:
+			part_dict = formulaComponents(MSConstants.residue_formula[aa])
+			for k in part_dict.keys():
+				component_counts[k] += part_dict[k]
+		# add water to account for N and C termini
+		component_counts['H'] += 2
+		component_counts['O'] += 1
+	return component_counts
+		
 
 def formulaMass(formula, atomic_mass=MSConstants.monoisotopic_atomic_mass):
     """Return the mass of formula, using the given mass regime (monoisotopic
@@ -94,17 +113,21 @@ def formulaMass(formula, atomic_mass=MSConstants.monoisotopic_atomic_mass):
     >>> str(round(formulaMass('C2H3ON'), 4))
     '57.0215'
     """
-    parts = [ p or '1' for p in re.split(r'([A-Z][a-z]*)', formula)[1:] ]
-    # parts for glycine = ['C', '2', 'H', '3', 'O', '1', 'N', '1']
-    return sum(atomic_mass[parts[i]] * int(parts[i+1]) for i in range(0, len(parts), 2))
+    #parts = [ p or '1' for p in re.split(r'([A-Z][a-z]*)', formula)[1:] ]
+    parts = formulaComponents(formula)
+    mass = sum([atomic_mass[comp]*count for (comp,count) in parts.items()])
+    return mass #sum(atomic_mass[parts[i]] * int(parts[i+1]) for i in range(0, len(parts), 2))
 
 ## End greylag crib
 
-def getPeptideMass(peptide):
-	mass = sum([formulaMass(MSConstants.residue_formula[x]) for x in peptide])
+def getPeptideMass(aa_sequence):
+	mass = sum([formulaMass(MSConstants.residue_formula[x]) for x in aa_sequence]) + formulaMass(MSConstants.water)
 	return mass
 
 if __name__=="__main__":
+	# DAD: add "--minus-water" option.
 	peps = sys.argv[1:]
 	for pep in peps:
-		print "{0} = {1:.5f}".format(pep, getPeptideMass(pep))
+		components = peptideComponents(pep)
+		component_string = ' '.join(['{}({})'.format(comp,components[comp]) for comp in 'HCNOPS' if comp in components.keys()])
+		print "{} = {:.5f}; {:s}".format(pep, getPeptideMass(pep), component_string)
