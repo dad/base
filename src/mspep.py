@@ -1,5 +1,7 @@
-import sys, os, math, string, random, argparse
+import sys, os, math, string, argparse, re
 import stats, util, biofile, mq, na
+
+
 
 if __name__=='__main__':
 	parser = argparse.ArgumentParser(description="Extraction of evidence from MaxQuant evidence files")
@@ -12,6 +14,9 @@ if __name__=='__main__':
 	parser.add_argument("-m", "--merge", dest="merge", action="store_true", default=False, help="merge the indicated experiments?")
 	parser.add_argument("-t", "--tag", dest="tags", action="append", default=[], help="tags to restrict the analysis to specific tagged experiments")
 	parser.add_argument("-u", "--unique", dest="unique_matches", action="store_true", default=False, help="use unique peptides only?")
+	parser.add_argument("-y", "--type", dest="output_type", default="fasta", help="type of output [fasta=alignment, ratio=profiles]")
+	parser.add_argument("--IL", dest="I_equals_L", action="store_true", help="I equivalent to L?")
+
 	options = parser.parse_args()
 
 	# Set up some output
@@ -95,22 +100,42 @@ if __name__=='__main__':
 	else:
 		outs.addStream(sys.stdout)
 
-	outs.write(">{}\n{}\n".format(options.target_orf, target_prot))
-
+	# Pull out peptide data for target ORF
 	prot_rec = merged_ex.getProtein(options.target_orf)
 	pep_list = []
 	for pep in prot_rec.peptides:
-		pos = target_prot.find(pep.sequence)
-		if pos>-1:
-			pep_list.append((pos, pep.sequence))
+		# Handle I=L
+		pat = pep.sequence
+		if options.I_equals_L:
+			pat = pat.replace("I","[IL]")
+		patre = re.compile(pat)
+		match = re.search(patre, target_prot)
+		if match:
+			pos = match.start()
+			pep_list.append((pos, pep))
+		#pos = target_prot.find(pep.sequence)
+		#print pos
+		#if pos>-1:
 	pep_list.sort()
-	gap = '-'
-	len_prot = len(target_prot)
-	n_peps = 0
-	for (pos, pep) in pep_list:
-		n_peps += 1
-		pepid = "{}-{}".format(options.target_orf, n_peps)
-		line = gap*pos + pep + gap*(len_prot-(len(pep)+pos))
-		outs.write(">{}\n{}\n".format(pepid, line))
+
+	if options.output_type == 'fasta':
+		# Write out FASTA file
+
+		outs.write(">{}\n{}\n".format(options.target_orf, target_prot))
+
+		gap = '-'
+		len_prot = len(target_prot)
+		n_peps = 0
+		for (pos, pep) in pep_list:
+			n_peps += 1
+			pepid = "{}-{}".format(options.target_orf, n_peps)
+			line = gap*pos + pep.sequence + gap*(len_prot-(len(pep.sequence)+pos))
+			outs.write(">{}\n{}\n".format(pepid, line))
+	elif options.output_type == 'ratio':
+		outs.write("seq\tbegin\tend\tratio\n")
+		for (pos, pep) in pep_list:
+			ratio_stats = pep.getHeavyLightRatioSummary()
+			outs.write("{seq}\t{begin}\t{end}\t{ratio}\n".format(seq=pep.sequence, begin=pos+1, end=pos+len(pep.sequence), ratio=na.formatNA(ratio_stats.median)))
+		
 			
 	
