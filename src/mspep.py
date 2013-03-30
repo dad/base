@@ -112,6 +112,7 @@ if __name__=='__main__':
 		match = re.search(patre, target_prot)
 		if match:
 			pos = match.start()
+			pep.sequence = match.group(0)
 			pep_list.append((pos, pep))
 		#pos = target_prot.find(pep.sequence)
 		#print pos
@@ -132,10 +133,10 @@ if __name__=='__main__':
 			line = gap*pos + pep.sequence + gap*(len_prot-(len(pep.sequence)+pos))
 			outs.write(">{}\n{}\n".format(pepid, line))
 	elif options.output_type == 'ratio':
-		outs.write("seq\tbegin\tend\tratio\n")
+		outs.write("seq\tbegin\tend\tratio\tratio.count\n")
 		for (pos, pep) in pep_list:
 			ratio_stats = pep.getHeavyLightRatioSummary()
-			outs.write("{seq}\t{begin}\t{end}\t{ratio}\n".format(seq=pep.sequence, begin=pos+1, end=pos+len(pep.sequence), ratio=na.formatNA(ratio_stats.median)))
+			outs.write("{seq}\t{begin}\t{end}\t{ratio}\t{ratio_n}\n".format(seq=pep.sequence, begin=pos+1, end=pos+len(pep.sequence), ratio=na.formatNA(ratio_stats.median), ratio_n=na.formatNA(ratio_stats.n)))
 		
 			
 	
