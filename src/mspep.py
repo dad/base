@@ -51,7 +51,7 @@ if __name__=='__main__':
 	# Now, all experiments are set up.  Read in the data, then aggregate it.
 	# First, read in.
 	eef = mq.ExperimentEvidenceFactory()
-	experiments = eef.load(evidences, options.tags, options.experiments, options.unique_matches, orf_dict)
+	experiments = eef.load(evidences, options.tags, options.experiments, options.unique_matches, None, orf_dict)
 
 	for ex in experiments:
 		info_outs.write("# Read {0!s}\n".format(ex))
@@ -105,6 +105,7 @@ if __name__=='__main__':
 	pep_list = []
 	for pep in prot_rec.peptides:
 		# Handle I=L
+		# DAD: this should really be done in the results reader, mq.py...
 		pat = pep.sequence
 		if options.I_equals_L:
 			pat = pat.replace("I","[IL]")
@@ -113,6 +114,7 @@ if __name__=='__main__':
 		if match:
 			pos = match.start()
 			pep.sequence = match.group(0)
+			# DAD: need to update modified sequence as well.
 			pep_list.append((pos, pep))
 		#pos = target_prot.find(pep.sequence)
 		#print pos
@@ -133,10 +135,14 @@ if __name__=='__main__':
 			line = gap*pos + pep.sequence + gap*(len_prot-(len(pep.sequence)+pos))
 			outs.write(">{}\n{}\n".format(pepid, line))
 	elif options.output_type == 'ratio':
-		outs.write("seq\tbegin\tend\tratio\tratio.count\n")
+		outs.write("seq\tmod.seq\tbegin\tend\tratio\n")
 		for (pos, pep) in pep_list:
-			ratio_stats = pep.getHeavyLightRatioSummary()
-			outs.write("{seq}\t{begin}\t{end}\t{ratio}\t{ratio_n}\n".format(seq=pep.sequence, begin=pos+1, end=pos+len(pep.sequence), ratio=na.formatNA(ratio_stats.median), ratio_n=na.formatNA(ratio_stats.n)))
+			#ratio_stats = pep.getHeavyLightRatioSummary()
+			for ratio in pep.heavy_light_ratio_list:
+				outs.write("{seq}\t{modseq}\t{begin}\t{end}\t{ratio}\n".format(
+					seq=pep.sequence, modseq=pep.modified_sequence, begin=pos+1, end=pos+len(pep.sequence), ratio=na.formatNA(ratio)))
+			#outs.write("{seq}\t{begin}\t{end}\t{ratio}\t{ratio_n}\n".format(
+			#	seq=pep.sequence, begin=pos+1, end=pos+len(pep.sequence), ratio=na.formatNA(ratio_stats.median), ratio_n=na.formatNA(ratio_stats.n)))
 		
 			
 	

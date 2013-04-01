@@ -232,6 +232,7 @@ class PeptideData(object):
 		self.intensity_h = None
 		self._fraction = None
 		self.sequence = None
+		self.modified_sequence = None		
 		self.mods = None
 		self._msms_count = None
 
@@ -248,6 +249,7 @@ class PeptideData3(object):
 		self.intensity_m = None
 		self._fraction = None
 		self.sequence = None
+		self.modified_sequence = None		
 		self.mods = None
 		self._msms_count = None
 
@@ -265,7 +267,7 @@ class PeptideQuant(object):
 	def __init__(self, key):
 		self._key = key
 		self.sequence = None
-		self.mod_sequence = None
+		self.modified_sequence = None
 		self.heavy_light_ratio_list = []
 		self.heavy_light_normalized_ratio_list = []
 		self.intensity_l_list = []
@@ -283,6 +285,10 @@ class PeptideQuant(object):
 			self.sequence = pep_data.sequence
 		else:
 			assert(self.sequence == pep_data.sequence)
+		if self.modified_sequence is None:
+			self.modified_sequence = pep_data.modified_sequence
+		else:
+			assert(self.modified_sequence == pep_data.modified_sequence)
 		self.heavy_light_ratio_list.append(pep_data.ratio_hl)
 		self.heavy_light_normalized_ratio_list.append(pep_data.ratio_hl_normalized)
 		self.intensity_l_list.append(pep_data.intensity_l)
@@ -554,9 +560,10 @@ class EvidenceDescriptor(object):
 		self.experiment = None
 		self.tags = None
 		self.description = None
+		self.tracked_modifications = None
 
 	def __str__(self):
-		line = "%s, %s, %s, %s" % (self.filename, self.experiment, self.invert, self.tags)
+		line = "{}, {}, {}, {}, {}".format(self.filename, self.experiment, self.invert, self.tags, self.tracked_modifications)
 		return line
 
 class ExperimentEvidence(object):
@@ -573,13 +580,13 @@ class ExperimentEvidence(object):
 	# Fields that may need to be inverted if invert = true
 	invert_flds = ["ratio.hl","ratio.hl.normalized"]
 
-	def __init__(self, unique_matches=False):
+	def __init__(self, tracked_mods=None, unique_matches=False):
 		self.filename = None
 		self.invert = False
 		self.experiment = None
 		self.protein_data = {}
 		self.peptide_data = {}
-		self.tracked_modifications = None
+		self.tracked_modifications = tracked_mods
 		self.unique_matches_only = unique_matches
 
 	def initFrom(self, ex_desc):
@@ -588,7 +595,7 @@ class ExperimentEvidence(object):
 		self.experiment = ex_desc.experiment
 		self.protein_data = {}
 		self.peptide_data = {}
-		self.tracked_modifications = None
+		self.tracked_modifications = ex_desc.tracked_modifications
 
 	def readDescriptors(self, in_stream):
 		line = in_stream.readline()
@@ -641,12 +648,13 @@ class ExperimentEvidence(object):
 				pep_data.intensity_l = flds.get('intensity.l')
 				pep_data._fraction = flds.get('fraction')
 				pep_data.sequence = flds['sequence']
+				pep_data.modified_sequence = flds['modified.sequence']
 				pep_data.msms_count = flds['ms.ms.count']
 				pep_data.mods = flds['modifications']
 				# Use sequence as unique identifier for this peptide
 				pep_key = pep_data.sequence
-				# Use modified peptide as a key only if we are tracking these modifications
-				if pep_data.mods != 'Unmodified' and self.isTrackedModification(pep_data.mods):
+				# Use modified peptide as a key unless we are not tracking these modifications
+				if pep_data.mods != 'Unmodified': # and self.isTrackedModification(pep_data.mods):
 					pep_key = flds['modified.sequence']
 				# Retrieve the relevant PeptideQuant entry (the one with this sequence as its key), or make a new one
 				try:
@@ -854,7 +862,7 @@ class ExperimentEvidenceFactory(object):
 		self.experiments = None
 		self.learn_experiments = False
 
-	def load(self, evidence_descs, filter_tags, filter_experiments, unique_matches, orf_dict):
+	def load(self, evidence_descs, filter_tags, filter_experiments, unique_matches, tracked_modifications, orf_dict):
 		# evidence_descs is a list of EvidenceDescriptor variables
 		# Read experiments
 		# Filter based on tags
@@ -867,7 +875,7 @@ class ExperimentEvidenceFactory(object):
 				shared_tags = list(tag_set.intersection(set(ed.tags)))
 				if len(filter_tags) == 0 or len(shared_tags) > 0:
 					# This experiment should be included
-					exev = ExperimentEvidence(unique_matches)
+					exev = ExperimentEvidence(tracked_modifications, unique_matches)
 					exev.initFrom(ed)
 					self.experiments.append(exev)
 					try:
