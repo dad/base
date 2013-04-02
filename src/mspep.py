@@ -24,7 +24,7 @@ if __name__=='__main__':
 
 	orf_dict = None
 	if not options.database_fname is None:
-		orf_dict = biofile.readFASTADict(options.database_fname)
+		orf_dict = biofile.readFASTADict(os.path.expanduser(options.database_fname))
 
 	# Pull out target protein
 	target_prot = orf_dict[options.target_orf]
