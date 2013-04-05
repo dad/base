@@ -629,7 +629,9 @@ class ExperimentEvidence(object):
 				all_id_flds = flds["proteins"].split(';')  # To get all proteins to which this peptide could belong, even if they are not uniquely supported by at least one peptide (e.g., they are paralogs which share this peptide)
 				if self.unique_matches_only and len(all_id_flds)>1:
 					return False
+				# DAD: how to handle cases of multiple proteins identified?
 				id_flds = flds["leading.razor.protein"].split(';')  # To get the "most likely" protein, in the sense of a protein whose identification is uniquely supported by at least one peptide
+				id_flds = flds["proteins"].split(';')
 				n_prots = len(id_flds)
 
 				# Get intensities and ratio
