@@ -117,7 +117,7 @@ rcorr.sp <- function(x, y, method='pearson', use='pairwise.complete.obs', within
 			res.rely[xi,yj] <- ryy
 			res.withinx[xi,yj] <- (xwith[1]==xwith[2])
 			res.withiny[xi,yj] <- (ywith[1]==ywith[2])
-			res.n[xi,yj] <- (prod(c(r.n[xrow[1], ycol[1]], r.n[xrow[1], ycol[2]], r.n[xrow[2], ycol[1]], r.n[xrow[2], ycol[2]])))^(0.25)
+			#res.n[xi,yj] <- (prod(c(r.n[xrow[1], ycol[1]], r.n[xrow[1], ycol[2]], r.n[xrow[2], ycol[1]], r.n[xrow[2], ycol[2]])))^(0.25)
 			res.n[xi,yj] <- min(c(r.n[xrow[1], ycol[1]], r.n[xrow[1], ycol[2]], r.n[xrow[2], ycol[1]], r.n[xrow[2], ycol[2]]))
 			res.id[xi,yj] <- paste(paste(xrow),paste(ycol),collapse=' ')
 			res.id.x1[xi,yj] <- xrow[1]
