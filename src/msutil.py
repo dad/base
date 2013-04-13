@@ -1,4 +1,5 @@
-import sys, os, math, string, re
+import sys, os, math, string, re, unittest
+from bisect import bisect_left
 
 ## Cribbed from greylag, a collection of programs for MS/MS protein analysis
 ## Copyright (C) 2006-2008  Stowers Institute for Medical Research
@@ -6,8 +7,8 @@ import sys, os, math, string, re
 
 # FIX: is this mono or avg?  (possible error here is ~0.0007 amu)
 class MSConstants:
-	proton_mass =   1.007276
-	electron_mass = 0.000549                # ?
+	proton_mass =   1.00727646677
+	electron_mass = 0.00054857991
 
 	# Reference values from NIST (http://physics.nist.gov/PhysRefData/)
 	monoisotopic_atomic_mass = {
@@ -77,6 +78,72 @@ class MSConstants:
 	residues = sorted(residue_formula.keys())
 	residues_w_brackets = residues + ['[', ']']
 
+def binary_search(a, x, lo=0, hi=None):   # can't use a to specify default for hi
+    hi = hi if hi is not None else len(a) # hi defaults to len(a)   
+    pos = bisect_left(a,x,lo,hi)          # find insertion position
+    return (pos if pos != hi and a[pos] == x else -1) # don't walk off the end
+    
+class MS2Spectrum(object):
+	"""A set of (centroid,intensity) pairs with other information."""
+	def __init__(self):
+		self._centroid_pair_list = []
+		self._charge = None
+		self._MS1 = None
+		self._mz = None
+		self._scan = None
+	
+	def init(self, pair_list, charge, ms1, mz, scan):
+		self._centroid_pair_list = pair_list
+		self._charge = charge
+		self._MS1 = ms1
+		self._mz = mz
+		self._scan = scan
+		
+	def readFromDTA(self, dlr):
+		self._centroid_pair_list = []
+		# Read MS1 and charge
+		flds = dlr.next()
+		self._charge = int(flds[1])
+		self._MS1 = flds[0]
+		while not dlr.atEnd():
+			flds = dlr.next()
+			self._centroid_pair_list.append(tuple(flds))
+		self._centroid_pair_list.sort()
+	
+	def closestPeak(self, mz, resolution):
+		"""Find the peak that is closest in m/z to mz. Return None if there is no peak within +/- resolution."""
+		# First just do brutally slow but guaranteed-correct linear search.
+		closest_index = -1
+		smallest_diff = 1e6
+		for (i,x) in enumerate(self._centroid_pair_list):
+			(mass, intens) = x
+			diff = abs(mass - mz)	
+			if diff < smallest_diff:
+				closest_index = i
+				smallest_diff = diff
+		# Determine whether we're close enough
+		closepair = self._centroid_pair_list[closest_index]
+		if abs(closepair[0]-mz) > resolution:
+			res = None
+		else:
+			res = Peak(closepair[0], closepair[1])
+		return res
+	
+	@property
+	def scan(self, scan):
+		self._scan = scan
+	
+	def __str__(self):
+		return ",".join(["({m},{z})".format(m=m, z=z) for (m,z) in self._centroid_pair_list])
+		
+class Peak(object):
+	def __init__(self, mz, intensity):
+		self.mz = mz
+		self.intensity = intensity
+	
+	def __str__(self):
+		s = "{},{}".format(self.mz, self.intensity)
+		return s
 
 # The xtandem average residue masses are about 0.002 amu higher than those
 # calculated directly from the above average atomic masses.  None of the
@@ -115,7 +182,7 @@ def formulaMass(formula, atomic_mass=MSConstants.monoisotopic_atomic_mass):
     """
     #parts = [ p or '1' for p in re.split(r'([A-Z][a-z]*)', formula)[1:] ]
     parts = formulaComponents(formula)
-    mass = sum([atomic_mass[comp]*count for (comp,count) in parts.items()])
+    mass = sum([atomic_mass[comp]*n for (comp,n) in parts.items()])
     return mass #sum(atomic_mass[parts[i]] * int(parts[i+1]) for i in range(0, len(parts), 2))
 
 ## End greylag crib
@@ -124,10 +191,36 @@ def getPeptideMass(aa_sequence):
 	mass = sum([formulaMass(MSConstants.residue_formula[x]) for x in aa_sequence]) + formulaMass(MSConstants.water)
 	return mass
 
+
+##########
+# Test cases
+##########
+
+class test001(unittest.TestCase):
+	def test_run(self):
+		# Test closest peak
+		ms2 = MS2Spectrum()
+		ms2.init([(1,1), (2,2), (3,3), (4,4)], 2, 1000, 500, "the_scan")
+		pk = ms2.closestPeak(2.3, 0.5)
+		self.assertTrue(pk.mz==2)
+		
+class test002(unittest.TestCase):
+	def test_run(self):
+		# Test closest peak, outside resolution
+		ms2 = MS2Spectrum()
+		ms2.init([(1,1), (2,2), (3,3), (4,4)], 2, 1000, 500, "the_scan")
+		pk = ms2.closestPeak(2.3, 0.1)
+		# No peak within 0.1 of 2.3.
+		self.assertTrue(pk == None)
+		
+class test003(unittest.TestCase):
+	def test_run(self):
+		# Test formula mass
+		m = formulaMass('H2O', {'H':1, 'O':16})
+		self.assertTrue(m == 18)
+		
+		
+		
+
 if __name__=="__main__":
-	# DAD: add "--minus-water" option.
-	peps = sys.argv[1:]
-	for pep in peps:
-		components = peptideComponents(pep)
-		component_string = ' '.join(['{}({})'.format(comp,components[comp]) for comp in 'HCNOPS' if comp in components.keys()])
-		print "{} = {:.5f}; {:s}".format(pep, getPeptideMass(pep), component_string)
+	unittest.main(verbosity=2)
