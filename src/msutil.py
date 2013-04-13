@@ -119,7 +119,7 @@ class MS2Spectrum(object):
 		self._centroid_pair_list.sort()
 	
 	def writeToDTA(self, outs):
-		outs.write("{me._mz} {me._charge}\n".format(me=self))
+		outs.write("{me._MS1} {me._charge}\n".format(me=self))
 		for peak in self.peaks:
 			outs.write("{p.mz} {p.intensity}\n".format(p=peak))
 	
@@ -152,6 +152,22 @@ class MS2Spectrum(object):
 	@scan.setter
 	def scan(self, s):
 		self._scan = s
+	
+	@property
+	def charge(self):
+		return self._charge
+	
+	@charge.setter
+	def scan(self, chg):
+		self._charge = chg
+	
+	@property
+	def MS1(self):
+		return self._MS1
+	
+	@MS1.setter
+	def scan(self, MS1):
+		self._MS1 = MS1
 	
 	@property
 	def peaks(self):
@@ -258,6 +274,8 @@ class test004(unittest.TestCase):
 		ms2_copy.readFromDTA(tmpfile)
 		peaks = [p for p in ms2.peaks]
 		peaks_copy = [p for p in ms2_copy.peaks]
+		self.assertTrue(ms2.charge == ms2_copy.charge)
+		self.assertTrue(ms2.MS1 == ms2_copy.MS1)
 		for (p1,p2) in zip(peaks, peaks_copy):
 			self.assertTrue(p1.mz==p2.mz)
 			self.assertTrue(p1.intensity==p2.intensity)
