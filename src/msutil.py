@@ -1,5 +1,4 @@
 import sys, os, math, string, re, unittest
-from bisect import bisect_left
 
 ## Cribbed from greylag, a collection of programs for MS/MS protein analysis
 ## Copyright (C) 2006-2008  Stowers Institute for Medical Research
@@ -77,12 +76,20 @@ class MSConstants:
 
 	residues = sorted(residue_formula.keys())
 	residues_w_brackets = residues + ['[', ']']
+	
+	# Masses for the TMT 6-plex reporter ions
+	TMT6plex_reporter_ion_masses = {
+		126:126.127725,
+		127:127.124760,
+		128:128.134433,
+		129:129.131468,
+		130:130.141141,
+		131:131.138176
+	}
 
-def binary_search(a, x, lo=0, hi=None):   # can't use a to specify default for hi
-    hi = hi if hi is not None else len(a) # hi defaults to len(a)   
-    pos = bisect_left(a,x,lo,hi)          # find insertion position
-    return (pos if pos != hi and a[pos] == x else -1) # don't walk off the end
-    
+def ppm(actual, observed):
+	return 1e6*(observed - actual)/float(actual)
+
 class MS2Spectrum(object):
 	"""A set of (centroid,intensity) pairs with other information."""
 	def __init__(self):
@@ -99,44 +106,63 @@ class MS2Spectrum(object):
 		self._mz = mz
 		self._scan = scan
 		
-	def readFromDTA(self, dlr):
+	def readFromDTA(self, stream):
 		self._centroid_pair_list = []
 		# Read MS1 and charge
-		flds = dlr.next()
+		flds = stream.readline().strip().split(' ')
 		self._charge = int(flds[1])
-		self._MS1 = flds[0]
-		while not dlr.atEnd():
-			flds = dlr.next()
-			self._centroid_pair_list.append(tuple(flds))
+		self._MS1 = float(flds[0])
+		for line in stream:
+			if line.strip() != '':
+				flds = line.strip().split(' ')
+				self._centroid_pair_list.append((float(flds[0]), float(flds[1])))
 		self._centroid_pair_list.sort()
 	
-	def closestPeak(self, mz, resolution):
-		"""Find the peak that is closest in m/z to mz. Return None if there is no peak within +/- resolution."""
+	def writeToDTA(self, outs):
+		outs.write("{me._mz} {me._charge}\n".format(me=self))
+		for peak in self.peaks:
+			outs.write("{p.mz} {p.intensity}\n".format(p=peak))
+	
+	def closestPeak(self, mz, ppmresolution):
+		"""Find the peak that is closest in m/z to mz. Return None if there is no peak within +/- resolution in ppm."""
 		# First just do brutally slow but guaranteed-correct linear search.
 		closest_index = -1
 		smallest_diff = 1e6
 		for (i,x) in enumerate(self._centroid_pair_list):
 			(mass, intens) = x
-			diff = abs(mass - mz)	
-			if diff < smallest_diff:
+			diff = mass - mz
+			if abs(diff) < smallest_diff:
 				closest_index = i
-				smallest_diff = diff
-		# Determine whether we're close enough
+				smallest_diff = abs(diff)
+			else:
+				if diff > 0:
+					# We have moved beyond where a closer match is possible, because mz is ordered.
+					break
+		# Determine whether this match is close enough
 		closepair = self._centroid_pair_list[closest_index]
-		if abs(closepair[0]-mz) > resolution:
-			res = None
-		else:
+		res = None
+		if abs(ppm(mz,closepair[0])) <= ppmresolution:
 			res = Peak(closepair[0], closepair[1])
 		return res
 	
 	@property
-	def scan(self, scan):
-		self._scan = scan
+	def scan(self):
+		return self._scan
+	
+	@scan.setter
+	def scan(self, s):
+		self._scan = s
+	
+	@property
+	def peaks(self):
+		for (m,i) in self._centroid_pair_list:
+			yield Peak(m,i)
 	
 	def __str__(self):
 		return ",".join(["({m},{z})".format(m=m, z=z) for (m,z) in self._centroid_pair_list])
 		
 class Peak(object):
+	"""A simple peak object."""
 	def __init__(self, mz, intensity):
 		self.mz = mz
 		self.intensity = intensity
@@ -201,7 +227,7 @@ class test001(unittest.TestCase):
 		# Test closest peak
 		ms2 = MS2Spectrum()
 		ms2.init([(1,1), (2,2), (3,3), (4,4)], 2, 1000, 500, "the_scan")
-		pk = ms2.closestPeak(2.3, 0.5)
+		pk = ms2.closestPeak(2.0001, 100)
 		self.assertTrue(pk.mz==2)
 		
 class test002(unittest.TestCase):
@@ -218,6 +244,23 @@ class test003(unittest.TestCase):
 		# Test formula mass
 		m = formulaMass('H2O', {'H':1, 'O':16})
 		self.assertTrue(m == 18)
+		
+class test004(unittest.TestCase):
+	def test_run(self):
+		# Test reading and writing from DTA
+		ms2 = MS2Spectrum()
+		ms2.init([(1,1), (2,2), (3,3), (4,4)], 2, 1000, 500, "the_scan")
+		tmpfile = os.tmpfile()
+		ms2.writeToDTA(tmpfile)
+		ms2_copy = MS2Spectrum()
+		tmpfile.flush()
+		tmpfile.seek(0)
+		ms2_copy.readFromDTA(tmpfile)
+		peaks = [p for p in ms2.peaks]
+		peaks_copy = [p for p in ms2_copy.peaks]
+		for (p1,p2) in zip(peaks, peaks_copy):
+			self.assertTrue(p1.mz==p2.mz)
+			self.assertTrue(p1.intensity==p2.intensity)
 		
 		
 		
