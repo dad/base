@@ -1148,10 +1148,20 @@ pstat <- function(c, prefix="") {
 	cat(prefix, c$data.name, "r =", format(c$statistic,digits=3), "P =", format(c$p.value,digits=3), "\n", sep=" ")
 }
 
-cortest <- function(x,y, meth="spearman", exact=FALSE, ...) {
-	c <- cor.test(x, y, method=meth, exact=exact, ...)
-	c$data.name <- paste(deparse(substitute(x)), "and", deparse(substitute(y)))
-	c$N = nrow(na.omit(data.frame(x,y)))
+cortest <- function(x,y, method="spearman", exact=FALSE, log=F, ...) {
+	fn <- noop
+	fnstr.beg <- ""
+	fnstr.end <- ""
+	if (log) {
+		fn <- log.nozero
+		fnstr.beg <- "log.nozero("
+		fnstr.end <- ")"
+	}
+	c <- cor.test(fn(x), fn(y), method=method, exact=exact, ...)
+	
+	c$data.name <- paste(fnstr.beg, deparse(substitute(x)), fnstr.end, "and", fnstr.beg, deparse(substitute(y)), fnstr.end)
+	c$N = nrow(na.omit(fn(data.frame(x,y))))
+	c$log = log
 	c
 }
 
