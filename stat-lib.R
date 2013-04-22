@@ -1145,7 +1145,7 @@ pcor <- function(c, prefix="") {
 }
 
 pstat <- function(c, prefix="") {
-	cat(prefix, c$data.name, "r =", format(c$statistic,digits=3), "P =", format(c$p.value,digits=3), "\n", sep=" ")
+	cat(prefix, c$data.name, ": r=", format(c$statistic,digits=3), ", P=", format(c$p.value,digits=3), "\n", sep=" ")
 }
 
 cortest <- function(x,y, method="spearman", exact=FALSE, log=F, ...) {
@@ -1167,7 +1167,7 @@ cortest <- function(x,y, method="spearman", exact=FALSE, log=F, ...) {
 
 corr.list <- function(x, v1, vs, fxn=cortest, ret="estimate", ...) {
 	y <- sapply(vs, function(m){
-		fxn(x[,v1], x[,m],...)[[ret]]
+		fxn(x[,v1], x[,m], ...)[[ret]]
 	})
 	y <- t(as.matrix(y))
 	dimnames(y) <- list(v1,vs)
