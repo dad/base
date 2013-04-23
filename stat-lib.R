@@ -51,7 +51,7 @@ p.0 <- function(...) {
 
 # Make log-zeros into NA's
 log.nozero <- function(x, log.fxn=log, ...){
-	x[x<=0] <- NA
+	x[x<=0 | x==Inf] <- NA
 	log.fxn(x, ...)
 }
 
@@ -1665,7 +1665,7 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 	lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))
 	#cat("h2\n")
 	if (log.transform) {
-		trans <- log10
+		trans <- function(x) {log.nozero(x, log.fxn=log10)}
 		inv.trans <- function(y) {10^y}
 	}
 	else if (logodds) {
@@ -1681,7 +1681,7 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 	densities <- lapply(1:length(x), function(n) {
 		if (is.null(weight.list)) {
 			y <- x[[n]]
-			ny <- na.omit(y)
+			ny <- as.vector(na.omit(y))
 			d <- density(trans(ny), na.rm=T, bw=bw, kern=kernel)
 		}
 		else {
@@ -1730,10 +1730,12 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 			## Make xlims
 			valid.x <- x
 			if (log) {
-				valid.x <- lapply(x, function(y) {y[y>0]})
+				valid.x <- lapply(x, function(y) {y[y>0 & y != Inf]})
 			}
+			# DAD: should track omitted NA values and return them to user.
 			xmin <- min(sapply(valid.x,min,na.rm=T),na.rm=T)
-			xlim <- c(xmin, max(sapply(x,max,na.rm=T),na.rm=T))
+			xmax <- max(sapply(valid.x,max,na.rm=T),na.rm=T)
+			xlim <- c(xmin, xmax)
 		}
 
 		## Infer X and Y labels, if not passed in
