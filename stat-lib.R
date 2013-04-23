@@ -327,8 +327,13 @@ id.match <- function(x, y, id.x, id.y) {
 	data.frame(x, y[z,])
 }
 
-rcormat <- function(x, method="spearman") {
-	rcorr(as.matrix(x), type=method)
+rcormat <- function(x, method="spearman", log=F) {
+	y <- as.matrix(x)
+	fn <- noop
+	if (log) {
+		y <- log.nozero(y)
+	}
+	rcorr(as.matrix(y), type=method)
 }
 
 pcor.covmat <- function(covmat) {
