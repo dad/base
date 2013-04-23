@@ -50,9 +50,9 @@ p.0 <- function(...) {
 }
 
 # Make log-zeros into NA's
-log.nozero <- function(x, log.fxn=log){
+log.nozero <- function(x, log.fxn=log, ...){
 	x[x<=0] <- NA
-	log.fxn(x)
+	log.fxn(x, ...)
 }
 
 log.nz <- log.nozero
