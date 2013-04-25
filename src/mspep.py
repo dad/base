@@ -135,7 +135,7 @@ if __name__=='__main__':
 			line = gap*pos + pep.sequence + gap*(len_prot-(len(pep.sequence)+pos))
 			outs.write(">{}\n{}\n".format(pepid, line))
 	elif options.output_type == 'ratio':
-		outs.write("seq\tmod.seq\tbegin\tend\tratio\tintensity\tintensity.h\tintensity.l\n")
+		outs.write("seq\tmod.seq\tbegin\tend\tratio\tint.ratio\tintensity\tintensity.h\tintensity.l\n")
 		n_written = 0
 		for (pos, pep) in pep_list:
 			#ratio_stats = pep.getHeavyLightRatioSummary()
@@ -143,11 +143,15 @@ if __name__=='__main__':
 				inth = pep.intensity_h_list[ri]
 				intl = pep.intensity_l_list[ri]
 				inten = None
+				# Ratio of intensities
+				int_ratio = None
 				if not (na.isNA(inth) or na.isNA(intl)):
 					inten = inth+intl
-				outs.write("{seq}\t{modseq}\t{begin}\t{end}\t{ratio}\t{inten}\t{inth}\t{intl}\n".format(
+					if intl>0:
+						int_ratio = inth/float(intl)
+				outs.write("{seq}\t{modseq}\t{begin}\t{end}\t{ratio}\t{intratio}\t{inten}\t{inth}\t{intl}\n".format(
 					seq=pep.sequence, modseq=pep.modified_sequence, begin=pos+1, end=pos+len(pep.sequence), 
-					ratio=na.formatNA(ratio), inten=na.formatNA(inten), inth=na.formatNA(inth), intl=na.formatNA(intl)))
+					ratio=na.formatNA(ratio), intratio=na.formatNA(int_ratio), inten=na.formatNA(inten), inth=na.formatNA(inth), intl=na.formatNA(intl)))
 				n_written += 1
 		info_outs.write("# Wrote {} peptide records\n".format(n_written))
 			#outs.write("{seq}\t{begin}\t{end}\t{ratio}\t{ratio_n}\n".format(
