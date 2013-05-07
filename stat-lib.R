@@ -327,13 +327,23 @@ id.match <- function(x, y, id.x, id.y) {
 	data.frame(x, y[z,])
 }
 
-rcormat <- function(x, method="spearman", log=F) {
+rcormat <- function(x, method="spearman", log=FALSE, na.rm=FALSE) {
 	y <- as.matrix(x)
 	fn <- noop
 	if (log) {
 		y <- log.nozero(y)
 	}
+	if (na.rm) {
+		y <- na.omit(y)
+	}
 	rcorr(as.matrix(y), type=method)
+}
+
+corplot <- function(x, ...) {
+	library(lattice)
+	print(levelplot(x, xlab=NULL, ylab=NULL, at=do.breaks(c(-1.01,1.01),101),
+		scales=list(x=list(rot=90)), colorkey=list(space="top"), 
+		col.regions=colorRampPalette(c("darkblue","white","orange")), ...))
 }
 
 pcor.covmat <- function(covmat) {
