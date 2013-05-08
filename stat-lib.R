@@ -1640,8 +1640,12 @@ flatpolygon <- function(x, y, min=0, horiz=TRUE, ...) {
 
 
 ## Takes a list of variables, plots kernel densities
-multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0', col=NULL, lty="solid", fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
-	equal.height=FALSE, relative.heights=NULL, max.height=1.0, xlab="x", ylab="Density", yaxs='i', weight.list=NULL, legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, logodds=FALSE, ...) {
+multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0', col=NULL, lty="solid", 
+	fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
+	bty='n', yaxt='n', yaxs='i', ylab='', xlab='x', 
+	equal.height=FALSE, relative.heights=NULL, max.height=1.0, 
+	legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, 
+	weight.list=NULL, logodds=FALSE, ...) {
 	extra.args <- list(...)
 	log.transform <- log
 	if (is.data.frame(x) || is.matrix(x)) {
@@ -1747,14 +1751,14 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 				xlab <- "x"
 			}
 		}
-		if (missing(ylab) | is.null(ylab)) {
-			if (equal.height | set.rel.heights | set.max.height) {
-				ylab <- "Peak-normalized density"
-			}
-			else {
-				ylab <- "Density"
-			}
-		}
+		#if (missing(ylab) | is.null(ylab)) {
+		#	if (equal.height | set.rel.heights | set.max.height) {
+		#		ylab <- "Peak-normalized density"
+		#	}
+		#	else {
+		#		ylab <- "Density"
+		#	}
+		#}
 
 		# Use prettier log axis if xaxt is unset
 		use.log.axis <- FALSE
@@ -1769,7 +1773,7 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 	
 		## Actually plot the data
 		d <- densities[[1]]
-		plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, ...)
+		plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, bty=bty, yaxt=yaxt, ...)
 		if (use.log.axis) {
 			my.axis(1, xlim, log=TRUE, expand.range=FALSE)
 		}
