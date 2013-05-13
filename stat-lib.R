@@ -1654,7 +1654,7 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 	fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
 	bty='n', yaxt='n', yaxs='i', ylab='', xlab='x', 
 	equal.height=FALSE, relative.heights=NULL, max.height=1.0, 
-	legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, 
+	legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, line.col=col,
 	weight.list=NULL, logodds=FALSE, ...) {
 	extra.args <- list(...)
 	log.transform <- log
@@ -1672,9 +1672,13 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 	
 	#cat("h1\n")
 	## Colors
-	if (is.null(col)) {col <- rainbow(length(x))}
+	if (is.null(col)) {
+		col <- rainbow(length(x))
+		line.col <- col
+	}
 	## Extend properties into vectors, if necessary
 	cols <- as.vector(replicate(length(x)/length(col) + 1,col))
+	line.cols <- as.vector(replicate(length(x)/length(line.col) + 1,line.col))
 	ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
 	lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))
 	#cat("h2\n")
@@ -1794,7 +1798,7 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 				height.div <- data.max.heights[[i]]
 			}
 			if (fill) {
-				flatpolygon(inv.trans(d$x), abs.max.heights[[i]]*d$y/data.max.heights[[i]], col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
+				flatpolygon(inv.trans(d$x), abs.max.heights[[i]]*d$y/data.max.heights[[i]], col=cols[i], lty=ltys[i], lwd=lwds[i], border=line.cols[i], ...)
 			}
 			else {
 				lines(inv.trans(d$x), abs.max.heights[[i]]*d$y/data.max.heights[[i]], col=cols[i], lty=ltys[i], lwd=lwds[i], ...)
