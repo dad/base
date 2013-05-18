@@ -1653,9 +1653,12 @@ flatpolygon <- function(x, y, min=0, horiz=TRUE, ...) {
 multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0', col=NULL, lty="solid", 
 	fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
 	bty='n', yaxt='n', yaxs='i', ylab='', xlab='x', 
-	equal.height=FALSE, relative.heights=NULL, max.height=1.0, 
+	#equal.height=FALSE, 
+	relative.heights=NULL, max.height=1.0, 
 	legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, line.col=col,
 	weight.list=NULL, logodds=FALSE, ...) {
+	
+	fxncall <- match.call(expand.dots=TRUE)
 	extra.args <- list(...)
 	log.transform <- log
 	if (is.data.frame(x) || is.matrix(x)) {
@@ -1718,9 +1721,28 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 	set.max.height <- !is.null(max.height)
 	# By default, max. heights are given by data
 	abs.max.heights <- unlist(data.max.heights)
+	equal.height <- FALSE # default
 
 	## Set relative heights?
 	if (set.rel.heights) {
+		# Options are relative.heights = "equal", "count", or a set of numbers specifying relative heights
+		height.options <- c('equal','count')
+		hmatch <- pmatch(relative.heights, height.options) # Will give NA if no match.
+		if (!any(is.na(hmatch))) { # if a list of numbers was not passed in
+			opt = height.options[hmatch]
+			if (opt == 'equal') {
+				relative.heights <- rep(1, length(x))
+				equal.height = TRUE
+			}
+			else if (opt == 'count') {
+				relative.heights <- sapply(x, function(m) {length(na.omit(m))})
+			}
+		} else {
+			# Check to make sure enough height values are available.
+			if (length(relative.heights) < length(x)) {
+				relative.heights <- rep(relative.heights, ceiling(length(x)/length(relative.heights)))
+			}
+		}
 		# Normalize the passed-in relative.heights variable
 		relative.heights <- relative.heights/max(relative.heights, na.rm=T)
 		# Set max. height later; assume 1.0 for now.
@@ -1728,9 +1750,9 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 	}
 
 	## Make all equal height?
-	if (equal.height) {
-		abs.max.heights <- rep(1, length(x))
-	}
+	#if (equal.height) {
+	#	abs.max.heights <- rep(1, length(x))
+	#}
 
 	## Set maximum heights?
 	if (set.max.height) {
@@ -1765,14 +1787,6 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 				xlab <- "x"
 			}
 		}
-		#if (missing(ylab) | is.null(ylab)) {
-		#	if (equal.height | set.rel.heights | set.max.height) {
-		#		ylab <- "Peak-normalized density"
-		#	}
-		#	else {
-		#		ylab <- "Density"
-		#	}
-		#}
 
 		# Use prettier log axis if xaxt is unset
 		use.log.axis <- FALSE
