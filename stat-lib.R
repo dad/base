@@ -57,6 +57,23 @@ log.nozero <- function(x, log.fxn=log, ...){
 
 log.nz <- log.nozero
 
+# Geometric mean
+# Return NA if any numbers are negative (could be handled better, but result can be imaginary in this case)
+# Return 0 if any number is zero
+geo.mean <- function(x, na.rm=FALSE){
+	res <- NA
+	if (na.rm) {
+		x <- na.omit(as.vector(x))
+	}
+	if (any(x == 0)) {
+		res <- 0
+	} else if (all(x>0)) {
+		res <- exp(mean(log(x)))
+	}
+	res
+}
+
+
 
 # From psych library
 count.pairwise <- function (x, y = NULL) {
