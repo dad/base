@@ -86,6 +86,65 @@ count.pairwise <- function (x, y = NULL) {
 	return(n)
 }
 
+cor.sp <- function(x, x2=NULL, y=NULL, y2=NULL, method='pearson', use='pairwise.complete.obs', log=FALSE, na.rm=FALSE) {
+	# Formula: r_corrected = sqrt[ r(x1,y1)*r(x2,y2) / (r(x1,x2)*r(y1,y2)) ]
+	
+	if (is.null(y)) {
+		# All data in X
+		stopifnot(ncol(x)>=4)
+		d <- x[,1:4]
+	} else if (is.null(x2) & is.null(y2)) {
+		# Replicates of X and Y provided
+		stopifnot(ncol(x)>=2, ncol(y)>=2)
+		d <- data.frame(x, y)
+	} else {
+		# All data individually given
+		d <- data.frame(x,x2,y,y2)
+	}
+	
+	fnstr.beg <- ""
+	fnstr.end <- ""
+	if (log) {
+		fnstr.beg <- "log.nz("
+		fnstr.end <- ")"
+	}
+	if (log) {
+		d <- log.nozero(d)
+	}
+	if (na.rm) {
+		d <- na.omit(d)
+	}
+	if (nrow(na.omit(d))<3) {
+		warning("Insufficient data to compute correlations")
+	}
+	r <- cor(d, method=method, use=use)
+	dimnames(r) <- list(c('x1','x2','y1','y2'),c('x1','x2','y1','y2'))
+	denom <- sqrt(r['x1','x2']*r['y1','y2'])
+	r.sp1 <- r.sp2 <- r.sp <- NA
+	if (denom>0) {
+		r.sp1 <- sqrt(r['x1','y1']*r['x2','y2'])/denom
+		r.sp2 <- sqrt(r['x1','y2']*r['x2','y1'])/denom
+		r.sp <- sqrt(r.sp1*r.sp2)
+	}
+	data.name <- paste(fnstr.beg, "x, y", fnstr.end)
+	#data.name <- paste(fnstr.beg, deparse(substitute(x1)), fnstr.end, ",",
+	#	fnstr.beg, deparse(substitute(x2)), fnstr.end, ",",
+	#	fnstr.beg, deparse(substitute(y1)), fnstr.end, ",",
+	#	fnstr.beg, deparse(substitute(y2)), fnstr.end)
+	
+	r.range <- c(min(r.sp1,r.sp2), max(r.sp1,r.sp2))
+	# Confidence interval -- assume Gaussian
+	sdr <- sd(r.range)
+	conf.int <- NULL
+	if (!is.na(sdr)) {
+		conf.level <- 0.95
+		conf.int <- c(r.sp-1.96*sdr, r.sp+1.96*sdr)
+		attr(conf.int,'conf.level') <- conf.level
+	}
+
+	list(estimate=r.sp, N=nrow(d), range=r.range, p.value=NA, conf.int=conf.int, data.name=data.name, r.uncorrected=sqrt(r['x1','y1']*r['x2','y2']), raw=r)
+}
+
 # Spearman's correction for attenuation in a correlation coefficient.
 rcorr.sp <- function(x, y, method='pearson', use='pairwise.complete.obs', within.x=colnames(x), within.y=colnames(y)) {
 	x.pairnames <- combn(colnames(x),2)
