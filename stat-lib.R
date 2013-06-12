@@ -1648,6 +1648,8 @@ noop <- function(x) {
 	x
 }
 
+na.len <- function(x) {length(na.omit(x))}
+
 multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
 	equal.height=F, relative.heights=NULL, xlab="x", ylab="Empirical CDF", weight.list=NULL, ...) {
 	extra.args <- list(...)
@@ -1729,10 +1731,9 @@ flatpolygon <- function(x, y, min=0, horiz=TRUE, ...) {
 multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0', col=NULL, lty="solid", 
 	fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
 	bty='n', yaxt='n', yaxs='i', ylab='', xlab='x', 
-	#equal.height=FALSE, 
 	relative.heights=NULL, max.height=1.0, 
 	legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, line.col=col,
-	weight.list=NULL, logodds=FALSE, ...) {
+	weight.list=NULL, logodds=FALSE, add=FALSE, ...) {
 	
 	fxncall <- match.call(expand.dots=TRUE)
 	extra.args <- list(...)
@@ -1877,9 +1878,11 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0
 	
 		## Actually plot the data
 		d <- densities[[1]]
-		plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, bty=bty, yaxt=yaxt, ...)
-		if (use.log.axis) {
-			my.axis(1, xlim, log=TRUE, expand.range=FALSE)
+		if (!add) {
+			plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, bty=bty, yaxt=yaxt, ...)
+			if (use.log.axis) {
+				my.axis(1, xlim, log=TRUE, expand.range=FALSE)
+			}
 		}
 		for (i in 1:length(x)) {
 			d <- densities[[i]]
