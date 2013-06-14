@@ -360,7 +360,7 @@ points.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=N
 	plot.err(x,y,x.lower,x.upper,y.lower,y.upper,add=TRUE, bar.col=bar.col, ...)
 }
 
-my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, labels=T, ...) {
+my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, labels=T, las=1, ...) {
   if (log) {
   	at <- unlist(at)
   	at <- at[at>0]
@@ -378,10 +378,10 @@ my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, labels=T, ...) 
     	# Put labels at log-transformed locations.
     	place.at <- latseq
     }
-    axis(side, at=place.at, labels=labs, ...)
+    axis(side, at=place.at, labels=labs, las=las, ...)
   }
   else {
-    axis(side, at, labels, ...)
+    axis(side, at, labels, las=las, ...)
   }
 }
 
