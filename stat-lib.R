@@ -119,13 +119,18 @@ cor.sp <- function(x, x2=NULL, y=NULL, y2=NULL, method='pearson', use='pairwise.
 	}
 	r <- cor(d, method=method, use=use)
 	dimnames(r) <- list(c('x1','x2','y1','y2'),c('x1','x2','y1','y2'))
-	denom <- sqrt(r['x1','x2']*r['y1','y2'])
-	r.sp1 <- r.sp2 <- r.sp <- NA
-	if (denom>0) {
+    if (any(c(r['x1','x2'],r['y1','y2'])<0)) {
+      warning("Negative replicate correlations found")
+      r.sp1 <- r.sp2 <- r.sp <- NA
+    } else {
+      denom <- sqrt(r['x1','x2']*r['y1','y2'])
+      r.sp1 <- r.sp2 <- r.sp <- NA
+      if (denom>0) {
 		r.sp1 <- sqrt(r['x1','y1']*r['x2','y2'])/denom
 		r.sp2 <- sqrt(r['x1','y2']*r['x2','y1'])/denom
 		r.sp <- sqrt(r.sp1*r.sp2)
-	}
+      }
+    }
 	data.name <- paste(fnstr.beg, "x, y", fnstr.end)
 	#data.name <- paste(fnstr.beg, deparse(substitute(x1)), fnstr.end, ",",
 	#	fnstr.beg, deparse(substitute(x2)), fnstr.end, ",",
@@ -142,7 +147,14 @@ cor.sp <- function(x, x2=NULL, y=NULL, y2=NULL, method='pearson', use='pairwise.
 		attr(conf.int,'conf.level') <- conf.level
 	}
 
-	list(estimate=r.sp, N=nrow(d), range=r.range, p.value=NA, conf.int=conf.int, data.name=data.name, r.uncorrected=sqrt(r['x1','y1']*r['x2','y2']), raw=r)
+    r.unc <- NA
+    if ((sign(r['x1','y1']) == sign(r['x2','y2'])) & (sign(r['x1','y1'])  == sign(r['x1','y2'])) & (sign(r['x1','y1']) == sign(r['x2','y1']))) {
+      r.unc <- geo.mean(c(r['x1','y1'], r['x2','y2'], r['x1','y2'], r['x2','y1']))
+    } else {
+      r.unc <- median(c(r['x1','y1'], r['x2','y2'],r['x1','y2'], r['x2','y1']))
+    }
+
+	list(estimate=r.sp, N=nrow(d), range=r.range, p.value=NA, conf.int=conf.int, data.name=data.name, r.uncorrected=r.unc, raw=r)
 }
 
 # Spearman's correction for attenuation in a correlation coefficient.
