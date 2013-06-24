@@ -487,7 +487,7 @@ scale.mat <- function(mat, dim=2, ...) {
     colnames(m) <- colnames(mat)
   }
   else if (dim==2) {
-	m <- apply(mat, dim, scale, ...)
+	m <- scale(mat, ...)
   }
   if (is.data.frame(mat)) {
     m <- as.data.frame(m)
