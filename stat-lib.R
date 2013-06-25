@@ -119,12 +119,13 @@ cor.sp <- function(x, x2=NULL, y=NULL, y2=NULL, method='pearson', use='pairwise.
 	}
 	r <- cor(d, method=method, use=use)
 	dimnames(r) <- list(c('x1','x2','y1','y2'),c('x1','x2','y1','y2'))
-    if (any(c(r['x1','x2'],r['y1','y2'])<0)) {
+    r.sp1 <- r.sp2 <- r.sp <- NA
+    if (any(is.na(c(r['x1','x2'],r['y1','y2'])))) {
+      warning("NA replicate correlations found")
+    } else if (any(c(r['x1','x2'],r['y1','y2'])<0)) {
       warning("Negative replicate correlations found")
-      r.sp1 <- r.sp2 <- r.sp <- NA
     } else {
       denom <- sqrt(r['x1','x2']*r['y1','y2'])
-      r.sp1 <- r.sp2 <- r.sp <- NA
       if (denom>0) {
 		r.sp1 <- sqrt(r['x1','y1']*r['x2','y2'])/denom
 		r.sp2 <- sqrt(r['x1','y2']*r['x2','y1'])/denom
