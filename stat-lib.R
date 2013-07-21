@@ -373,29 +373,33 @@ points.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=N
 	plot.err(x,y,x.lower,x.upper,y.lower,y.upper,add=TRUE, bar.col=bar.col, ...)
 }
 
-my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, labels=T, las=1, ...) {
-  if (log) {
-  	at <- unlist(at)
-  	at <- at[at>0]
-    lat <- as.integer(log10(at))
-    range <- c(min(lat,na.rm=T),max(lat,na.rm=T))
-    range.expansion.factor <- (range[2]-range[1])*expand.range
-    range.expanded <- floor(c(range[1]-range.expansion.factor, range[2]+range.expansion.factor))
-    latseq <- seq(range.expanded[1], range.expanded[2],1)
-    labs <- F
-    if (labels) {
-    	labs <- as.expression(lapply(latseq, function(m){substitute(10^i ,list(i=m))}))
-    }
-	place.at <- 10^latseq
-    if (log.at) {
-    	# Put labels at log-transformed locations.
-    	place.at <- latseq
-    }
-    axis(side, at=place.at, labels=labs, las=las, ...)
-  }
-  else {
-    axis(side, at, labels, las=las, ...)
-  }
+my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, explicit=FALSE, labels=T, las=1, ...) {
+	if (log) {
+		at <- unlist(at)
+		at <- at[at>0]
+		lat <- as.integer(log10(at))
+		if (explicit) {
+			latseq = lat
+		} else {
+			range <- c(min(lat,na.rm=T),max(lat,na.rm=T))
+			range.expansion.factor <- (range[2]-range[1])*expand.range
+			range.expanded <- floor(c(range[1]-range.expansion.factor, range[2]+range.expansion.factor))
+			latseq <- seq(range.expanded[1], range.expanded[2],1)
+		}
+		labs <- F
+		if (labels) {
+			labs <- as.expression(lapply(latseq, function(m){substitute(10^i ,list(i=m))}))
+		}
+		place.at <- 10^latseq
+		if (log.at) {
+			# Put labels at log-transformed locations.
+			place.at <- latseq
+		}
+		axis(side, at=place.at, labels=labs, las=las, ...)
+	}
+	else {
+		axis(side, at, labels, las=las, ...)
+	}
 }
 
 charlist <- function(x,sep='') {

@@ -282,12 +282,13 @@ def adjustPValue(p_values, method="fdr"):
 	n = len(p_values)
 	if method.lower() == "bh" or method.lower() == 'fdr':
 		ni = range(n,0,-1) # from n to 1
-		indexed_pv = sorted(zip(range(n), p_values), reverse=True)
-		(inds,pvals) = zip(*indexed_pv)
+		indexed_pv = sorted(zip(p_values, range(n)), reverse=True)
+		(pvals,inds) = zip(*indexed_pv)
 		newp = [(float(n)/ni[xi])*pvals[xi] for xi in range(n)]
-		print newp
 		cum_min_p = [min(newp[0:xi]) for xi in range(1,n+1)]
-		adjusted_p_values = [min(p,1.0) for p in cum_min_p]
+		adjp_sorted = [min(p,1.0) for p in cum_min_p]
+		# re-sort
+		adjusted_p_values = [adjp_sorted[xi] for xi in inds]
 	elif method.lower() == 'bonferroni':
 		adjusted_p_values = [min(n*p,1.0) for p in p_values]
 	return adjusted_p_values
