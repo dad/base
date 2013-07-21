@@ -277,19 +277,19 @@ def sample_wr(population, k):
     _random, _int = random.random, int  # speed hack
     return [population[x] for x in [_int(_random() * n) for i in xrange(k)]]
 
-def correctPValue(p_values, method="BH"):
-	# DAD: implement
+def adjustPValue(p_values, method="fdr"):
 	adjusted_p_values = p_values[:]
-	'''
-	if method == "BH":
-		p_values.sort(decreasing=True)
-
-		#i <- n:1
-		#o <- order(p, decreasing = TRUE)
-		#ro <- order(o)
-		#pmin(1, cummin(n/i * p[o]))[ro]
-	'''
-	assert False, "Not implemented yet"
+	n = len(p_values)
+	if method.lower() == "bh" or method.lower() == 'fdr':
+		ni = range(n,0,-1) # from n to 1
+		indexed_pv = sorted(zip(range(n), p_values), reverse=True)
+		(inds,pvals) = zip(*indexed_pv)
+		newp = [(float(n)/ni[xi])*pvals[xi] for xi in range(n)]
+		print newp
+		cum_min_p = [min(newp[0:xi]) for xi in range(1,n+1)]
+		adjusted_p_values = [min(p,1.0) for p in cum_min_p]
+	elif method.lower() == 'bonferroni':
+		adjusted_p_values = [min(n*p,1.0) for p in p_values]
 	return adjusted_p_values
 
 #---------
@@ -481,7 +481,10 @@ def Prob_Z(z, twosided=False):
 def probZ(z, twosided=False):
 	p = scipy.special.erfc(z / math.sqrt(2.0))/2.0
 	if twosided:
-		p = 2*p
+		if z < 0.0:
+			p = 2*(1-p)
+		else:
+			p = 2*p
 	return p
 
 #-------------------------------------------------------------------------------
