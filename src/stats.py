@@ -8,6 +8,7 @@ Expanded and maintained by D. Allan Drummond, 2004-2012."""
 import re, math, os, string, random
 import listrank, na
 import scipy as sp
+import scipy.special
 
 #---------------------------------------------------------------------------------
 class StatsError(Exception):
@@ -474,13 +475,15 @@ def Kendalls_Tau(xlist, ylist):
     return (tau, prob, int(n))
 
 #-------------------------------------------------------------------------------
-def Prob_Z(z):
-	p = Complementary_Error_Function(z / math.sqrt(2.0))/2.0
+def Prob_Z(z, twosided=False):
+	return probZ(z, twosided)
+
+def probZ(z, twosided=False):
+	p = scipy.special.erfc(z / math.sqrt(2.0))/2.0
+	if twosided:
+		p = 2*p
 	return p
-	#if z < 0.0:
-	#	return 1-p
-	#else:
-	#	return p
+
 #-------------------------------------------------------------------------------
 def Kendalls_Tau2(xlist, ylist):
     """Calculates Kendall's tau non-parametric correlation between two variables.
@@ -909,6 +912,25 @@ def __getAVEA(a, b, c, d):
 		v = n1i*n0i*m1i*m0i/float((ni-1)*ni*ni)
 		ea = n1i*m1i/float(ni)
 	return (a,v,ea)
+
+def getOddsRatio(table, pseudocount=0):
+	(a,b,c,d) = table
+	# Add pseudocount if necessary
+	if pseudocount>0:
+		(a,b,c,d) = tuple(sp.array(table)+pseudocount)
+	res = None
+	if b*c>0:
+		res = (a*d)/(b*c)
+	return res
+	
+def getZScore(table, pseudocount=0):
+	(a,b,c,d) = table
+	# Add pseudocount if necessary
+	if pseudocount>0:
+		(a,b,c,d) = tuple(sp.array(table)+pseudocount)
+	res = __getAVEA(a,b,c,d)
+	return __ZStat(*res)
+	
 
 def getSummaryMHStats(tables):
 	sum_a = 0
