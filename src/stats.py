@@ -3,7 +3,7 @@
 """Module for statistics.
 
 Originally written by Jesse Bloom, 2004.
-Expanded and maintained by D. Allan Drummond, 2004-2012."""
+Expanded and maintained by D. Allan Drummond, 2004-2013."""
 #
 import re, math, os, string, random
 import listrank, na
@@ -277,18 +277,28 @@ def sample_wr(population, k):
     _random, _int = random.random, int  # speed hack
     return [population[x] for x in [_int(_random() * n) for i in xrange(k)]]
 
-def adjustPValue(p_values, method="fdr"):
+def adjustPValues(p_values, method="fdr"):
+	"""Adjust P values for multiple testing.
+	
+	Methods (case-insensitive):
+		'FDR' or 'BH': Benjamini-Hochberg false discovery rate correction
+		'Bonferroni': Bonferroni correction
+	"""
 	adjusted_p_values = p_values[:]
 	n = len(p_values)
 	if method.lower() == "bh" or method.lower() == 'fdr':
 		ni = range(n,0,-1) # from n to 1
+		# Sort the P values and keep track of the indices
 		indexed_pv = sorted(zip(p_values, range(n)), reverse=True)
 		(pvals,inds) = zip(*indexed_pv)
+		# adjust
 		newp = [(float(n)/ni[xi])*pvals[xi] for xi in range(n)]
 		cum_min_p = [min(newp[0:xi]) for xi in range(1,n+1)]
 		adjp_sorted = [min(p,1.0) for p in cum_min_p]
 		# re-sort
-		adjusted_p_values = [adjp_sorted[xi] for xi in inds]
+		adjusted_p_values = [-1]*n
+		for xi in range(n):
+			adjusted_p_values[inds[xi]] = adjp_sorted[xi]
 	elif method.lower() == 'bonferroni':
 		adjusted_p_values = [min(n*p,1.0) for p in p_values]
 	return adjusted_p_values
