@@ -47,6 +47,46 @@ load.ms.data <- function(fname, invert=FALSE) {
 	d
 }
 
+load.maxquant.data <- function(control.filename) {
+	# Read in the data
+	run.files <- read.delim(control.filename, comment.char='#', stringsAsFactors=FALSE)
+
+	run.data <- lapply(1:nrow(run.files), function(id) {
+		fname <- run.files[id,]$filename
+		cat("Reading ", fname, ";", sep='')
+		res <- read.delim(fname, comment.char='#', stringsAsFactors=FALSE)
+		if (run.files[id,]$invert) {
+			invert.flds <- c("ratio.hl", 'ratio.hl.normalized')
+			res[,invert.flds] <- 1/res[,invert.flds]
+			tmp <- res$intensity.h
+			res$intensity.h <- res$intensity.l
+			res$intensity.l <- tmp
+		}
+		cat(" ", nrow(res),"lines\n", sep=' ')
+		res
+		})
+	names(run.data) <- run.files$alias
+
+	# Match everything back to the whole yeast genome dataset
+	run.orfs <- sapply(run.data, function(m) {m$orf})
+	u.run.orfs <- as.vector(unique(unlist(run.orfs)))
+	all.orfs <- unique(c(u.run.orfs, unclass(yres$bg$orf)))
+
+	run.match.df <- data.frame(lapply(run.data, function(d) {
+		match(all.orfs, d$orf)
+	}))
+	colnames(run.match.df) <- names(run.data)
+	yeast.match <- match(all.orfs, yres$bg$orf)
+
+	# Merge data across experiments
+	run.data <- lapply(1:length(run.data), function(m) {run.data[[m]][run.match.df[[m]],]})
+	names(run.data) <- run.files$alias
+
+	# Merge data across experiments
+	merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,], yres$sL[yeast.match,], yres$raw[yeast.match,c(yres$fields$prot, yres$fields$mrna)])
+	merged.sir
+}
+
 sampling.error <- function(n, log.sd.cutoff) {
 	log.sd.cutoff/sqrt(n)
 }
