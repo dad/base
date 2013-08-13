@@ -1762,7 +1762,7 @@ flatpolygon <- function(x, y, min=0, horiz=TRUE, ...) {
 
 
 ## Takes a list of variables, plots kernel densities
-multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='nrd0', col=NULL, lty="solid", 
+multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='SJ', col=NULL, lty="solid", 
 	fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
 	bty='n', yaxt='n', yaxs='i', ylab='', xlab='x', 
 	relative.heights=NULL, max.height=1.0, 
