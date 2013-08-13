@@ -402,7 +402,21 @@ my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, explicit=FALSE,
 	}
 }
 
-lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, ...) {
+lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, ...) {
+	if (is.null(xlab)) {
+		if (is.null(y)) {
+			xlab <- colnames(x)[1]
+		} else {
+			xlab <- deparse(substitute(x))
+		}
+	}
+	if (is.null(ylab)) {
+		if (is.null(y)) {
+			ylab <- colnames(x)[2]
+		} else {
+			ylab <- deparse(substitute(y))
+		}
+	}
 	if (is.null(y)) {
 		# Plot first two columns of x
 		y <- x[,2]
@@ -414,7 +428,7 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, ...) {
 	if (is.null(ylim)) {
 		ylim <- c(min(y[y>0],na.rm=T), max(y,na.rm=T))
 	}
-	plot(x, y, log='xy', xaxt='n', yaxt='n', xlim=xlim, ylim=ylim, ...)
+	plot(x, y, log='xy', xaxt='n', yaxt='n', xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
 	my.axis(1, xlim, log=T, las=las)
 	my.axis(2, ylim, log=T, las=las)
 }
