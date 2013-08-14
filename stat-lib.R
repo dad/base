@@ -402,7 +402,7 @@ my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, explicit=FALSE,
 	}
 }
 
-lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, ...) {
+lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, pch=16, ...) {
 	if (is.null(xlab)) {
 		if (is.null(y)) {
 			xlab <- colnames(x)[1]
@@ -428,7 +428,7 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, 
 	if (is.null(ylim)) {
 		ylim <- c(min(y[y>0],na.rm=T), max(y,na.rm=T))
 	}
-	plot(x, y, log='xy', xaxt='n', yaxt='n', xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, ...)
+	plot(x, y, log='xy', xaxt='n', yaxt='n', xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, pch=pch, ...)
 	my.axis(1, xlim, log=T, las=las)
 	my.axis(2, ylim, log=T, las=las)
 }
