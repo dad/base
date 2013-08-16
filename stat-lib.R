@@ -402,6 +402,7 @@ my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, explicit=FALSE,
 	}
 }
 
+# Default log-transformed plot
 lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, pch=16, ...) {
 	if (is.null(xlab)) {
 		if (is.null(y)) {
@@ -431,6 +432,18 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, 
 	plot(x, y, log='xy', xaxt='n', yaxt='n', xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, pch=pch, ...)
 	my.axis(1, xlim, log=T, las=las)
 	my.axis(2, ylim, log=T, las=las)
+}
+
+# Default log-transformed lm()
+llm <- function(form, data, log=T, na.rm=F, ...) {
+	x <- data[,all.vars(as.formula(form))]
+	if (log) {
+		x <- log.nozero(x)
+	}
+	if (na.rm) {
+		x <- na.omit(x)
+	}
+	lm(form, data=x, ...)
 }
 
 charlist <- function(x,sep='') {
