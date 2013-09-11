@@ -424,10 +424,10 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, 
 		x <- x[,1]
 	}
 	if (is.null(xlim)) {
-		xlim <- c(min(x[x>0],na.rm=T), max(x,na.rm=T))
+		xlim <- c(min(x[x>0],na.rm=T), max(x[x<Inf],na.rm=T))
 	}
 	if (is.null(ylim)) {
-		ylim <- c(min(y[y>0],na.rm=T), max(y,na.rm=T))
+		ylim <- c(min(y[y>0],na.rm=T), max(y[y<Inf],na.rm=T))
 	}
 	plot(x, y, log='xy', xaxt='n', yaxt='n', xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, pch=pch, ...)
 	my.axis(1, xlim, log=T, las=las)
