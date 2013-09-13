@@ -435,14 +435,23 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, 
 }
 
 # Default log-transformed lm()
-llm <- function(form, data, log=T, na.rm=F, ...) {
-	x <- data[,all.vars(as.formula(form))]
+llm <- function(form, data=NULL, log=T, na.rm=F, ...) {
+	vars <- all.vars(as.formula(form))
+	x <- NULL
+	if (is.null(data)) {
+		# Get variables from the environment
+		x <- lm(form, method='model.frame')
+		print(x)
+	} else {
+		x <- data[,vars]
+	}
 	if (log) {
 		x <- log.nozero(x)
 	}
 	if (na.rm) {
 		x <- na.omit(x)
 	}
+	#print(x)
 	lm(form, data=x, ...)
 }
 
