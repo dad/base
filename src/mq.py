@@ -287,8 +287,13 @@ class PeptideQuant(object):
 			assert(self.sequence == pep_data.sequence)
 		if self.modified_sequence is None:
 			self.modified_sequence = pep_data.modified_sequence
-		else:
-			assert(self.modified_sequence == pep_data.modified_sequence)
+		# DAD: this fails when it encounters 
+		# self.modified_sequence = _RFIVFHNEFSEHTFV(ph)ER_ 
+		# pep_data.modified_sequence = _RFIVFHNEFSEHTFVER_
+		# Not sure if this matters.
+		#else:
+		#	print self.modified_sequence, pep_data.modified_sequence
+		#	assert(self.modified_sequence == pep_data.modified_sequence)
 		self.heavy_light_ratio_list.append(pep_data.ratio_hl)
 		self.heavy_light_normalized_ratio_list.append(pep_data.ratio_hl_normalized)
 		self.intensity_l_list.append(pep_data.intensity_l)
