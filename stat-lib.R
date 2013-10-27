@@ -366,7 +366,11 @@ plot.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NUL
 	}
 	segments(x.lower, y, x.upper, y, col=bar.col)
 	segments(x, y.lower, x, y.upper, col=bar.col)
-    points(x, y, ...)
+	if (type=='l' | type=='o') {
+		lines(x, y, type=type, ...)
+	} else {
+    	points(x, y, type=type, ...)
+    }
 }
 
 points.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, bar.col=NULL, ...) {
@@ -399,6 +403,19 @@ my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, explicit=FALSE,
 	}
 	else {
 		axis(side, at, labels, las=las, ...)
+	}
+}
+
+# Regression line that can handle lmodel2 output
+my.abline <- function(g, model='OLS', ...) {
+	models <- c('OLS','MA','SMA','RMA')
+	if (class(g)=='lmodel2') {
+		modindex <- which(models==model)
+		entry <- g$regression.results[modindex,]
+		print(entry)
+		abline(entry[[2]], entry[[3]], ...)
+	} else {
+		abline(g, ...)
 	}
 }
 
