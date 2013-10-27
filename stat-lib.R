@@ -412,8 +412,9 @@ my.abline <- function(g, model='OLS', ...) {
 	if (class(g)=='lmodel2') {
 		modindex <- which(models==model)
 		entry <- g$regression.results[modindex,]
-		print(entry)
 		abline(entry[[2]], entry[[3]], ...)
+	} else if (class(g) == 'numeric') {
+		abline(g, model, ...)
 	} else {
 		abline(g, ...)
 	}
