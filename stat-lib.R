@@ -353,7 +353,7 @@ barplot.err <- function(x, lower=x, upper=x, xlim=NULL, ylim=NULL, horiz=FALSE, 
 	invisible(bp)
 }
 
-plot.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, add=FALSE, log='', bar.col=NULL, type='l', ...) {
+plot.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, add=FALSE, log='', bar.col=NULL, type='p', ...) {
 	if (is.null(x.lower)) x.lower = x
 	if (is.null(x.upper)) x.upper = x
 	if (is.null(y.lower)) y.lower = y
