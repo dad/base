@@ -452,6 +452,27 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, 
 	my.axis(2, ylim, log=T, las=las)
 }
 
+# Extract coefficients from lmodel2 fit
+coef2 <- function(g, model='OLS') {
+	models <- c('OLS','MA','SMA','RMA')
+	modindex <- which(models==model)
+	entry <- g$regression.results[modindex,]
+	res <- as.numeric(entry[2:3])
+	names(res) <- c('Intercept','Slope')
+	res
+}
+
+# Extract confidence intervals from lmodel2 fit
+confint2 <- function(g, model='OLS') {
+	models <- c('OLS','MA','SMA','RMA')
+	modindex <- which(models==model)
+	entry <- g$confidence.intervals[modindex,]
+	res <- as.numeric(entry[2:5])
+	names(res) <- c('Intercept.lower','Intercept.upper','Slope.lower','Slope.upper')
+	res	
+}
+
+
 # Default log-transformed lm()
 llm <- function(form, data=NULL, log=T, na.rm=F, ...) {
 	vars <- all.vars(as.formula(form))
