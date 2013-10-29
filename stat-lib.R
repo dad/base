@@ -452,6 +452,11 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, 
 	my.axis(2, ylim, log=T, las=las)
 }
 
+# Log-transform values
+llmodel2 <- function(y, x, log.fxn=log.nz, base=10, nperm=1, range.x='interval', range.y='interval', ...) {
+	lmodel2(log.fxn(y,log,base)~log.fxn(x,log,base), nperm=nperm, range.x=range.x, range.y=range.y, ...)
+}
+
 # Extract coefficients from lmodel2 fit
 coef2 <- function(g, model='OLS') {
 	models <- c('OLS','MA','SMA','RMA')
