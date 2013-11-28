@@ -377,6 +377,29 @@ points.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=N
 	plot.err(x,y,x.lower,x.upper,y.lower,y.upper,add=TRUE, bar.col=bar.col, ...)
 }
 
+lines.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, bar.col=NULL, ...) {
+	plot.err(x,y,x.lower,x.upper,y.lower,y.upper,add=TRUE, bar.col=bar.col, type='l', ...)
+}
+
+poly.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, add=TRUE, border=NA, lines=TRUE, points=FALSE, pch=16, col='black', alpha=NA, ...) {
+	if (is.null(x.lower)) x.lower = x
+	if (is.null(x.upper)) x.upper = x
+	if (is.null(y.lower)) y.lower = y
+	if (is.null(y.upper)) y.upper = y
+	polycol <- col
+	if (!is.na(alpha)) {
+		polycol <- tcol(col,alpha)
+	}
+	polygon(c(x.lower,rev(x.upper)), c(y.lower,rev(y.upper)), border=border, col=polycol, ...)
+	if (lines) {
+		lines(x, y, col=col, ...)
+	}
+	if (points) {
+		points(x, y, pch=pch, col=col, ...)
+	}
+	#plot.err(x,y,x.lower,x.upper,y.lower,y.upper,add=add, bar.col=bar.col, ...)
+}
+
 my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, explicit=FALSE, labels=T, las=1, ...) {
 	if (log) {
 		at <- unlist(at)
