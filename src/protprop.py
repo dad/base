@@ -85,6 +85,8 @@ if __name__=='__main__':
 	parser.add_argument("-i", "--in", dest="in_fname", default=None, help="input FASTA filename")
 	parser.add_argument("-s", "--seq", dest="sequence", default=None, help="input sequence")
 	parser.add_argument("-t", "--translate", dest="translate", action="store_true", default=False, help="translate the input sequences?")
+	parser.add_argument("-b", "--begin", dest="begin_aa", type=int, default=0, help="beginning amino acid")
+	parser.add_argument("-e", "--end", dest="end_aa", type=int, default=None, help="ending amino acid (inclusive)")
 	parser.add_argument("--pH", dest="pH", type=float, default=7.2, help="pH for charge determination")
 	options = parser.parse_args()
 	
@@ -101,6 +103,11 @@ if __name__=='__main__':
 			seq = translate.translateRaw(options.sequence)
 		else:
 			seq = options.sequence
+		seq = seq.replace('-','')
+		if not options.end_aa is None and options.end_aa<= len(seq):
+			seq = seq[0:options.end_aa]
+		print options.end_aa, options.begin_aa
+		seq = seq[options.begin_aa:]
 		outs.write("length = {:d}\n".format(pp.getLength(seq)))
 		pI = pp.getIsoelectricPoint(seq, tolerance=1e-4)
 		outs.write("pI = {0}\n".format(pI))
@@ -119,6 +126,13 @@ if __name__=='__main__':
 		for (h,seq) in zip(headers,seqs):
 			if options.translate:
 				seq = translate.translateRaw(seq)
+			seq = seq.replace('-','')
+			#print seq
+			#print options.begin_aa, options.end_aa, len(seq)
+			if not options.end_aa is None and options.end_aa<= len(seq):
+				seq = seq[0:options.end_aa]
+			seq = seq[options.begin_aa:]
+			print seq
 			line = "#{}\n{}\t{:d}\t{:1.4f}\t{:1.4f}\t{:1.4f}\n".format(h, biofile.firstField(h), pp.getLength(seq), pp.getCharge(seq, options.pH), pp.getIsoelectricPoint(seq), pp.getHydrophobicity(seq))
 			outs.write(line)
 
