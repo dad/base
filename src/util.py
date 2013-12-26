@@ -281,11 +281,10 @@ class DelimitedLineReader:
 			raise ReaderEOFError("Attempt to read past end of stream")
 		res = None
 		if self.isValid():
-			if process:
+			res = self.cur_line
+			if process: # Split the line into fields, parse by types according to handlers if specified
 				self.cur_flds = self.process(apply_handlers)
 				res = self.cur_flds
-			else:
-				res = self.cur_line
 		#print "$%d-%s^" % (self.getNumRead(), self.getRawLine())
 		return res
 
@@ -373,27 +372,26 @@ class DelimitedLineReader:
 		return res
 
 	def getHeader(self, move_to_data=True):
-		if self.has_header:
-			if not self.headers:
-				li = 0
+		res = self.headers
+		if res is None and self.has_header:
+			li = 0
+			self.cur_line = self.cache.getLine(li)
+			while self.isComment():
+				li += 1
 				self.cur_line = self.cache.getLine(li)
-				while self.isComment():
-					li += 1
-					self.cur_line = self.cache.getLine(li)
-				if self.isValid() and not self.isComment():
-					self.headers = self.process(apply_handlers=False)
-					if move_to_data:
-						# Position reader at line following header
-						for pop_li in range(li+1):
-							self.cache.pop()
-							self.n_lines_read += 1
-				else:
-					raise ReaderError("Never encountered a header line")
+			if self.isValid() and not self.isComment():
+				self.headers = self.process(apply_handlers=False)
+				if move_to_data:
+					# Position reader at line following header
+					for pop_li in range(li+1):
+						self.cache.pop()
+						self.n_lines_read += 1
+			else:
+				raise ReaderError("Never encountered a header line")
 			# Now process the headers -- e.g., de-dupe column names.
 			self.headers = self.header_name_processor(self.headers)
-			return self.headers
-		else:
-			return None # No header
+			res = self.headers
+		return res
 
 	def inferHandlerKey(self, fld):
 		# int -> float -> string
@@ -410,11 +408,10 @@ class DelimitedLineReader:
 		return found_key
 
 
-	def inferHandlers(self):
+	def inferHandlers(self, max_lines=100):
 		# DAD: run through fields until we've seen at least one non-NA for each.
 		handlers_identified = False
 		li = 0
-		max_lines = 100
 		self.cur_line = self.cache.getLine(li)
 		self.handlers = None
 		inferred_string = []
@@ -431,7 +428,7 @@ class DelimitedLineReader:
 					inferred_string = ['X']*len(flds)
 				if len(flds) != len(self.handlers):
 					print flds
-				assert len(flds) == len(self.handlers), "Number of fields %d not equal to number of handlers %d" % (len(flds), len(self.handlers))
+				assert len(flds) == len(self.handlers), "Number of fields {} not equal to number of handlers {}".format(len(flds), len(self.handlers))
 				for hi in range(len(self.handlers)):
 					fld = flds[hi]
 					if self.handlers[hi] is None:
@@ -452,8 +449,6 @@ class DelimitedLineReader:
 				# We're finished when all handlers are not None.
 				handlers_identified = len([h for h in self.handlers if h is None]) == 0
 			if not handlers_identified:
-				#print "cache:", self.cache.cache
-
 				li += 1
 				try:
 					self.cur_line = self.cache.getLine(li)
@@ -478,9 +473,27 @@ class DelimitedLineReader:
 		try:
 			self.handlers[handler_index] = self.handler_dict[type_string]
 		except KeyError, ke:
-			raise ReaderError, "Unknown handler type %s" % type_string
+			raise ReaderError, "Unknown handler type {}".format(type_string)
 		except IndexError:
-			raise ReaderError, "Bad handler index %d" % handler_index
+			raise ReaderError, "Bad handler index {}".format(handler_index)
+	
+	def setColumnType(self, column_name, type_string):
+		headers = self.getHeader()
+		if not headers is None:
+			try:
+				column_id = headers.index(column_name)
+				self.setHandlerType(column_id, type_string)
+			except ValueError:
+				raise ReaderError("Column {} not in header".format(column_name))
+		else:
+			# Try to interpret as column index
+			try:
+				column_id = int(column_name)
+				if column_id < len(self.handlers):
+					self.setHandlerType(column_id, type_string)
+			except ValueError:
+				raise ReaderError("Column {} not in header".format(column_name))
+		
 	
 	# Generators for iteration
 	@property

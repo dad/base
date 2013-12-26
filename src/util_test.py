@@ -343,6 +343,24 @@ class test017(unittest.TestCase):
 		inf.close()
 		os.remove(fname)
 
+class test018(unittest.TestCase):
+	"""set handler type"""
+	def test_run(self):
+		fname = "tmp_types.txt"
+		inf = file(fname, 'w')
+		inf.write("one\ttwo\tthree\n")
+		#inf.write("  NA	NA	NA\n")
+		inf.write(" 1.0  two  3\n")
+		inf.close()
+		inf = file(fname, 'r')
+		# Assume all types are string
+		fp = util.DelimitedLineReader(inf, header=True, field_defs='sss', sep=None)
+		fp.setColumnType("three", "d")
+		flds = fp.nextDict()
+		self.assertTrue(flds['three']==3)
+		inf.close()
+		os.remove(fname)
+
 
 def randString():
 	return ''.join(random.sample(string.letters, 10))
