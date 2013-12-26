@@ -300,6 +300,49 @@ class test015(unittest.TestCase):
 		inf.close()
 		os.remove(fname)
 
+class test016(unittest.TestCase):
+	"""iterator over entries"""
+	def test_run(self):
+		n_lines = 10
+		header_list = ["str","float","int","str"]
+		fname = "tmp_comment_first.txt"
+		inf = file(fname, 'w')
+		inf.write("one\ttwo\tthree\n")
+		inf.write("  a  b c\n")
+		inf.write(" a   b  c\n")
+		inf.close()
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = util.DelimitedLineReader(inf, header=True, sep=None)
+		for flds in fp.entries:
+			self.assertTrue(flds[0]=='a')
+			self.assertTrue(flds[1]=='b')
+			self.assertTrue(flds[2]=='c')
+		inf.close()
+		os.remove(fname)
+
+class test017(unittest.TestCase):
+	"""iterator over dict entries"""
+	def test_run(self):
+		n_lines = 10
+		header_list = ["str","float","int","str"]
+		fname = "tmp_comment_first.txt"
+		inf = file(fname, 'w')
+		inf.write("one\ttwo\tthree\n")
+		inf.write("  a  b c\n")
+		inf.write(" a   b  c\n")
+		inf.close()
+		inf = file(fname, 'r')
+		# Infer the types
+		fp = util.DelimitedLineReader(inf, header=True, sep=None)
+		for flds in fp.dictentries:
+			self.assertTrue(flds['one']=='a')
+			self.assertTrue(flds['two']=='b')
+			self.assertTrue(flds['three']=='c')
+			self.assertFalse(flds['three']=='b')
+		inf.close()
+		os.remove(fname)
+
 
 def randString():
 	return ''.join(random.sample(string.letters, 10))

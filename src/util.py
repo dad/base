@@ -481,6 +481,17 @@ class DelimitedLineReader:
 			raise ReaderError, "Unknown handler type %s" % type_string
 		except IndexError:
 			raise ReaderError, "Bad handler index %d" % handler_index
+	
+	# Generators for iteration
+	@property
+	def entries(self):
+		while not self.atEnd():
+			yield self.next()
+
+	@property
+	def dictentries(self):
+		while not self.atEnd():
+			yield self.nextDict()
 
 
 # Read
@@ -521,13 +532,14 @@ class LightDataFrame:
 
 	@property
 	def headers(self):
-		return self._headers
-
+		return self._headers[:]
+	
 	def __str__(self):
 		s = "\t".join(self.headers)+"\n"
 		for ri in range(self.nrows):
+			rd = self.rowDict(ri)
 			for h in self.headers:
-				s += '\t' + str(self.rowDict(ri)[h])
+				s += '\t' + str(rd[h])
 			s += '\n'
 		return s
 
