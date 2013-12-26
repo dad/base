@@ -589,7 +589,7 @@ def getAkashi2x2TablesForORF(conservationFxn, aligned_cdna, aligned_prot, other_
 			gene_codon_tables[codon].append(tuple(table))
 	return gene_codon_tables
 
-def getAkashi2x2TablesForORFRefCodon(conservationFxn, reference_codon_dict, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount=0, n_terminal_start=0):
+def getAkashi2x2TablesForORFRefCodon(conservationFxn, reference_codon_dict, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount=0, n_terminal_start=0, weight=1.0):
 	# Now build the tables for this gene
 	# Compute conserved--preferred association using each codon as preferred in turn
 	gc = translate.geneticCode(rna=False)
@@ -605,14 +605,14 @@ def getAkashi2x2TablesForORFRefCodon(conservationFxn, reference_codon_dict, alig
 			# Get reference codon
 			ref_codon = reference_codon_dict[codon]
 			# Add the pseudocount to each entry
-			table = [conserved_codon_counts[codon]+pseudocount,
-					 conserved_codon_counts[ref_codon]+pseudocount,
-					 variable_codon_counts[codon]+pseudocount,
-					 variable_codon_counts[ref_codon]+pseudocount]
+			table = [weight*conserved_codon_counts[codon]+pseudocount,
+					 weight*conserved_codon_counts[ref_codon]+pseudocount,
+					 weight*variable_codon_counts[codon]+pseudocount,
+					 weight*variable_codon_counts[ref_codon]+pseudocount]
 			gene_codon_tables[codon].append(tuple(table))
 	return gene_codon_tables
 
-def getAkashi2x2TablesForORFAllCodonPairs(conservationFxn, codon_pair_list, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount=0, n_terminal_start=0):
+def getAkashi2x2TablesForORFAllCodonPairs(conservationFxn, codon_pair_list, aligned_cdna, aligned_prot, other_aligned_cdnas, other_aligned_prots, pseudocount=0, n_terminal_start=0, weight=1.0):
 	# Now build the tables for this gene
 	# Compute conserved--preferred association using each codon as preferred in turn
 	gc = translate.geneticCode(rna=False)
@@ -626,10 +626,11 @@ def getAkashi2x2TablesForORFAllCodonPairs(conservationFxn, codon_pair_list, alig
 			# Get contingency table for each codon/ref-codon pair
 			# cons-pref, cons-un, var-pref, var-un
 			# Add the pseudocount to each entry
-			table = [conserved_codon_counts[codon]+pseudocount,
-					 conserved_codon_counts[ref_codon]+pseudocount,
-					 variable_codon_counts[codon]+pseudocount,
-					 variable_codon_counts[ref_codon]+pseudocount]
+			# Multiply by weight
+			table = [weight*conserved_codon_counts[codon]+pseudocount,
+					 weight*conserved_codon_counts[ref_codon]+pseudocount,
+					 weight*variable_codon_counts[codon]+pseudocount,
+					 weight*variable_codon_counts[ref_codon]+pseudocount]
 			gene_codon_tables[(codon,ref_codon)].append(tuple(table))
 	return gene_codon_tables
 
