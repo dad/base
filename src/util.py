@@ -371,6 +371,9 @@ class DelimitedLineReader:
 				res = line[0] == self.comment_str
 		return res
 
+	def getHeaders(self, move_to_data=True):
+		return self.getHeader(move_to_data)
+	
 	def getHeader(self, move_to_data=True):
 		res = self.headers
 		if res is None and self.has_header:

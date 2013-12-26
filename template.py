@@ -25,6 +25,7 @@ if __name__=='__main__':
 		data_outs.addStream(sys.stdout)
 
 	# Write out parameters
+	data_outs.write("# {}\n".format(' '.join(sys.argv)))
 	data_outs.write("# Run {}\n".format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')))
 	data_outs.write("# Parameters:\n")
 	optdict = vars(options)
