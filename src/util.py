@@ -1,9 +1,20 @@
-import time, os, random, string, sys, math, traceback, unittest
+import os, random, string, sys, math, traceback, unittest
+import time, datetime
+#import pytz
 import na
 
 # Float equality.  On my system (WinXP, Python 2.6), smallest distinguishable float difference is 7.45e-9.
 def feq(f1,f2,eps=1e-8):
 	return abs(f1-f2)<eps
+
+# Easy timestamp production
+def timestamp(zone='US/Central', timeformat='%Y-%m-%d %H:%M:%S %Z%z'):
+	#tz = pytz.timezone(zone)
+	#localtime = tz.localize(datetime.datetime.fromtimestamp(time.time()))
+	timest = datetime.datetime.fromtimestamp(time.time()).strftime(timeformat)
+	#timest = localtime.strftime(timeformat)
+	return timest
+
 
 def printTiming(func):
 	"""Use as follows. Given a function foo(arg1,arg2), define as:
