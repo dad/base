@@ -63,5 +63,15 @@ class test005(unittest.TestCase):
 		for i in range(len(a)):
 			self.assertTrue(a[i] == a2[i])
 
+class test006(unittest.TestCase):
+	"""Histogram"""
+	def test(self):
+		a = [1,3,5,2,4,0,7,7.01]
+		hist = stats.Histogram()
+		hist.init(min(a), max(a), 10)
+		hist.add(a)
+		self.assertTrue(len(hist.extras) == 0)
+
+
 if __name__=='__main__':
 	unittest.main(verbosity=2)

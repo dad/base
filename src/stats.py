@@ -14,12 +14,27 @@ import scipy.special
 class StatsError(Exception):
     """Statistics error."""
 
+# From http://stackoverflow.com/questions/3679694/a-weighted-version-of-random-choice
+def weighted_choice(choices):
+   total = sum(w for c, w in choices)
+   r = random.uniform(0, total)
+   upto = 0
+   for c, w in choices:
+      if upto + w >= r:
+         return c
+      upto += w
+   assert False, "Shouldn't get here"
+
 class Histogram:
 	bins = [0]
 	min_val = 0.0
 	max_val = 1.0
 	bin_width = 1.0
 	extras = []
+
+	def __init__(self, vals=None, n_bins=0):
+		if not vals is None:
+			self.init(min(vals), max(vals), n_bins)
 
 	def init(self,min_val,max_val,n_bins):
 		assert n_bins > 0
@@ -32,22 +47,27 @@ class Histogram:
 
 	def getBin(self, x):
 		b = -1
-		try:
-			b = int((x-self.min_val)/self.bin_width)
-		except TypeError:
-			raise TypeError, "Value '{}' is not of usable type".format(x)
-		return b
+		if x == self.max_val: # final bin is [low, high], where others are [low,high)
+			b = len(self.bins)-1
+		else:
+			b = math.floor((x-self.min_val)/self.bin_width)
+		return int(b)
 
 	def validBin(self, b):
 		return b >= 0 and b < len(self.bins)
 
 	def add(self, x):
-		b = self.getBin(x)
-		if self.validBin(b):
-			self.bins[b] += 1
+		if isinstance(x,list):
+			for y in x:
+				self.add(y)
 		else:
-			self._extras.append(x)
-		self.total_count += 1
+			b = self.getBin(x)
+			if self.validBin(b):
+				self.bins[b] += 1
+			else:
+				#print x, b, len(self.bins), ((self.max_val-self.min_val)/self.bin_width
+				self._extras.append(x)
+			self.total_count += 1
 
 	def printMe(self):
 		print "{}" % self
@@ -93,12 +113,17 @@ class Histogram:
 		return rep
 	
 	def write(self, stream, header=None):
-		if header is None:
-			header = "bin\tbin.mid\tcount\tdensity\n"
-		stream.write(header)
+		#if header is None:
+		#	header = "bin\tbin.mid\tcount\tdensity\n"
+		#stream.write(header)
+		stream.write(str(self))
 
 	def total(self):
 		return sum(self.bins) + len(self.extras)
+	
+	@property
+	def extras(self):
+		return self._extras[:]
 
 
 class Summary:
