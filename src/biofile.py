@@ -779,6 +779,8 @@ def readFASTA(infile):
 			if line[0] == '>':  # a new header
 				if seq:
 					frag = ''.join(seq)
+					if frag[-1] == '*': # Remove trailing stop
+						frag = frag[:-1]
 					sequences.append(frag.upper())
 				seq = []
 				# Strip off leading '>'
@@ -790,6 +792,8 @@ def readFASTA(infile):
 				frag = line.strip()
 				seq.append(frag)
 		frag = ''.join(seq)
+		if frag[-1] == '*': # Remove trailing stop
+			frag = frag[:-1]
 		sequences.append(frag.upper())
 	infile.close()
 	assert len(headers) == len(sequences), "Error, headers and sequences have different lengths, {} != {}.".format(len(headers), len(sequences))
