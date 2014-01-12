@@ -16,45 +16,67 @@ class StatsError(Exception):
 
 # From http://stackoverflow.com/questions/3679694/a-weighted-version-of-random-choice
 def weighted_choice(choices):
-   total = sum(w for c, w in choices)
-   r = random.uniform(0, total)
-   upto = 0
-   for c, w in choices:
-      if upto + w >= r:
-         return c
-      upto += w
-   assert False, "Shouldn't get here"
+	total = sum(w for c, w in choices)
+	r = random.uniform(0, total)
+	upto = 0
+	for c, w in choices:
+		if upto + w >= r:
+			return c
+		upto += w
+	assert False, "Shouldn't get here"
+  
+class HistogramBin(object):
+	def __init__(self, mid, width, count):
+		self._mid = mid
+		self._width = width
+		self._count = count
+	
+	@property
+	def lower(self):
+		return self._mid - self._width/2.0
+	
+	@property
+	def upper(self):
+		return self._mid + self._width/2.0
+	
+	@property
+	def count(self):
+		return self._count
+	
+	@property
+	def mid(self):
+		return self._mid
 
 class Histogram:
-	bins = [0]
-	min_val = 0.0
-	max_val = 1.0
-	bin_width = 1.0
-	extras = []
-
 	def __init__(self, vals=None, n_bins=0):
+		self._bins = [0]
+		self._min_val = 0.0
+		self._max_val = 1.0
+		self._bin_width = 1.0
+		self._extras = []
+		self._total_count = 0
 		if not vals is None:
 			self.init(min(vals), max(vals), n_bins)
 
-	def init(self,min_val,max_val,n_bins):
+	def init(self, min_val, max_val, n_bins):
 		assert n_bins > 0
-		self.bins = [0]*n_bins
-		self.min_val = min_val
-		self.max_val = max_val
-		self.bin_width = (max_val-min_val)/float(n_bins)
-		self.total_count = 0
+		self._bins = [0]*n_bins
+		self._min_val = min_val
+		self._max_val = max_val
+		self._bin_width = (max_val-min_val)/float(n_bins)
+		self._total_count = 0
 		self._extras = []
 
 	def getBin(self, x):
 		b = -1
-		if x == self.max_val: # final bin is [low, high], where others are [low,high)
-			b = len(self.bins)-1
+		if x == self._max_val: # final bin is [low, high], where others are [low,high)
+			b = len(self._bins)-1
 		else:
-			b = math.floor((x-self.min_val)/self.bin_width)
+			b = math.floor((x-self._min_val)/self._bin_width)
 		return int(b)
 
 	def validBin(self, b):
-		return b >= 0 and b < len(self.bins)
+		return b >= 0 and b < len(self._bins)
 
 	def add(self, x):
 		if isinstance(x,list):
@@ -63,68 +85,38 @@ class Histogram:
 		else:
 			b = self.getBin(x)
 			if self.validBin(b):
-				self.bins[b] += 1
+				self._bins[b] += 1
 			else:
 				#print x, b, len(self.bins), ((self.max_val-self.min_val)/self.bin_width
 				self._extras.append(x)
-			self.total_count += 1
+			self._total_count += 1
 
-	def printMe(self):
-		print "{}" % self
-	
 	def values(self):
 		pass
 
 	def __str__(self):
-		rep = ''
-		rep += "bin\tbin.mid\tcount\tdensity\n"
-		# Don't print empty bins on tails
-		bin_min = None
-		bin_max = None
-		i = 0
-		for b in self.bins:
-			if b>0 and not bin_min:
-				if i>0:
-					bin_min = i-1
-				else:
-					bin_min = 0
-				break
-			i += 1
-		i = len(self.bins)
-		for b in self.bins[::-1]:
-			if b>0 and not bin_max:
-				if i<len(self.bins):
-					bin_max = i+1
-				else:
-					bin_max = i
-			i -= 1
-		if not bin_min:
-			bin_min = 0
-		if not bin_max:
-			bin_max = len(self.bins)
-
-		for i in range(bin_min,bin_max):
-			bin_mid = self.min_val + self.bin_width*(i+0.5)
-			rep += "{:d}\t{:f}\t{:d}\n".format(i, bin_mid, self.bins[i])
-		#if i < len(self.bins)-1:
-		#	print self.bins[i+1]
-		if len(self._extras)>0:
-			rep += "# Extras: {}\n".format(' '.join(['{}'.format(s) for s in self._extras]),)
-		return rep
+		return(str(self))
 	
 	def write(self, stream, header=None):
-		#if header is None:
-		#	header = "bin\tbin.mid\tcount\tdensity\n"
-		#stream.write(header)
 		stream.write(str(self))
 
 	def total(self):
-		return sum(self.bins) + len(self.extras)
+		return self._total_count
 	
 	@property
 	def extras(self):
-		return self._extras[:]
-
+		for x in self._extras:
+			yield x
+	
+	@property
+	def bins(self):
+		width = self._bin_width
+		for (bi, b) in enumerate(self._bins):
+			print bi
+			bin_mid = self._min_val + width*(bi+0.5)
+			bini = HistogramBin(bin_mid, width, b)
+			yield bini
+			
 
 class Summary:
 	def __init__(self):
