@@ -26,10 +26,12 @@ def weighted_choice(choices):
 	assert False, "Shouldn't get here"
   
 class HistogramBin(object):
-	def __init__(self, mid, width, count):
+	def __init__(self, mid, width, count, total, cumcount):
 		self._mid = mid
 		self._width = width
 		self._count = count
+		self._total = total
+		self._cumcount = cumcount
 	
 	@property
 	def lower(self):
@@ -44,8 +46,20 @@ class HistogramBin(object):
 		return self._count
 	
 	@property
+	def density(self):
+		return self._count/float(self._total)
+	
+	@property
 	def mid(self):
 		return self._mid
+
+	@property
+	def cum(self):
+		return self._cumcount
+
+	@property
+	def cumdensity(self):
+		return self._cumcount/float(self._total)
 
 class Histogram:
 	def __init__(self, vals=None, n_bins=0):
@@ -113,9 +127,12 @@ class Histogram:
 	@property
 	def bins(self):
 		width = self._bin_width
+		total = self._total_count
+		cum = 0
 		for (bi, b) in enumerate(self._bins):
 			bin_mid = self._min_val + width*(bi+0.5)
-			bini = HistogramBin(bin_mid, width, b)
+			cum += b
+			bini = HistogramBin(bin_mid, width, b, total, cum)
 			yield bini
 			
 
