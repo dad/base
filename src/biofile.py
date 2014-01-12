@@ -578,6 +578,10 @@ def firstField(x):
 	h = x.split()[0].strip()
 	return h
 
+def secondField(x):
+	h = x.split()[1].strip()
+	return h
+
 class FASTAEntry(object):
 	def __init__(self, header, sequence):
 		self.header = header
