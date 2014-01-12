@@ -49,14 +49,16 @@ class HistogramBin(object):
 
 class Histogram:
 	def __init__(self, vals=None, n_bins=0):
-		self._bins = [0]
-		self._min_val = 0.0
-		self._max_val = 1.0
-		self._bin_width = 1.0
-		self._extras = []
-		self._total_count = 0
 		if not vals is None:
 			self.init(min(vals), max(vals), n_bins)
+			self.add(vals)
+		else:
+			self._bins = [0]*n_bins
+			self._min_val = 0.0
+			self._max_val = 1.0
+			self._bin_width = 1.0
+			self._extras = []
+			self._total_count = 0
 
 	def init(self, min_val, max_val, n_bins):
 		assert n_bins > 0
