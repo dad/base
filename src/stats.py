@@ -112,7 +112,6 @@ class Histogram:
 	def bins(self):
 		width = self._bin_width
 		for (bi, b) in enumerate(self._bins):
-			print bi
 			bin_mid = self._min_val + width*(bi+0.5)
 			bini = HistogramBin(bin_mid, width, b)
 			yield bini
