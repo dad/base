@@ -159,11 +159,15 @@ def defaultHeader(header_flds):
 
 class LineCache:
 	"""Class for caching lines."""
-	def __init__(self, instream, comment_str='#'):
+	def __init__(self, instream, comment_str='#', save_comments=False):
 		self.cache = []
 		self.instream = instream
 		self.cache_size = 100 # lines
 		self.comment_str = comment_str
+		self.comment_cache = None
+		self._save_comments = save_comments
+		if save_comments:
+			self.comment_cache = []
 		self.refill()
 
 	def add(self, line):
@@ -192,7 +196,16 @@ class LineCache:
 			else:
 				if not line.strip().startswith(self.comment_str):
 					self.add(line)
+				else:
+					if self._save_comments:
+						self.comment_cache.append(line)
 		return eof
+	
+	def popcomment(self):
+		res = None
+		if len(self.comment_cache) > 0:
+			res = self.comment_cache.pop()
+		return res
 
 	def getLine(self, index):
 		eof = False
@@ -250,13 +263,14 @@ class DelimitedLineReader:
 	"""
 	handler_dict = {"s":str, "f":naFloatParser, "d":naIntParser}
 
-	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=False, comment_str="#", custom_handler_dict=None, header_name_processor=basicHeaderFixer):
+	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=False, comment_str="#", save_comments=False, custom_handler_dict=None, header_name_processor=basicHeaderFixer):
 		self.infile = in_file
 		self.delim = sep
 		self.strip = strip
 		self.comment_str = comment_str
 		# Data
 		self.cache = LineCache(self.infile, comment_str=self.comment_str)
+		self.comment_cache = None
 		self.cur_flds = None
 		self.cur_line = None
 		self.n_lines_read = 0
