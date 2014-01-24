@@ -381,7 +381,7 @@ barplot.err <- function(x, lower=x, upper=x, xlim=NULL, ylim=NULL, horiz=FALSE, 
 	invisible(bp)
 }
 
-plot.err <- function(x, y=NULL, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, add=FALSE, log='', col='black', bar.col=col, type='p', ...) {
+plot.err <- function(x, y=NULL, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NULL, add=FALSE, log='', col='black', bar.col=NULL, type='p', ...) {
 	# If y is NULL, assume this is a dataframe with appropriate columns
 	if (is.null(y)) {
 		x.lower <- x$x.lower
@@ -395,9 +395,9 @@ plot.err <- function(x, y=NULL, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.uppe
 	if (is.null(x.upper)) x.upper = x
 	if (is.null(y.lower)) y.lower = y
 	if (is.null(y.upper)) y.upper = y
-	#if (is.null(bar.col)) {
-	#	bar.col <- par("col")
-	#}
+	if (is.null(bar.col)) {
+		bar.col <- col
+	}
 	if (!add) {
 		plot(c(x.lower,x.upper), c(y.lower,y.upper), type='n', log=log, ...)
 	}
