@@ -1419,8 +1419,21 @@ pcor <- function(c, prefix="") {
 	cat(prefix, c$data.name, ": r=", format(c$estimate,digits=3), ", P=", format(c$p.value,digits=3), ", N=", c$N, "\n", sep="")
 }
 
-pstat <- function(c, prefix="") {
-	cat(prefix, c$data.name, ": stat=", format(c$statistic,digits=3), ", P=", format(c$p.value,digits=3), "\n", sep="")
+pstat <- function(testres, prefix="") {
+	line = paste(prefix, testres$data.name, sep='')
+	if (!is.null(testres$alternative)) {
+		line = paste(line, " alternative=", testres$alternative, sep='')
+	}
+	if (!is.null(testres$statistic)) {
+		line = paste(line, " statistic=", format(testres$statistic,digits=3), sep='')
+	}
+	if (!is.null(testres$df)) {
+		line = paste(line, " df=", testres$df, sep='')
+	}
+	if (!is.null(testres$p.value)) {
+		line = paste(line, " P=", format(testres$p.value,digits=3), sep='')
+	}
+	cat(line, "\n", sep="")
 }
 
 cortest <- function(x,y, method="spearman", exact=FALSE, log=F, ...) {
