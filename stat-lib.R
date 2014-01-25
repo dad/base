@@ -73,8 +73,6 @@ geo.mean <- function(x, na.rm=FALSE){
 	res
 }
 
-
-
 # From psych library
 count.pairwise <- function (x, y = NULL) {
 	if (is.null(y)) {
@@ -86,6 +84,7 @@ count.pairwise <- function (x, y = NULL) {
 	return(n)
 }
 
+# Spearman's correction for attenuation in a correlation coefficient.
 cor.sp <- function(x, x2=NULL, y=NULL, y2=NULL, method='pearson', use='pairwise.complete.obs', log=FALSE, na.rm=FALSE) {
 	# Formula: r_corrected = sqrt[ r(x1,y1)*r(x2,y2) / (r(x1,x2)*r(y1,y2)) ]
 	
@@ -127,19 +126,17 @@ cor.sp <- function(x, x2=NULL, y=NULL, y2=NULL, method='pearson', use='pairwise.
     } else {
       denom <- sqrt(r['x1','x2']*r['y1','y2'])
       if (denom>0) {
+      	# Calculate the two estimates of the corrected correlation;
+      	# their geometric mean is the final estimate
 		r.sp1 <- sqrt(r['x1','y1']*r['x2','y2'])/denom
 		r.sp2 <- sqrt(r['x1','y2']*r['x2','y1'])/denom
 		r.sp <- sqrt(r.sp1*r.sp2)
       }
     }
 	data.name <- paste(fnstr.beg, "x, y", fnstr.end)
-	#data.name <- paste(fnstr.beg, deparse(substitute(x1)), fnstr.end, ",",
-	#	fnstr.beg, deparse(substitute(x2)), fnstr.end, ",",
-	#	fnstr.beg, deparse(substitute(y1)), fnstr.end, ",",
-	#	fnstr.beg, deparse(substitute(y2)), fnstr.end)
 	
 	r.range <- c(min(r.sp1,r.sp2), max(r.sp1,r.sp2))
-	# Confidence interval -- assume Gaussian
+	# Confidence interval -- assume Gaussian, 95% CI = 1.96 SD
 	sdr <- sd(r.range)
 	conf.int <- NULL
 	if (!is.na(sdr)) {
@@ -155,70 +152,8 @@ cor.sp <- function(x, x2=NULL, y=NULL, y2=NULL, method='pearson', use='pairwise.
       r.unc <- median(c(r['x1','y1'], r['x2','y2'],r['x1','y2'], r['x2','y1']))
     }
 
+	# Note: P value is undefined/inappropriate for corrected correlations
 	list(estimate=r.sp, N=nrow(d), range=r.range, p.value=NA, conf.int=conf.int, data.name=data.name, r.uncorrected=r.unc, raw=r)
-}
-
-# Spearman's correction for attenuation in a correlation coefficient.
-rcorr.sp <- function(x, y, method='pearson', use='pairwise.complete.obs', within.x=colnames(x), within.y=colnames(y)) {
-	x.pairnames <- combn(colnames(x),2)
-	y.pairnames <- combn(colnames(y),2)
-	within.x.pairnames <- combn(within.x,2)
-	within.y.pairnames <- combn(within.y,2)
-	res.r <- matrix(NA, nrow=ncol(x.pairnames), ncol=ncol(y.pairnames))
-	rownames(res.r) <- pair.names(colnames(x))
-	colnames(res.r) <- pair.names(colnames(y))
-	res.n <- res.r
-	res.rel <- res.r
-	res.relx <- res.r
-	res.rely <- res.r
-	res.withinx <- res.r
-	res.withiny <- res.r
-	res.unc <- res.r
-	res.id <- res.r
-	res.id.x1 <- res.r
-	res.id.x2 <- res.r
-	res.id.y1 <- res.r
-	res.id.y2 <- res.r
-	# Prepare correlation matrices from which we'll assemble estimates
-	r.x <- cor(x, method=method, use=use)
-	r.y <- cor(y, method=method, use=use)
-	r.xy <- cor(x, y, method=method, use=use)
-	r.n <- count.pairwise(x, y)
-	
-	for (xi in 1:ncol(x.pairnames)) {
-		for (yj in 1:ncol(y.pairnames)) {
-			xrow <- x.pairnames[,xi]
-			xwith <- within.x.pairnames[,xi]
-			#print(xrow)
-			ycol <- y.pairnames[,yj]
-			ywith <- within.y.pairnames[,yj]
-			#rxy <- mean(c(r.xy[xrow[1], ycol[1]], r.xy[xrow[1], ycol[2]], r.xy[xrow[2], ycol[1]], r.xy[xrow[2], ycol[2]]))
-			# Geometric mean of observed correlations
-			rxy <- (prod(c(r.xy[xrow[1], ycol[1]], r.xy[xrow[1], ycol[2]], r.xy[xrow[2], ycol[1]], r.xy[xrow[2], ycol[2]])))^(0.25)
-			# Reliability of X
-			rxx <- r.x[xrow[1], xrow[2]]
-			# Reliability of Y
-			ryy <- r.y[ycol[1], ycol[2]]
-			res.r[xi,yj] <- rxy/sqrt(rxx*ryy)
-			res.unc[xi,yj] <- rxy
-			res.rel[xi,yj] <- sqrt(rxx*ryy)
-			res.relx[xi,yj] <- rxx
-			res.rely[xi,yj] <- ryy
-			res.withinx[xi,yj] <- (xwith[1]==xwith[2])
-			res.withiny[xi,yj] <- (ywith[1]==ywith[2])
-			#res.n[xi,yj] <- (prod(c(r.n[xrow[1], ycol[1]], r.n[xrow[1], ycol[2]], r.n[xrow[2], ycol[1]], r.n[xrow[2], ycol[2]])))^(0.25)
-			res.n[xi,yj] <- min(c(r.n[xrow[1], ycol[1]], r.n[xrow[1], ycol[2]], r.n[xrow[2], ycol[1]], r.n[xrow[2], ycol[2]]))
-			res.id[xi,yj] <- paste(paste(xrow),paste(ycol),collapse=' ')
-			res.id.x1[xi,yj] <- xrow[1]
-			res.id.x2[xi,yj] <- xrow[2]
-			res.id.y1[xi,yj] <- ycol[1]
-			res.id.y2[xi,yj] <- ycol[2]
-		}
-	}
-	data.frame(r=as.vector(res.r), n=as.vector(res.n), r.unc=as.vector(res.unc), rel=as.vector(res.rel), 
-		relx=as.vector(res.relx), rely=as.vector(res.rely), 
-		withinx=as.vector(res.withinx), withiny=as.vector(res.withiny), 
-		id=as.vector(res.id), id.x1=as.vector(res.id.x1), id.x2=as.vector(res.id.x2), id.y1=as.vector(res.id.y1), id.y2=as.vector(res.id.y2))
 }
 
 
