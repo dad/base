@@ -593,7 +593,7 @@ v2col <- function(v, comps, map=c("hsv","rgb")) {
 		switch(match.arg(map,coloropts), 
 			hsv=hsv(np[1],np[2],np[3]), # Hue, saturation, brightness/value model
 			rgb=rgb(np[1],np[2],np[3], maxColorValue=1)) # Red, green, blue model
-	} else { # matrix
+	} else { # matrix, use vectorized version
 		v2col.vec(v, comps, map)
 	}
 }
