@@ -505,7 +505,7 @@ llm <- function(form, data=NULL, log=T, na.rm=F, ...) {
 }
 
 charlist <- function(x,sep='') {
-	t(sapply(x, function(m) {unlist(strsplit(m,sep))}))
+	t(sapply(x, function(m) {unlist(strsplit(m,split=sep))}, USE.NAMES=FALSE))
 }
 
 ## Lower triangle
@@ -562,6 +562,55 @@ pcor.pc <- function(x, y, z.mat, z.indices=NULL, method='s', ...) {
   res$eig <- e
   class(res) <- "pcor"
   res
+}
+
+# Functions for mapping vectors to colors
+pc.score <- function(x, mat) {
+	# Score vectors by projecting them on principal components given by mat
+	if (is.null(dim(x))) { # vector
+		res <- x %*% mat
+	} else { # matrix
+		res <- apply(x, 1, function(s) {s %*% mat})
+	}
+	res
+}
+
+normv <- function(x) {
+	# Normalize a vector to unit length
+	x/sqrt(sum(x*x))
+}
+
+v2col <- function(v, comps, map=c("hsv","rgb")) {
+	if (is.null(dim(v))) { # vector
+		# Project onto principal components
+		p <- pc.score(v, comps)
+		# Grab first three loadings and normalize to unit vector
+		np <- normv(p[1:3])
+		# Map from [-1,1] entries to [0,1] entries
+		np <- (np+1)/2
+		# Match the color model
+		coloropts <- c("hsv","rgb")
+		switch(match.arg(map,coloropts), 
+			hsv=hsv(np[1],np[2],np[3]), # Hue, saturation, brightness/value model
+			rgb=rgb(np[1],np[2],np[3], maxColorValue=1)) # Red, green, blue model
+	} else { # matrix
+		v2col.vec(v, comps, map)
+	}
+}
+
+v2col.vec <- function(v, comps, map=c("hsv","rgb")) {
+	# Project onto principal components
+	p <- pc.score(v, comps)
+	# Grab first three loadings and normalize to unit vector
+	np <- apply(p, 2, function(m) {
+		normv(m[1:3])})
+	# Map from [-1,1] entries to [0,1] entries
+	np <- (np+1)/2
+	# Match the color model
+	coloropts <- c("hsv","rgb")
+	switch(match.arg(map,coloropts), 
+		hsv=apply(np, 2, function(m){hsv(m[1],m[2],m[3])}), # Hue, saturation, brightness/value model
+		rgb=apply(np, 2, function(m){rgb(m[1],m[2],m[3], maxColorValue=1)})) # Red, green, blue model
 }
 
 scale.if.numeric <- function(x, ...) {
