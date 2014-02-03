@@ -598,12 +598,15 @@ v2col <- function(v, comps, map=c("hsv","rgb")) {
 	}
 }
 
+# Vectorized version of v2col
+# Input matrix v assumed to be m x n
+# Principal component eigenvectors n x n
+# Output is m colors
 v2col.vec <- function(v, comps, map=c("hsv","rgb")) {
 	# Project onto principal components
 	p <- pc.score(v, comps)
 	# Grab first three loadings and normalize to unit vector
-	np <- apply(p, 2, function(m) {
-		normv(m[1:3])})
+	np <- apply(p, 2, function(m) {normv(m[1:3])})
 	# Map from [-1,1] entries to [0,1] entries
 	np <- (np+1)/2
 	# Match the color model
