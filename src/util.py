@@ -1,7 +1,38 @@
 import os, random, string, sys, math, traceback, unittest
-import time, datetime
+import time, datetime, collections
 #import pytz
 import na
+
+class listdict(collections.MutableMapping):
+	def __init__(self, thedict=None):
+		self._dict = {}
+		if not thedict is None:
+			for (k,v) in thedict.items():
+				self._dict[k] = [v]
+	
+	def __getitem__(self, key):
+		res = []
+		try:
+			res = self._dict[key]
+		except KeyError:
+			self._dict[key] = res
+		return res
+	
+	def __setitem__(self, key, value):
+		if isinstance(value,list):
+			self._dict[key] = value
+		else:
+			self._dict[key] = [value]
+	
+	def __delitem__(self, key):
+		del self._dict[key]
+	
+	def __len__(self):
+		return len(self._dict)
+	
+	def __iter__(self):
+		for it in self._dict:
+			yield it
 
 # Float equality.  On my system (WinXP, Python 2.6), smallest distinguishable float difference is 7.45e-9.
 def feq(f1,f2,eps=1e-8):

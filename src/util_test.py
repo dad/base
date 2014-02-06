@@ -402,6 +402,26 @@ def makeFile(fname, headers, fld_types, n_lines, sep, na_prob, first_lines=None,
 	outf.close()
 	return fname
 
+
+class test019(unittest.TestCase):
+	"""listdict"""
+	def test_run(self):
+		ld = util.listdict()
+		ld['a'].append(1)
+		ld['a'].append(2)
+		self.assertTrue(ld['a'] == [1,2])
+
+class test020(unittest.TestCase):
+	"""listdict initialization"""
+	def test_run(self):
+		d = {'a':1, 'b':2}
+		ld = util.listdict(d)
+		ld['a'].append(2)
+		self.assertTrue(ld['a'] == [1,2])
+		self.assertTrue(ld['b'] == [2])
+
+
+
 if __name__=="__main__":
 	test_printTiming()
 	unittest.main(verbosity=2)
