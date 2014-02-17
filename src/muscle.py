@@ -31,7 +31,7 @@ def alignSequences(seq_list, max_iters=16, exepath="~/develop/muscle3.8.31/muscl
 		if not os.path.isfile(os.path.expanduser(exepath)):
 			raise MuscleError, "Can't find muscle executable at {}".format(os.path.expanduser(exepath))
 		else:
-			raise MuscleError, "Muscle error code %d" % error
+			raise MuscleError, "Muscle error code {:d}".format(error)
 
 def alignGeneFromProtein(gene, prot_align):
 	j = 0
