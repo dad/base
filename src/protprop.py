@@ -25,8 +25,10 @@ class ProteinProperties(object):
 			res = proportion-1.0 # more clearly, -1 * (1-proportion)
 		return res
 
-	def getCharge(self, sequence, pH):
-		protein_charge = self._aminoAcidCharge('N-term', pH) + self._aminoAcidCharge('C-term', pH)
+	def getCharge(self, sequence, pH, include_termini=True):
+		protein_charge = 0.0
+		if include_termini:
+			protein_charge += self._aminoAcidCharge('N-term', pH) + self._aminoAcidCharge('C-term', pH)
 		for aa in self.charges.keys():
 			protein_charge += sequence.count(aa) * self._aminoAcidCharge(aa, pH)
 		return protein_charge
