@@ -102,33 +102,39 @@ load.maxquant.data.triple <- function(control.filename) {
 	run.data <- lapply(1:nrow(run.files), function(id) {
 		x <- run.files[id,]
 		fname <- x$filename
-		cat("Reading ", fname, ";", sep='')
-		res <- read.delim(fname, comment.char='#', stringsAsFactors=FALSE)
+		cat("Reading ", fname, sep='')
+		raw <- read.delim(fname, comment.char='#', stringsAsFactors=FALSE)
+		res <- NULL
 		# Assign intensities
 		# Assign ratios, inverting if necessary
-		for (irnn in 1:3) {
+		n.fractions <- length(which(x[,paste('fraction',1:3,sep='')]!='NA'))
+		cat(" (", n.fractions, " fractions)", sep='')
+		for (irnn in 1:n.fractions) {
 			fracstr <- paste('fraction',irnn,sep='')
 			if (!is.na(x[[fracstr]])) {
-				res[[p.0('intensity',irnn)]] <- res[[p.0('intensity',tolower(x[[fracstr]]))]]
-			}
-			rnn <- combn(1:3,2)[,irnn]
-			rstr <- tolower(paste(x[[paste('fraction',rnn[1],sep='')]],x[[paste('fraction',rnn[2],sep='')]],sep=''))
-			print(rstr)
-			if (rstr %in% c('hl','hm','ml')) { # MaxQuant native ratio orientation
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- res[[p.0('ratio',rstr)]]
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- res[[p.0('ratio',rstr,'count')]]
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'sd')]] <- res[[p.0('ratio',rstr,'sd')]]
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'normalized')]] <- res[[p.0('ratio',rstr,'normalized')]]
-			} else { # Invert native ratio orientation
-				stopifnot(rstr %in% c('lh','mh','lm'))
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- 1/res[[p.0('ratio',strReverse(rstr))]]
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- res[[p.0('ratio',strReverse(rstr),'count')]]
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'sd')]] <- res[[p.0('ratio',strReverse(rstr),'sd')]]
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'normalized')]] <- 1/res[[p.0('ratio',strReverse(rstr),'normalized')]]
+				res[[p.0('intensity',irnn)]] <- raw[[p.0('intensity',tolower(x[[fracstr]]))]]
 			}
 		}
+		ratio.combs <- combn(1:n.fractions,2)
+		for (irnn in 1:ncol(ratio.combs)) {
+			rnn <- ratio.combs[,irnn]
+			rstr <- tolower(paste(x[[paste('fraction',rnn[1],sep='')]],x[[paste('fraction',rnn[2],sep='')]],sep=''))
+			#print(rstr)
+			if (rstr %in% c('hl','hm','ml')) { # MaxQuant native ratio orientation
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- raw[[p.0('ratio',rstr)]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- raw[[p.0('ratio',rstr,'count')]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'sd')]] <- raw[[p.0('ratio',rstr,'sd')]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'normalized')]] <- raw[[p.0('ratio',rstr,'normalized')]]
+			} else { # Invert native ratio orientation
+				stopifnot(rstr %in% c('lh','mh','lm'))
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- 1/raw[[p.0('ratio',strReverse(rstr))]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- raw[[p.0('ratio',strReverse(rstr),'count')]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'sd')]] <- raw[[p.0('ratio',strReverse(rstr),'sd')]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'normalized')]] <- 1/raw[[p.0('ratio',strReverse(rstr),'normalized')]]
+			}
+		}
+		res <- data.frame(orf=raw$orf, res)
 		cat(" ", nrow(res),"lines\n", sep=' ')
-		print(names(res))
 		res
 		})
 	names(run.data) <- run.files$alias
@@ -149,13 +155,14 @@ load.maxquant.data.triple <- function(control.filename) {
 	names(run.data) <- run.files$alias
 
 	# Merge data across experiments
-	#merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,], yres$sL[yeast.match,], yres$raw[yeast.match,c(yres$fields$prot, yres$fields$mrna)])
-	merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,c('gene','mw')])
-	compare.flds <- c("ratio.12", 'ratio.12.normalized', 'ratio.12.sd',"ratio.12.count",
-		"ratio.13", 'ratio.13.normalized', 'ratio.13.sd',"ratio.13.count",
-		"ratio.23", 'ratio.23.normalized', 'ratio.23.sd',"ratio.23.count",
-		"intensity", "intensity.1","intensity.2","intensity.3","n.proteins","n.peptides","ms.ms.count")
+	merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,], yres$sL[yeast.match,], yres$raw[yeast.match,c(yres$fields$prot, yres$fields$mrna)])
+	#merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,c('gene','mw')])
+	#compare.flds <- c("ratio.12", 'ratio.12.normalized', 'ratio.12.sd',"ratio.12.count",
+	#	"ratio.13", 'ratio.13.normalized', 'ratio.13.sd',"ratio.13.count",
+	#	"ratio.23", 'ratio.23.normalized', 'ratio.23.sd',"ratio.23.count",
+	#	"intensity", "intensity.1","intensity.2","intensity.3","n.proteins","n.peptides","ms.ms.count")
 	for (ri in 1:length(run.data)) {
+		compare.flds <- colnames(run.data[[ri]])
 	  run.flds <- paste(compare.flds,ri,sep='.')
 	  merged.sir[,run.flds] <- run.data[[ri]][,compare.flds]
 	}
