@@ -133,7 +133,7 @@ load.maxquant.data.triple <- function(control.filename) {
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'normalized')]] <- 1/raw[[p.0('ratio',strReverse(rstr),'normalized')]]
 			}
 		}
-		res <- data.frame(orf=raw$orf, res)
+		res <- data.frame(orf=raw$orf, res, raw[,c("n.proteins","n.peptides","ms.ms.count")])
 		cat(" ", nrow(res),"lines\n", sep=' ')
 		res
 		})
