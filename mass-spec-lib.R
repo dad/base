@@ -95,7 +95,10 @@ load.maxquant.data <- function(control.filename) {
 strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse="")
 
 # Objective: with H,M,L specified for fractions 1,2,3
-load.maxquant.data.triple <- function(control.filename) {
+#alias	filename	description	fraction1	fraction2	fraction3
+#30C MDY748	../data/ms/mdy748-ss.clar.72.150-erlic.txt	NA	L	H	NA
+#30C BY4741	../data/ms/by4741-30C.txt	NA	M	H	L
+load.maxquant.data.triple <- function(control.filename, additional.fields=c("n.proteins","n.peptides","ms.ms.count")) {
 	# Read in the data
 	run.files <- read.delim(control.filename, comment.char='#', stringsAsFactors=FALSE)
 
@@ -119,7 +122,6 @@ load.maxquant.data.triple <- function(control.filename) {
 		for (irnn in 1:ncol(ratio.combs)) {
 			rnn <- ratio.combs[,irnn]
 			rstr <- tolower(paste(x[[paste('fraction',rnn[1],sep='')]],x[[paste('fraction',rnn[2],sep='')]],sep=''))
-			#print(rstr)
 			if (rstr %in% c('hl','hm','ml')) { # MaxQuant native ratio orientation
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- raw[[p.0('ratio',rstr)]]
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- raw[[p.0('ratio',rstr,'count')]]
@@ -133,7 +135,8 @@ load.maxquant.data.triple <- function(control.filename) {
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'normalized')]] <- 1/raw[[p.0('ratio',strReverse(rstr),'normalized')]]
 			}
 		}
-		res <- data.frame(orf=raw$orf, res, raw[,c("n.proteins","n.peptides","ms.ms.count")])
+		# Append remaining non-label-specific fields
+		res <- data.frame(orf=raw$orf, res, raw[,additional.fields])
 		cat(" ", nrow(res),"lines\n", sep=' ')
 		res
 		})
@@ -155,16 +158,11 @@ load.maxquant.data.triple <- function(control.filename) {
 	names(run.data) <- run.files$alias
 
 	# Merge data across experiments
-	merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,], yres$sL[yeast.match,], yres$raw[yeast.match,c(yres$fields$prot, yres$fields$mrna)])
-	#merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,c('gene','mw')])
-	#compare.flds <- c("ratio.12", 'ratio.12.normalized', 'ratio.12.sd',"ratio.12.count",
-	#	"ratio.13", 'ratio.13.normalized', 'ratio.13.sd',"ratio.13.count",
-	#	"ratio.23", 'ratio.23.normalized', 'ratio.23.sd',"ratio.23.count",
-	#	"intensity", "intensity.1","intensity.2","intensity.3","n.proteins","n.peptides","ms.ms.count")
+	merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,], yres$sL[yeast.match,])
 	for (ri in 1:length(run.data)) {
 		compare.flds <- colnames(run.data[[ri]])
-	  run.flds <- paste(compare.flds,ri,sep='.')
-	  merged.sir[,run.flds] <- run.data[[ri]][,compare.flds]
+		run.flds <- paste(compare.flds,ri,sep='.')
+		merged.sir[,run.flds] <- run.data[[ri]][,compare.flds]
 	}
 	merged.sir
 }
