@@ -6,6 +6,13 @@
 # For pcor functions
 source("~/research/lib/pcor.R")
 
+# From Paul Tol: http://www.sron.nl/~pault/colourschemes.pdf
+tol.color.values <- c('#332288','#88ccee','#44aa99','#117733','#999933','#ddcc77','#cc6677','#882255','#aa4499')
+tol.col <- function(n) {
+	colorRampPalette(tol.color.values, space='rgb')(n)
+}
+myrainbow <- function(n) { tol.col(n) }
+
 dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="svg", ...) {
 	if (output.type=='pdf') {
 		full.fname = paste(fdir,fname,".pdf",sep="")
@@ -1845,7 +1852,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 	if (!is.list(x)) {
 		x <- list(x)
 	}
-	if (is.null(col)) {col <- rainbow(length(x))}
+	if (is.null(col)) {col <- myrainbow(length(x))}
 	## Extend properties into vectors, if necessary
 	cols <- as.vector(replicate(length(x)/length(col) + 1,col))
 	ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
@@ -1937,7 +1944,7 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='SJ',
 	#cat("h1\n")
 	## Colors
 	if (is.null(col)) {
-		col <- rainbow(length(x))
+		col <- myrainbow(length(x))
 		line.col <- col
 	}
 	## Extend properties into vectors, if necessary
