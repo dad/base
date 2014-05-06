@@ -1,6 +1,11 @@
 import sys, os, math, string, random, argparse
 import stats, util, biofile, mq, na
 
+# Example:
+# extract-triple-evidence.py -e evidence.txt -x experimentname --out output.txt
+# extract-triple-evidence.py -e evidence.txt -x experimentname --unique --out unique-output.txt
+# extract-triple-evidence.py -e evidence.txt -x experiment1 -x experiment2 --merge --out merged-output.txt
+
 if __name__=='__main__':
 	parser = argparse.ArgumentParser(description="Extraction of evidence from MaxQuant evidence files")
 	parser.add_argument("-i", "--in", dest="in_fname", default=None, help="input filename")
@@ -19,10 +24,8 @@ if __name__=='__main__':
 	parser.add_argument("-u", "--unique", dest="unique_matches", action="store_true", default=False, help="use unique peptides only?")
 	parser.add_argument("--normalize-intensity", dest="normalize_intensity", action="store_true", help="normalize intensity when merging?")
 	parser.add_argument("--normalize-ratio-by", dest="normalize_ratio_by_orf", default=None, help="ORF to use for normalization across runs")
-	#parser.add_argument("--ratio-sig-control", dest="ratio_significance_control", default="ratio_hl_normalized", help="field to use for ratio significance calculations")
 	parser.add_argument("--ratio-sig", dest="ratio_significance_field", default="ratio_hl_normalized", help="field to use for ratio significance calculations")
 	parser.add_argument("--abundance", dest="abundance_field", default="intensity", help="field to use for abundance calculations")
-	#parser.add_argument("--sig-window", dest="ratio_significance_window", type="int", default=300, help="number of nearby proteins to use for ratio significance calculations")
 	options = parser.parse_args()
 
 	# Set up some output
@@ -221,10 +224,6 @@ if __name__=='__main__':
 	prot_list = [(x.id, x) for x in merged_ex.proteins]
 	for (prot_id,prot) in sorted(prot_list):
 		line = '{}'.format(prot_id)
-		#ratio_stats = prot.getHeavyLightRatioSummary()
-		#ratio_norm_stats = prot.getNormalizedHeavyLightRatioSummary()
-		#iratio_stats = prot.getHeavyLightIntensityRatioSummary()
-		#iratio_norm_stats = prot.getNormalizedHeavyLightIntensityRatioSummary()
 		if options.debugging:
 			for pep in prot.peptides:
 				for ratio in pep.heavy_light_normalized_ratio_list:
