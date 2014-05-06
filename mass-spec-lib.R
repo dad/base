@@ -120,15 +120,21 @@ load.maxquant.data.triple <- function(control.filename, additional.fields=c("n.p
 		}
 		ratio.combs <- combn(1:n.fractions,2)
 		for (irnn in 1:ncol(ratio.combs)) {
+			# rnn is ratio.[integer][integer], e.g. ratio.12
 			rnn <- ratio.combs[,irnn]
 			rstr <- tolower(paste(x[[paste('fraction',rnn[1],sep='')]],x[[paste('fraction',rnn[2],sep='')]],sep=''))
+			# Intensity ratio is determined by intensities, which have already been labeled.
+			res[[p.0('iratio',paste(rnn[1],rnn[2],sep=''))]] <- res[[p.0('intensity',rnn[1])]]/res[[p.0('intensity',rnn[2])]]
+			# Ratios must be extracted in the proper orientation
 			if (rstr %in% c('hl','hm','ml')) { # MaxQuant native ratio orientation
+				#cat('native',p.0('ratio',paste(rnn[1],rnn[2],sep='')),p.0('ratio',rstr),'\n')
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- raw[[p.0('ratio',rstr)]]
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- raw[[p.0('ratio',rstr,'count')]]
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'sd')]] <- raw[[p.0('ratio',rstr,'sd')]]
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'normalized')]] <- raw[[p.0('ratio',rstr,'normalized')]]
 			} else { # Invert native ratio orientation
 				stopifnot(rstr %in% c('lh','mh','lm'))
+				#cat('reversed',p.0('ratio',paste(rnn[1],rnn[2],sep='')),p.0('ratio',rstr),'\n')
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- 1/raw[[p.0('ratio',strReverse(rstr))]]
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- raw[[p.0('ratio',strReverse(rstr),'count')]]
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'sd')]] <- raw[[p.0('ratio',strReverse(rstr),'sd')]]
@@ -139,7 +145,7 @@ load.maxquant.data.triple <- function(control.filename, additional.fields=c("n.p
 		res <- data.frame(orf=raw$orf, res, raw[,additional.fields])
 		cat(" ", nrow(res),"lines\n", sep=' ')
 		res
-		})
+	}) # End of loading run.data
 	names(run.data) <- run.files$alias
 
 	# Match everything back to the whole yeast genome dataset
