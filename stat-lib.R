@@ -282,14 +282,27 @@ sderr <- function(x) {
 }
 # Turn data into data.frame with 
 gen.err <- function(x, mean.fn=mean, var.fn=sderr, ...) {
-	if (!is.null(dim(x))) {
+	if (is.list(x)) {
+		xm <- sapply(x, mean.fn, ...)
+		xv <- sapply(x, var.fn, ...)
+	}
+	else if (!is.null(dim(x)) & dim(x)[1]>1) {
 		xm <- unlist(apply(x, 1, mean.fn, ...))
 		xv <- unlist(apply(x, 1, var.fn, ...))
+	} else if (!is.null(dim(x)) & dim(x)[1]==1) {
+		xm <- mean.fn(x, ...)
+		xv <- var.fn(x, ...)
 	} else {
 		xm <- x
 		xv <- 0*x
 	}
-	data.frame(x=xm, x.lower=xm-xv, x.upper=xm+xv)
+	if (any(is.na(xv))) {
+		xv[is.na(xv)] <- 0
+	}
+	res <- data.frame(x=xm, x.lower=xm-xv, x.upper=xm+xv)
+	#print(names(x))
+	rownames(res) <- names(x)
+	res
 }
 
 gen.xy.err <- function(x, y, mean.fn=mean, var.fn=sderr, ...) {

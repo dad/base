@@ -450,8 +450,9 @@ class PeptideQuant3(PeptideQuant):
 		self.medium_light_ratio_list = []
 		self.medium_light_normalized_ratio_list = []
 		self.intensity_m_list = []
+		# Ratios straight from MaxQuant
 		self._ratio_getters = {"hl":self.getHeavyLightRatioSummary, "hm":self.getHeavyMediumRatioSummary, "ml":self.getMediumLightRatioSummary}
-		self._normalized_ratio_getters = {"hl":self.getNormalizedHeavyLightRatioSummary, "hm":self.getNormalizedHeavyMediumRatioSummary, "ml":self.getNormalizedMediumLightRatioSummary}
+		self._normalized_ratio_getters = {"hl":self.getNormalizedHeavyLightRatioSummary, "hm":self.getNormalizedHeavyMediumRatioSummary, "ml":self.getNormalizedMediumLightRatioSummary}		
 
 	def add(self, pep_data):
 		PeptideQuant.add(self, pep_data)
