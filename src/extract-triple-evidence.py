@@ -164,7 +164,7 @@ if __name__=='__main__':
 		pep_outs.write("# {0!s}\n".format(merged_ex))
 		pep_header = "seq\tproteins\tn.proteins"
 		for rat in ['hl','ml','hm']:
-			pep_header += "\tratio.{0}\tratio.{0}.mean\tratio.{0}.normalized\tratio.{0}.normalized.mean\tratio.{0}.normalized.lower.95\tratio.{0}.normalized.upper.95\tratio.{0}.count".format(rat)
+			pep_header += "\tratio.{0}\tratio.{0}.mean\tiratio.{0}\tiratio.{0}.mean\tratio.{0}.normalized\tratio.{0}.normalized.mean\tratio.{0}.normalized.lower.95\tratio.{0}.normalized.upper.95\tratio.{0}.count\tiratio.{0}.count".format(rat)
 		pep_header += "\tintensity\tintensity.h\tintensity.m\tintensity.l\tms.ms.count\tn.fractions\tfractions\n"
 		pep_outs.write(pep_header)
 		n_written = 0
@@ -183,9 +183,12 @@ if __name__=='__main__':
 			output_fields = []
 			for rat in ['hl','ml','hm']:
 				ratio_stats = pep.getRatioSummary(rat)
+				iratio_stats = pep.getIRatioSummary(rat)
 				ratio_norm_stats = pep.getNormalizedRatioSummary(rat)
 				output_fields.append(util.FieldFormatter(ratio_stats.median,"{0:e}"))
 				output_fields.append(util.FieldFormatter(ratio_stats.mean,"{0:e}"))
+				output_fields.append(util.FieldFormatter(iratio_stats.median,"{0:e}"))
+				output_fields.append(util.FieldFormatter(iratio_stats.mean,"{0:e}"))
 				output_fields.append(util.FieldFormatter(ratio_norm_stats.median,"{0:e}"))
 				output_fields.append(util.FieldFormatter(ratio_norm_stats.mean,"{0:e}"))
 				rn_lower_95 = None
@@ -196,6 +199,7 @@ if __name__=='__main__':
 				output_fields.append(util.FieldFormatter(rn_lower_95,"{0:e}"))
 				output_fields.append(util.FieldFormatter(rn_upper_95,"{0:e}"))
 				output_fields.append(util.FieldFormatter(ratio_stats.n,"{0:d}"))
+				output_fields.append(util.FieldFormatter(iratio_stats.n,"{0:d}"))
 			output_fields.append(util.FieldFormatter(pep.intensity,"{0:e}"))
 			output_fields.append(util.FieldFormatter(pep.heavy_intensity,"{0:e}"))
 			output_fields.append(util.FieldFormatter(pep.medium_intensity,"{0:e}"))
@@ -217,7 +221,7 @@ if __name__=='__main__':
 	outs.write("# {0!s}\n".format(merged_ex))
 	header = "orf\tn.proteins\tn.peptides"
 	for rat in ['hl','ml','hm']:
-		header += "\tratio.{0}\tratio.{0}.mean\tratio.{0}.normalized\tratio.{0}.normalized.mean\tratio.{0}.normalized.lower.95\tratio.{0}.normalized.upper.95\tratio.{0}.count\tratio.{0}.sd\tratio.{0}.normalized.sd".format(rat)
+		header += "\tratio.{0}\tratio.{0}.mean\tiratio.{0}\tiratio.{0}.mean\tratio.{0}.normalized\tratio.{0}.normalized.mean\tratio.{0}.normalized.lower.95\tratio.{0}.normalized.upper.95\tratio.{0}.count\tratio.{0}.sd\tiratio.{0}.count\tiratio.{0}.sd\tratio.{0}.normalized.sd".format(rat)
 	header += "\tintensity\tintensity.h\tintensity.m\tintensity.l\tms.ms.count\tratio.significance\n"
 	outs.write(header)
 	n_written = 0
@@ -234,9 +238,12 @@ if __name__=='__main__':
 		output_fields.append(util.FieldFormatter(prot.n_peptides,"{0:d}"))
 		for rat in ['hl','ml','hm']:
 			ratio_stats = prot.getRatioSummary(rat)
+			iratio_stats = prot.getIRatioSummary(rat)
 			ratio_norm_stats = prot.getNormalizedRatioSummary(rat)
 			output_fields.append(util.FieldFormatter(ratio_stats.median,"{0:e}"))
 			output_fields.append(util.FieldFormatter(ratio_stats.mean,"{0:e}"))
+			output_fields.append(util.FieldFormatter(iratio_stats.median,"{0:e}"))
+			output_fields.append(util.FieldFormatter(iratio_stats.mean,"{0:e}"))
 			output_fields.append(util.FieldFormatter(ratio_norm_stats.median,"{0:e}"))
 			output_fields.append(util.FieldFormatter(ratio_norm_stats.mean,"{0:e}"))
 			rn_lower_95 = None
@@ -248,6 +255,8 @@ if __name__=='__main__':
 			output_fields.append(util.FieldFormatter(rn_upper_95,"{0:e}"))
 			output_fields.append(util.FieldFormatter(ratio_stats.n,"{0:d}"))
 			output_fields.append(util.FieldFormatter(ratio_stats.sd,"{0:e}"))
+			output_fields.append(util.FieldFormatter(iratio_stats.n,"{0:d}"))
+			output_fields.append(util.FieldFormatter(iratio_stats.sd,"{0:e}"))
 			output_fields.append(util.FieldFormatter(ratio_norm_stats.sd,"{0:e}"))
 		output_fields.append(util.FieldFormatter(prot.intensity,"{0:e}"))
 		output_fields.append(util.FieldFormatter(prot.heavy_intensity,"{0:e}"))

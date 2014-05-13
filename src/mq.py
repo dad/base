@@ -146,11 +146,16 @@ class ProteinQuant3(ProteinQuant):
 	def __init__(self, id):
 		ProteinQuant.__init__(self, id)
 		self._ratio_getters = {"hl":self.getHeavyLightRatioSummary, "hm":self.getHeavyMediumRatioSummary, "ml":self.getMediumLightRatioSummary}
+		self._iratio_getters = {"hl":self.getHeavyLightIRatioSummary, "hm":self.getHeavyMediumIRatioSummary, "ml":self.getMediumLightIRatioSummary}
 		self._normalized_ratio_getters = {"hl":self.getNormalizedHeavyLightRatioSummary, "hm":self.getNormalizedHeavyMediumRatioSummary, "ml":self.getNormalizedMediumLightRatioSummary}
 
 	def getRatioSummary(self, ratio_string):
 		# Dispatch
 		return self._ratio_getters[ratio_string]()
+
+	def getIRatioSummary(self, ratio_string):
+		# Dispatch
+		return self._iratio_getters[ratio_string]()
 
 	def getNormalizedRatioSummary(self, ratio_string):
 		# Dispatch
@@ -180,6 +185,34 @@ class ProteinQuant3(ProteinQuant):
 	def ratio_ml(self):
 		res = None
 		med = self.getMediumLightRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+		
+	def getHeavyMediumIRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		for pep in self.peptides:
+			acc.addAll(pep.heavy_medium_iratio_list) # EW: work here
+		return acc.summary
+
+	@property
+	def iratio_hm(self):
+		res = None
+		med = self.getHeavyMediumIRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	def getMediumLightIRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		for pep in self.peptides:
+			acc.addAll(pep.medium_light_iratio_list) # EW: work here
+		return acc.summary
+
+	@property
+	def iratio_ml(self):
+		res = None
+		med = self.getMediumLightIRatioSummary().median
 		if not na.isNA(med):
 			res = math.exp(med)
 		return res
@@ -446,25 +479,34 @@ class PeptideQuant3(PeptideQuant):
 	def __init__(self, key):
 		PeptideQuant.__init__(self, key)
 		self.heavy_medium_ratio_list = []
+		self.heavy_medium_iratio_list = []
 		self.heavy_medium_normalized_ratio_list = []
 		self.medium_light_ratio_list = []
+		self.medium_light_iratio_list = []
 		self.medium_light_normalized_ratio_list = []
 		self.intensity_m_list = []
 		# Ratios straight from MaxQuant
 		self._ratio_getters = {"hl":self.getHeavyLightRatioSummary, "hm":self.getHeavyMediumRatioSummary, "ml":self.getMediumLightRatioSummary}
+		self._iratio_getters = {"hl":self.getHeavyLightIRatioSummary, "hm":self.getHeavyMediumIRatioSummary, "ml":self.getMediumLightIRatioSummary}
 		self._normalized_ratio_getters = {"hl":self.getNormalizedHeavyLightRatioSummary, "hm":self.getNormalizedHeavyMediumRatioSummary, "ml":self.getNormalizedMediumLightRatioSummary}		
 
 	def add(self, pep_data):
 		PeptideQuant.add(self, pep_data)
 		self.heavy_medium_ratio_list.append(pep_data.ratio_hm)
+		self.heavy_medium_iratio_list.append(pep_data.intensity_h/pep_data.intensity_m)
 		self.heavy_medium_normalized_ratio_list.append(pep_data.ratio_hm_normalized)
 		self.medium_light_ratio_list.append(pep_data.ratio_ml)
+		self.medium_light_iratio_list.append(pep_data.intensity_m/pep_data.intensity_l)
 		self.medium_light_normalized_ratio_list.append(pep_data.ratio_ml_normalized)
 		self.intensity_m_list.append(pep_data.intensity_m)
 		
 	def getRatioSummary(self, ratio_string):
 		# Dispatch
 		return self._ratio_getters[ratio_string]()
+	
+	def getIRatioSummary(self, ratio_string):
+		# Dispatch
+		return self._iratio_getters[ratio_string]()
 
 	def getNormalizedRatioSummary(self, ratio_string):
 		# Dispatch
@@ -504,6 +546,40 @@ class PeptideQuant3(PeptideQuant):
 	def ratio_count_ml(self):
 		return len(self.medium_light_ratio_list)
 
+	def getHeavyMediumRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		acc.addAll(self.heavy_medium_ratio_list)
+		return acc.summary
+
+	@property
+	def iratio_hm(self):
+		res = None
+		med = self.getHeavyMediumIRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	@property
+	def iratio_count_hm(self):
+		return len(self.heavy_medium_iratio_list)
+
+	def getMediumLightIRatioSummary(self):
+		acc = stats.LogAccumulator(store=True)
+		acc.addAll(self.medium_light_iratio_list)
+		return acc.summary
+
+	@property
+	def iratio_ml(self):
+		res = None
+		med = self.getMediumLightIRatioSummary().median
+		if not na.isNA(med):
+			res = math.exp(med)
+		return res
+
+	@property
+	def iratio_count_ml(self):
+		return len(self.medium_light_iratio_list)
+    
 	def getNormalizedHeavyMediumRatioSummary(self):
 		acc = stats.LogAccumulator(store=True)
 		acc.addAll(self.heavy_medium_normalized_ratio_list)
