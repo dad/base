@@ -128,16 +128,16 @@ load.maxquant.data.triple <- function(control.filename, additional.fields=c("n.p
 			# Ratios must be extracted in the proper orientation
 			if (rstr %in% c('hl','hm','ml')) { # MaxQuant native ratio orientation
 				#cat('native',p.0('ratio',paste(rnn[1],rnn[2],sep='')),p.0('ratio',rstr),'\n')
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- raw[[p.0('ratio',rstr)]]
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- raw[[p.0('ratio',rstr,'count')]]
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'sd')]] <- raw[[p.0('ratio',rstr,'sd')]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- raw[[p.0('iratio',rstr)]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- raw[[p.0('iratio',rstr,'count')]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'sd')]] <- raw[[p.0('iratio',rstr,'sd')]]
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'normalized')]] <- raw[[p.0('ratio',rstr,'normalized')]]
 			} else { # Invert native ratio orientation
 				stopifnot(rstr %in% c('lh','mh','lm'))
 				#cat('reversed',p.0('ratio',paste(rnn[1],rnn[2],sep='')),p.0('ratio',rstr),'\n')
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- 1/raw[[p.0('ratio',strReverse(rstr))]]
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- raw[[p.0('ratio',strReverse(rstr),'count')]]
-				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'sd')]] <- raw[[p.0('ratio',strReverse(rstr),'sd')]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''))]] <- 1/raw[[p.0('iratio',strReverse(rstr))]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'count')]] <- raw[[p.0('iratio',strReverse(rstr),'count')]]
+				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'sd')]] <- raw[[p.0('iratio',strReverse(rstr),'sd')]]
 				res[[p.0('ratio',paste(rnn[1],rnn[2],sep=''),'normalized')]] <- 1/raw[[p.0('ratio',strReverse(rstr),'normalized')]]
 			}
 		}
