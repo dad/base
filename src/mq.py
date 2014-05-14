@@ -152,6 +152,12 @@ class ProteinQuant3(ProteinQuant):
 		# Dispatch
 		return self._ratio_getters[ratio_string]()
 
+	def getIntensityRatioSummary(self, ratio_string):
+		acc = stats.LogAccumulator(store=True)
+		for pep in self.peptides:
+			acc.addAll(pep.getIntensityRatios(ratio_string))
+		return acc.summary
+
 	def getNormalizedRatioSummary(self, ratio_string):
 		# Dispatch
 		return self._normalized_ratio_getters[ratio_string]()
@@ -453,6 +459,8 @@ class PeptideQuant3(PeptideQuant):
 		# Ratios straight from MaxQuant
 		self._ratio_getters = {"hl":self.getHeavyLightRatioSummary, "hm":self.getHeavyMediumRatioSummary, "ml":self.getMediumLightRatioSummary}
 		self._normalized_ratio_getters = {"hl":self.getNormalizedHeavyLightRatioSummary, "hm":self.getNormalizedHeavyMediumRatioSummary, "ml":self.getNormalizedMediumLightRatioSummary}		
+		# Intensities
+		self._intensities = {"h":self.intensity_h_list, "m":self.intensity_m_list, "l":self.intensity_l_list}
 
 	def add(self, pep_data):
 		PeptideQuant.add(self, pep_data)
@@ -465,6 +473,24 @@ class PeptideQuant3(PeptideQuant):
 	def getRatioSummary(self, ratio_string):
 		# Dispatch
 		return self._ratio_getters[ratio_string]()
+	
+	def getIntensityRatios(self, ratio_string):
+		rstr = ratio_string.lower()
+		numerator = self._intensities[rstr[0]]
+		denominator = self._intensities[rstr[1]]
+		n = len(numerator)
+		ratios = [None]*n
+		assert(n==len(denominator))
+		for i in range(n):
+			if denominator[i] >0:
+				ratios[i] = numerator[i]/denominator[i]
+		#print ratios
+		return ratios
+
+	def getIntensityRatioSummary(self, ratio_string):
+		acc = stats.LogAccumulator(store=True)
+		acc.addAll(self.getIntensityRatios(ratio_string))
+		return acc.summary
 
 	def getNormalizedRatioSummary(self, ratio_string):
 		# Dispatch

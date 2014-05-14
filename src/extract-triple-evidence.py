@@ -218,6 +218,7 @@ if __name__=='__main__':
 	header = "orf\tn.proteins\tn.peptides"
 	for rat in ['hl','ml','hm']:
 		header += "\tratio.{0}\tratio.{0}.mean\tratio.{0}.normalized\tratio.{0}.normalized.mean\tratio.{0}.normalized.lower.95\tratio.{0}.normalized.upper.95\tratio.{0}.count\tratio.{0}.sd\tratio.{0}.normalized.sd".format(rat)
+		header += "\tiratio.{0}\tiratio.{0}.mean\tiratio.{0}.count\tiratio.{0}.sd".format(rat)
 	header += "\tintensity\tintensity.h\tintensity.m\tintensity.l\tms.ms.count\tratio.significance\n"
 	outs.write(header)
 	n_written = 0
@@ -249,6 +250,23 @@ if __name__=='__main__':
 			output_fields.append(util.FieldFormatter(ratio_stats.n,"{0:d}"))
 			output_fields.append(util.FieldFormatter(ratio_stats.sd,"{0:e}"))
 			output_fields.append(util.FieldFormatter(ratio_norm_stats.sd,"{0:e}"))
+			
+			iratio_stats = prot.getIntensityRatioSummary(rat)
+			#iratio_norm_stats = prot.getNormalizedRatioSummary(rat)
+			output_fields.append(util.FieldFormatter(iratio_stats.median,"{0:e}"))
+			output_fields.append(util.FieldFormatter(iratio_stats.mean,"{0:e}"))
+			#output_fields.append(util.FieldFormatter(iratio_norm_stats.median,"{0:e}"))
+			#output_fields.append(util.FieldFormatter(iratio_norm_stats.mean,"{0:e}"))
+			#rn_lower_95 = None
+			#rn_upper_95 = None
+			#if not iratio_norm_stats.se is None:
+			#	rn_lower_95 = math.exp(math.log(iratio_norm_stats.mean)-1.96*iratio_norm_stats.se)
+			#	rn_upper_95 = math.exp(math.log(iratio_norm_stats.mean)+1.96*iratio_norm_stats.se)
+			#output_fields.append(util.FieldFormatter(rn_lower_95,"{0:e}"))
+			#output_fields.append(util.FieldFormatter(rn_upper_95,"{0:e}"))
+			output_fields.append(util.FieldFormatter(iratio_stats.n,"{0:d}"))
+			output_fields.append(util.FieldFormatter(iratio_stats.sd,"{0:e}"))
+			#output_fields.append(util.FieldFormatter(iratio_norm_stats.sd,"{0:e}"))
 		output_fields.append(util.FieldFormatter(prot.intensity,"{0:e}"))
 		output_fields.append(util.FieldFormatter(prot.heavy_intensity,"{0:e}"))
 		output_fields.append(util.FieldFormatter(prot.medium_intensity,"{0:e}"))
