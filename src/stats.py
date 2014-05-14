@@ -271,7 +271,7 @@ class LogAccumulator(Accumulator):
 		super(LogAccumulator,self).__init__(x, store)
 	
 	def add(self, x):
-		if not na.isNA(x):
+		if not na.isNA(x) and x>0.0:
 			super(LogAccumulator,self).add(math.log(x))
 			self._nolog_sum += x
 		else:
