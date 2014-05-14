@@ -474,6 +474,7 @@ class PeptideQuant3(PeptideQuant):
 		# Dispatch
 		return self._ratio_getters[ratio_string]()
 	
+	# Intensity ratios: return at the peptide/event level
 	def getIntensityRatios(self, ratio_string):
 		rstr = ratio_string.lower()
 		numerator = self._intensities[rstr[0]]
@@ -484,7 +485,6 @@ class PeptideQuant3(PeptideQuant):
 		for i in range(n):
 			if denominator[i] >0:
 				ratios[i] = numerator[i]/denominator[i]
-		#print ratios
 		return ratios
 
 	def getIntensityRatioSummary(self, ratio_string):
