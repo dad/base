@@ -11,10 +11,10 @@ if __name__=='__main__':
 	parser.add_argument("-i", "--in", dest="in_fname", default=None, help="input filename")
 	parser.add_argument("-o", "--out", dest="out_fname", default=None, help="output filename")
 	parser.add_argument("--peptide-out", dest="peptide_out_fname", default=None, help="peptide output filename")
-	parser.add_argument("--protein-out", dest="protein_out_fname", default=None, help="protein output filename")
-	parser.add_argument("-v", "--invert", dest="invert", default="", \
-					  help="string (Y,T,1 all meaning 'true') indicating, for each experiment, whether to invert heavy/light labels, e.g. " + \
-					  "011 or NYY or FTT indicates that heavy/light ratios in experiment 1 are to be merged with light/heavy ratios in experiments 2 and 3.")
+	#parser.add_argument("--protein-out", dest="protein_out_fname", default=None, help="protein output filename")
+	#parser.add_argument("-v", "--invert", dest="invert", default="", \
+	#				  help="string (Y,T,1 all meaning 'true') indicating, for each experiment, whether to invert heavy/light labels, e.g. " + \
+	#				  "011 or NYY or FTT indicates that heavy/light ratios in experiment 1 are to be merged with light/heavy ratios in experiments 2 and 3.")
 	parser.add_argument("-e", "--evidence", dest="evidence_fnames", action="append", default=[], help="additional evidence files to merge")
 	parser.add_argument("-x", "--experiment", dest="experiments", action="append", default=None, help="experiments to assay")
 	parser.add_argument("-d", "--database", dest="database_fname", default=None, help="filename of FASTA database containing proteins to extract")
@@ -60,10 +60,10 @@ if __name__=='__main__':
 			# If no experiments are specified, we assume invert refers to whole evidence files.
 			ed = mq.EvidenceDescriptor()
 			ed.filename = os.path.expanduser(fname)
-			if not na.isNA(options.invert):
-				ed.invert = (options.invert.lower()[fi] in ['1','y','t'])
-			else:
-				ed.invert = False
+			#if not na.isNA(options.invert):
+			#	ed.invert = (options.invert.lower()[fi] in ['1','y','t'])
+			#else:
+			#	ed.invert = False
 			ed.tags = options.tags
 			evidences.append(ed)
 		else:
@@ -72,9 +72,9 @@ if __name__=='__main__':
 				ed.filename = os.path.expanduser(fname)
 				ed.experiment = options.experiments[xi]
 				ed.invert = False
-				if len(options.invert) > 0:
-					assert len(options.invert) == len(options.experiments)
-					ed.invert = (options.invert.lower()[xi] in ['1','y','t'])
+				#if len(options.invert) > 0:
+				#	assert len(options.invert) == len(options.experiments)
+				#	ed.invert = (options.invert.lower()[xi] in ['1','y','t'])
 				ed.tags = options.tags
 				evidences.append(ed)
 
@@ -164,7 +164,8 @@ if __name__=='__main__':
 		pep_outs.write("# {0!s}\n".format(merged_ex))
 		pep_header = "seq\tproteins\tn.proteins"
 		for rat in ['hl','ml','hm']:
-			pep_header += "\tratio.{0}\tratio.{0}.mean\tratio.{0}.normalized\tratio.{0}.normalized.mean\tratio.{0}.normalized.lower.95\tratio.{0}.normalized.upper.95\tratio.{0}.count".format(rat)
+			pep_header += "\tratio.{0}\tratio.{0}.mean\tratio.{0}.normalized\tratio.{0}.normalized.mean\tratio.{0}.normalized.lower.95\tratio.{0}.normalized.upper.95\tratio.{0}.count\tratio.{0}.sd\tratio.{0}.normalized.sd".format(rat)
+			pep_header += "\tiratio.{0}\tiratio.{0}.mean\tiratio.{0}.count\tiratio.{0}.sd".format(rat)
 		pep_header += "\tintensity\tintensity.h\tintensity.m\tintensity.l\tms.ms.count\tn.fractions\tfractions\n"
 		pep_outs.write(pep_header)
 		n_written = 0
@@ -196,6 +197,15 @@ if __name__=='__main__':
 				output_fields.append(util.FieldFormatter(rn_lower_95,"{0:e}"))
 				output_fields.append(util.FieldFormatter(rn_upper_95,"{0:e}"))
 				output_fields.append(util.FieldFormatter(ratio_stats.n,"{0:d}"))
+				output_fields.append(util.FieldFormatter(ratio_stats.sd,"{0:e}"))
+				output_fields.append(util.FieldFormatter(ratio_norm_stats.sd,"{0:e}"))
+				# Intensity ratios -- no "normalized" ratios here.
+				iratio_stats = pep.getIntensityRatioSummary(rat)
+				output_fields.append(util.FieldFormatter(iratio_stats.median,"{0:e}"))
+				output_fields.append(util.FieldFormatter(iratio_stats.mean,"{0:e}"))
+				output_fields.append(util.FieldFormatter(iratio_stats.n,"{0:d}"))
+				output_fields.append(util.FieldFormatter(iratio_stats.sd,"{0:e}"))
+
 			output_fields.append(util.FieldFormatter(pep.intensity,"{0:e}"))
 			output_fields.append(util.FieldFormatter(pep.heavy_intensity,"{0:e}"))
 			output_fields.append(util.FieldFormatter(pep.medium_intensity,"{0:e}"))
