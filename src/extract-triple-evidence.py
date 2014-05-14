@@ -212,7 +212,7 @@ if __name__=='__main__':
 			output_fields.append(util.FieldFormatter(pep.light_intensity,"{0:e}"))
 			output_fields.append(util.FieldFormatter(pep.msms_count,"{0:d}"))
 			fractions = [str(s) for s in pep.fractions]
-			#output_fields.append(util.FieldFormatter(len(fractions),"{0:d}"))
+			output_fields.append(util.FieldFormatter(len(fractions),"{0:d}"))
 			output_fields.append(util.FieldFormatter(','.join(fractions),"{0}"))
 
 			line += "\t" + "\t".join([str(f) for f in output_fields])
