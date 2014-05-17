@@ -154,6 +154,19 @@ if __name__=='__main__':
 		outs.addStream(outf)
 	else:
 		outs.addStream(sys.stdout)
+	
+	# Write out parameters
+	outs.write("# {}\n".format(util.timestamp()))
+	outs.write("# Parameters:\n")
+	optdict = vars(options)
+	for (k,v) in optdict.items():
+		outs.write("#\t{k}: {v}\n".format(k=k, v=v))
+		
+	# Write out data employed
+	rawfiles = sorted(merged_ex.rawfiles)
+	outs.write("# Raw files used:\n")
+	for rf in rawfiles:
+		outs.write("#\t{}\n".format(rf))
 
 	# Print out peptide data for the merged experiment?
 	pep_outs = util.OutStreams()
@@ -220,11 +233,12 @@ if __name__=='__main__':
 			n_written += 1
 		info_outs.write("# Wrote {0} peptide records to {1}\n".format(n_written, options.peptide_out_fname))
 
-	outs.write("# Merging {} experiments\n".format(len(experiments)))
-	for ex in experiments:
-		outs.write("# {0!s}\n".format(ex))
-	outs.write("# Merged into:\n")
-	outs.write("# {0!s}\n".format(merged_ex))
+	if len(experiments)>1:
+		outs.write("# Merging {} experiments\n".format(len(experiments)))
+		for ex in experiments:
+			outs.write("# {0!s}\n".format(ex))
+		outs.write("# Merged into:\n")
+		outs.write("# {0!s}\n".format(merged_ex))
 	header = "orf\tn.proteins\tn.peptides"
 	for rat in ['hl','ml','hm']:
 		header += "\tratio.{0}\tratio.{0}.mean\tratio.{0}.normalized\tratio.{0}.normalized.mean\tratio.{0}.normalized.lower.95\tratio.{0}.normalized.upper.95\tratio.{0}.count\tratio.{0}.sd\tratio.{0}.normalized.sd".format(rat)

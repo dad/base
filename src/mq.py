@@ -620,6 +620,7 @@ class ExperimentEvidence(object):
 		self.peptide_data = {}
 		self.tracked_modifications = tracked_mods
 		self.unique_matches_only = unique_matches
+		self.rawfiles = set()
 
 	def initFrom(self, ex_desc):
 		self.filename = ex_desc.filename
@@ -665,6 +666,9 @@ class ExperimentEvidence(object):
 				id_flds = flds["leading.razor.protein"].split(';')  # To get the "most likely" protein, in the sense of a protein whose identification is uniquely supported by at least one peptide
 				id_flds = flds["proteins"].split(';')
 				n_prots = len(id_flds)
+				
+				# Get raw file
+				self.rawfiles.add(flds['raw.file'])
 
 				# Get intensities and ratio
 				pep_data = PeptideData3()
