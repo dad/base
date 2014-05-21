@@ -89,7 +89,7 @@ if __name__=='__main__':
 	parser.add_argument("-i", "--in", dest="in_fname", default=None, help="input FASTA filename")
 	parser.add_argument("-s", "--seq", dest="sequence", default=None, help="input sequence")
 	parser.add_argument("-t", "--translate", dest="translate", action="store_true", default=False, help="translate the input sequences?")
-	parser.add_argument("-b", "--begin", dest="begin_aa", type=int, default=0, help="beginning amino acid (1-based)")
+	parser.add_argument("-b", "--begin", dest="begin_aa", type=int, default=1, help="beginning amino acid (1-based)")
 	parser.add_argument("-e", "--end", dest="end_aa", type=int, default=None, help="ending amino acid (1-based, inclusive)")
 	parser.add_argument("-x", "--exclude", dest="exclude", action="store_true", default=False, help="exclude rather than include begin/end region?")
 	parser.add_argument("-a", "--aas", dest="aas", default=None, help="amino acids for frequency counts")
@@ -170,20 +170,22 @@ if __name__=='__main__':
 		if not options.exclude:
 			if not options.end_aa is None and options.end_aa <= len(seq):
 				seq = seq[0:(options.end_aa)]
+			#print seq, seq[(options.begin_aa-1):]
 			seq = seq[(options.begin_aa-1):]
 		else: # Exclude the sequence
 			assert options.end_aa < len(seq)
 			assert options.begin_aa < options.end_aa
 			seq = seq[0:(options.begin_aa-1)] + seq[(options.end_aa):]
 		degapped_seq = seq.replace("-","")
-		#print seq
+		print degapped_seq
 		#print test_seq
+		#print seq
 		line = "#{}\n{}\t{:d}\t{:1.4f}\t{:1.4f}\t{:1.4f}".format(h, biofile.firstField(h), pp.getLength(degapped_seq), pp.getCharge(degapped_seq, options.pH), pp.getIsoelectricPoint(degapped_seq), pp.getHydrophobicity(degapped_seq))
 		if not aas is None:
 			counts = dict(pp.getComposition(degapped_seq, aas))
 			line += '\t' + '\t'.join(["{:1.4f}".format(counts[aa]/float(len(degapped_seq))) for aa in aas]) + '\t' + '\t'.join(["{:d}".format(counts[aa]) for aa in aas])
 		outs.write(line + '\n')
-
+	#print seqs
 	if not options.out_fname is None:
 		outf.close()
 

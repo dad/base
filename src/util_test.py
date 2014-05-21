@@ -7,8 +7,8 @@ def test_printTiming():
 	print 'The next message should show at least 500ms of wait time:\n\t',
 
 class test001(unittest.TestCase):
-	"""infer header types"""
 	def test_run(self):
+		"""infer header types"""
 		# Normal
 		n_lines = 100
 		header_list = ["str","float","int","str"]
@@ -29,8 +29,8 @@ class test001(unittest.TestCase):
 		os.remove(fname)
 
 class test002(unittest.TestCase):
-	"""read through"""
 	def test_run(self):
+		"""read through"""
 		# Normal
 		n_lines = 100
 		header_list = ["str","float","int","str"]
@@ -45,8 +45,8 @@ class test002(unittest.TestCase):
 		os.remove(fname)
 
 class test003(unittest.TestCase):
-	"""header parsing"""
 	def test_run(self):
+		"""header parsing"""
 		# Normal
 		n_lines = 100
 		header_list = ["str","float","int","anotherStr"]
@@ -62,8 +62,8 @@ class test003(unittest.TestCase):
 		return res
 
 class test004(unittest.TestCase):
-	"""infer header types 2"""
 	def test_run(self):
+		"""infer header types 2"""
 		# Normal
 		n_lines = 100
 		header_list = ["str","float","int","str"]
@@ -84,8 +84,8 @@ class test004(unittest.TestCase):
 		os.remove(fname)
 
 class test005(unittest.TestCase):
-	"""lines read"""
 	def test_run(self):
+		"""lines read"""
 		# Normal
 		n_lines = random.randint(10,300)
 		header_list = ["str","float","int","str"]
@@ -103,8 +103,8 @@ class test005(unittest.TestCase):
 		return res
 
 class test006(unittest.TestCase):
-	"""infer header types with NA's"""
 	def test_run(self):
+		"""infer header types with NA's"""
 		# NA's at some frequency -- infer types.
 		n_lines = 100
 		header_list = ["str","float","int","str"]
@@ -128,8 +128,8 @@ class test006(unittest.TestCase):
 		os.remove(fname)
 
 class test007(unittest.TestCase):
-	"""infer header types with NA's in every line"""
 	def test_run(self):
+		"""infer header types with NA's in every line"""
 		# NA's in every line -- infer types.
 		n_lines = 0
 		header_list = ["str","float","int","str"]
@@ -154,8 +154,8 @@ class test007(unittest.TestCase):
 		os.remove(fname)
 
 class test008(unittest.TestCase):
-	"""infer header types with NA's in one full column"""
 	def test_run(self):
+		"""infer header types with NA's in one full column"""
 		# NA's in every line -- infer types.
 		n_lines = 0
 		header_list = ["str","float","int","str"]
@@ -171,8 +171,8 @@ class test008(unittest.TestCase):
 		os.remove(fname)
 
 class test009(unittest.TestCase):
-	"""header processing"""
 	def test_run(self):
+		"""header processing"""
 		# Header processing
 		n_lines = 100
 		header_list = ["int","int.1","int","int"]
@@ -190,8 +190,8 @@ class test009(unittest.TestCase):
 		os.remove(fname)
 
 class test010(unittest.TestCase):
-	"""header processing: custom header processor"""
 	def test_run(self):
+		"""header processing: custom header processor"""
 		# Header processing
 		n_lines = 100
 		header_list = ["Ratio (H/L)","float","int","This + That"]
@@ -207,8 +207,8 @@ class test010(unittest.TestCase):
 		os.remove(fname)
 
 class test011(unittest.TestCase):
-	"""adaptive handler updating"""
 	def test_run(self):
+		"""adaptive handler updating"""
 		# Adaptive field redefinition
 		n_lines = 100
 		header_list = ["float","float","int","str"]
@@ -225,8 +225,8 @@ class test011(unittest.TestCase):
 		os.remove(fname)
 
 class test012(unittest.TestCase):
-	"""comment as last line"""
 	def test_run(self):
+		"""comment as last line"""
 		# Comment as last line
 		n_lines = 10
 		header_list = ["str","float","int","str"]
@@ -244,8 +244,8 @@ class test012(unittest.TestCase):
 		os.remove(fname)
 
 class test013(unittest.TestCase):
-	"""no headers but call to nextDict"""
 	def test_run(self):
+		"""no headers but call to nextDict"""
 		# No headers but call to nextDict
 		n_lines = 10
 		fname = "tmp_no_header.txt"
@@ -261,8 +261,8 @@ class test013(unittest.TestCase):
 		os.remove(fname)
 
 class test014(unittest.TestCase):
-	"""comments as first lines"""
 	def test_run(self):
+		"""comments as first lines"""
 		n_lines = 10
 		header_list = ["str","float","int","str"]
 		fname = "tmp_comment_first.txt"
@@ -278,8 +278,8 @@ class test014(unittest.TestCase):
 		os.remove(fname)
 
 class test015(unittest.TestCase):
-	"""multiple delimiters -- spaces -- with sep=None"""
 	def test_run(self):
+		"""multiple delimiters -- spaces -- with sep=None"""
 		n_lines = 10
 		header_list = ["str","float","int","str"]
 		fname = "tmp_comment_first.txt"
@@ -301,8 +301,8 @@ class test015(unittest.TestCase):
 		os.remove(fname)
 
 class test016(unittest.TestCase):
-	"""iterator over entries"""
 	def test_run(self):
+		"""iterator over entries"""
 		n_lines = 10
 		header_list = ["str","float","int","str"]
 		fname = "tmp_comment_first.txt"
@@ -322,8 +322,8 @@ class test016(unittest.TestCase):
 		os.remove(fname)
 
 class test017(unittest.TestCase):
-	"""iterator over dict entries"""
 	def test_run(self):
+		"""iterator over dict entries"""
 		n_lines = 10
 		header_list = ["str","float","int","str"]
 		fname = "tmp_comment_first.txt"
@@ -344,8 +344,8 @@ class test017(unittest.TestCase):
 		os.remove(fname)
 
 class test018(unittest.TestCase):
-	"""set handler type"""
 	def test_run(self):
+		"""set handler type"""
 		fname = "tmp_types.txt"
 		inf = file(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
@@ -404,16 +404,16 @@ def makeFile(fname, headers, fld_types, n_lines, sep, na_prob, first_lines=None,
 
 
 class test019(unittest.TestCase):
-	"""listdict"""
 	def test_run(self):
+		"""listdict"""
 		ld = util.listdict()
 		ld['a'].append(1)
 		ld['a'].append(2)
 		self.assertTrue(ld['a'] == [1,2])
 
 class test020(unittest.TestCase):
-	"""listdict initialization"""
 	def test_run(self):
+		"""listdict initialization"""
 		d = {'a':1, 'b':2}
 		ld = util.listdict(d)
 		ld['a'].append(2)
