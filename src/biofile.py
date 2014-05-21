@@ -576,6 +576,7 @@ class VCFRecord:
 
 def firstField(x):
 	h = x.split()[0].strip()
+	h = h.split('/')[0].strip()
 	return h
 
 def secondField(x):
