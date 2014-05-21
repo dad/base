@@ -20,8 +20,8 @@ def alignSequences(seq_list, max_iters=16, exepath=const_default_muscle_exepath)
 
 	cmd = "muscle -in {} -out {} -quiet -maxiters {:d}".format(tmp_fasta_file, outfile_name, max_iters)
 	#print cmd
-	print os.path.expanduser(exepath)
-	print exepath
+	#print os.path.expanduser(exepath)
+	#print exepath
 	if not os.path.isfile(os.path.expanduser(exepath)):
 		raise MuscleError, "Can't find muscle executable at {}".format(os.path.expanduser(exepath))
 	error = os.spawnv(os.P_WAIT, exepath, [x for x in cmd.split()])
