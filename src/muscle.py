@@ -1,13 +1,14 @@
 #! python
 
-import sys, os, random, string
-from optparse import OptionParser
+import sys, os, random, string, argparse
 import biofile, util, translate, stats
 
 class MuscleError(Exception):
 	"""MUSCLE alignment error"""
 
-def alignSequences(seq_list, max_iters=16, exepath="~/develop/muscle3.8.31/muscle"):
+const_default_muscle_exepath ="f:/develop/muscle3.8.31/muscle"
+
+def alignSequences(seq_list, max_iters=16, exepath=const_default_muscle_exepath):
 	tmp_fasta_file = "tmp-muscle-in-{}.txt".format(''.join(random.sample(string.ascii_letters, 20)))
 	tmpfile = file(tmp_fasta_file, 'w')
 	# Write out the sequences
@@ -19,7 +20,11 @@ def alignSequences(seq_list, max_iters=16, exepath="~/develop/muscle3.8.31/muscl
 
 	cmd = "muscle -in {} -out {} -quiet -maxiters {:d}".format(tmp_fasta_file, outfile_name, max_iters)
 	#print cmd
-	error = os.spawnv(os.P_WAIT, os.path.expanduser(exepath), [x for x in cmd.split()])
+	print os.path.expanduser(exepath)
+	print exepath
+	if not os.path.isfile(os.path.expanduser(exepath)):
+		raise MuscleError, "Can't find muscle executable at {}".format(os.path.expanduser(exepath))
+	error = os.spawnv(os.P_WAIT, exepath, [x for x in cmd.split()])
 
 	if not error:
 		seq_dict = biofile.readFASTADict(outfile_name)
@@ -58,13 +63,16 @@ def alignProteinFromProtein(prot, prot_align):
 if __name__=='__main__':
 	parser = argparse.ArgumentParser(description="Muscle alignment")
 	parser.add_argument("in_fname", help="input filename")
+	parser.add_argument("-p", "--path", dest="muscle_path", default=const_default_muscle_exepath, help="path to Muscle binary")
 	parser.add_argument("-t", "--translate", dest="translate", action="store_true", default=False, help="translate the input sequences?")
-	parser.add_argument("-o", "--out", dest="out_fname", type="string", default=None, help="output filename")
+	parser.add_argument("-o", "--out", dest="out_fname", default=None, help="output filename")
 	options = parser.parse_args()
 	
 	outs = util.OutStreams()
 	if not options.out_fname is None:
-		outf = file(os.path.expanduser(options.out_fname),'w')
+		fname = os.path.expanduser(options.out_fname)
+		print fname
+		outf = file(fname,'w')
 		outs.addStream(outf)
 	else:
 		outs.addStream(sys.stdout)
@@ -73,7 +81,8 @@ if __name__=='__main__':
 	seqs_to_align = seqs
 	if options.translate:
 		seqs_to_align = [translate.translate(s) for s in seqs]
-	alseqs = alignSequences(seqs_to_align)
+	alseqs = alignSequences(seqs_to_align, exepath=options.muscle_path)
+	#print alseqs
 	if options.translate:
 		alseqs = [alignGeneFromProtein(g, s) for (g,s) in zip(seqs,alseqs)]
 	for (h,s) in zip(headers,alseqs):
