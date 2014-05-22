@@ -437,6 +437,26 @@ class test021(unittest.TestCase):
 		os.remove(fname)
 
 
+class test022(unittest.TestCase):
+	def test_run(self):
+		"""readTable"""
+		fname = "tmp_lightdataframe.txt"
+		inf = file(fname, 'w')
+		inf.write("one\ttwo\tthree\n")
+		inf.write("a\tb\t3\n")
+		inf.write("a\tb\t33\n")
+		inf.close()
+		inf = file(fname, 'r')
+		ldf = util.readTable(inf, header=True)
+		for (ri, flds) in enumerate(ldf.dictrows):
+			if ri == 0:
+				self.assertTrue(flds['three'] == 3)
+			if ri == 1:
+				self.assertTrue(flds['three'] == 33)
+		inf.close()
+		os.remove(fname)
+
+
 
 if __name__=="__main__":
 	test_printTiming()

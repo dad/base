@@ -593,6 +593,11 @@ class LightDataFrame:
 		"""Index by column, given by column_key"""
 		col_index = self._header_lookup[column_key]
 		return self._data[col_index]
+	
+	@property
+	def dictrows(self):
+		for ri in range(self.nrows):
+			yield self.rowDict(ri)
 
 	@property
 	def nrows(self):
