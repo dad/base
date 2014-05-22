@@ -87,6 +87,13 @@ class test007(unittest.TestCase):
 		d = stats.chiSquaredHistogramDistance(a,b)
 		self.assertTrue(d>0.0)
 
+	def testknown(self):
+		"""Histogram distance, known"""
+		a = [1,3]
+		b = [3,1]
+		d = stats.chiSquaredHistogramDistance(a,b)
+		self.assertAlmostEqual(d,1.0)
+
 
 if __name__=='__main__':
 	unittest.main(verbosity=2)
