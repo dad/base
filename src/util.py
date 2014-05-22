@@ -616,14 +616,12 @@ class LightDataFrame:
 		return s
 
 
-def readTable(fname, header=True, sep='\t', header_name_processor=defaultHeader):
-	inf = file(fname,'r')
-	dlr = DelimitedLineReader(inf, header=header, sep=sep, header_name_processor=header_name_processor)
+def readTable(stream, header=True, sep='\t', header_name_processor=defaultHeader):
+	dlr = DelimitedLineReader(stream, header=header, sep=sep, header_name_processor=header_name_processor)
 	header_flds = dlr.getHeader()
 	data_dict = {}
 	initialized = False
-	while not dlr.atEnd():
-		flds = dlr.nextDict()
+	for flds in dlr.dictentries:
 		if not initialized:
 			for h in header_flds:
 				data_dict[h] = [flds[h]]
@@ -631,6 +629,5 @@ def readTable(fname, header=True, sep='\t', header_name_processor=defaultHeader)
 		else:
 			for h in header_flds:
 				data_dict[h].append(flds[h])
-	inf.close()
 	return LightDataFrame(header_flds, [data_dict[h] for h in header_flds])
 

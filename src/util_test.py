@@ -420,6 +420,22 @@ class test020(unittest.TestCase):
 		self.assertTrue(ld['a'] == [1,2])
 		self.assertTrue(ld['b'] == [2])
 
+class test021(unittest.TestCase):
+	def test_run(self):
+		"""readTable"""
+		fname = "tmp_lightdataframe.txt"
+		inf = file(fname, 'w')
+		inf.write("one\ttwo\tthree\n")
+		inf.write("a\tb\t3\n")
+		inf.write("a\tb\t33\n")
+		inf.close()
+		inf = file(fname, 'r')
+		ldf = util.readTable(inf, header=True)
+		self.assertTrue(ldf['three'][0] == 3)
+		self.assertTrue(ldf['three'][1] == 33)
+		inf.close()
+		os.remove(fname)
+
 
 
 if __name__=="__main__":
