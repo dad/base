@@ -12,7 +12,13 @@ import scipy.special
 
 #---------------------------------------------------------------------------------
 class StatsError(Exception):
-    """Statistics error."""
+	"""Statistics error."""
+
+def chiSquaredHistogramDistance(h1, h2):
+	# DAD: implement
+	assert(len(h1) == len(h2))
+	chisq_terms = [(q - p)*(q - p)/(q + p) for (q,p) in zip(h1,h2) if q+p>0.0]
+	return 0.5 * sum(chisq_terms)
 
 # From http://stackoverflow.com/questions/3679694/a-weighted-version-of-random-choice
 def weighted_choice(choices):
@@ -121,8 +127,7 @@ class Histogram:
 	
 	@property
 	def extras(self):
-		for x in self._extras:
-			yield x
+		return self._extras[:]
 	
 	@property
 	def bins(self):

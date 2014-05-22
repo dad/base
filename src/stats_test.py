@@ -6,8 +6,8 @@ import scipy as sp
 import scipy.stats as st
 
 class test001(unittest.TestCase):
-	"""Test Benjamini-Hochberg P-value adjustment"""
 	def test(self):
+		"""Test Benjamini-Hochberg P-value adjustment"""
 		adjps = stats.adjustPValues([0.1,0.2,0.3,0.4], method='FDR')
 		self.assertTrue(round(adjps[0],1)==0.4)
 		self.assertTrue(round(adjps[1],1)==0.4)
@@ -20,24 +20,24 @@ class test001(unittest.TestCase):
 		self.assertTrue(round(adjps[2],3)==0.009)
 
 class test002(unittest.TestCase):
-	"""Test Benjamini-Hochberg P-value adjustment, ordering"""
 	def test(self):
+		"""Test Benjamini-Hochberg P-value adjustment, ordering"""
 		pvals = sp.array(range(100))/1.0e5
 		adjps = stats.adjustPValues(pvals, method='FDR')
 		for i in range(1,10):
 			self.assertTrue(adjps[i]>adjps[i-1])
 
 class test003(unittest.TestCase):
-	"""Test Benjamini-Hochberg P-value adjustment, ordering"""
 	def test(self):
+		"""Test Benjamini-Hochberg P-value adjustment, ordering"""
 		pvals = sp.array(range(100,-1,-1))/1.0e5
 		adjps = stats.adjustPValues(pvals, method='FDR')
 		for i in range(1,10):
 			self.assertTrue(adjps[i]<adjps[i-1])
 
 class test004(unittest.TestCase):
-	"""Test Benjamini-Hochberg P-value adjustment, ordering"""
 	def test(self):
+		"""Test Benjamini-Hochberg P-value adjustment, ordering"""
 		sp.random.seed(111)
 		n = 3
 		#pvals = sp.array(range(n-1,-1,-1))/1.0e5
@@ -52,8 +52,8 @@ class test004(unittest.TestCase):
 			self.assertTrue(adjps[i] >= pvals[i])
 
 class test005(unittest.TestCase):
-	"""Restore list order"""
 	def test(self):
+		"""Restore list order"""
 		a = [1,3,5,2,4,0,7]
 		indexed = sorted(zip(a, range(len(a))), reverse=True)
 		(b,inds) = zip(*indexed)
@@ -64,13 +64,28 @@ class test005(unittest.TestCase):
 			self.assertTrue(a[i] == a2[i])
 
 class test006(unittest.TestCase):
-	"""Histogram"""
 	def test(self):
+		"""Histogram"""
 		a = [1,3,5,2,4,0,7,7.01]
 		hist = stats.Histogram()
 		hist.init(min(a), max(a), 10)
 		hist.add(a)
 		self.assertTrue(len(hist.extras) == 0)
+
+class test007(unittest.TestCase):
+	def testuneq(self):
+		"""Histogram distance, equal"""
+		a = [1,3,5,2,4,0,7,7.01]
+		b = [1,3,5,2,4,0,7,7.01]
+		d = stats.chiSquaredHistogramDistance(a,b)
+		self.assertAlmostEqual(d, 0.0)
+
+	def testeq(self):
+		"""Histogram distance, unequal"""
+		a = [1,3,5,2,4,0,7,7.01]
+		b = [1,3,5,2,4,0,7,8]
+		d = stats.chiSquaredHistogramDistance(a,b)
+		self.assertTrue(d>0.0)
 
 
 if __name__=='__main__':
