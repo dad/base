@@ -64,13 +64,17 @@ class ProteinProperties(object):
 			res = hyd/n
 		return res
 	
-	def getComposition(self, sequence, aas=translate.AAs()):
+	def getComposition(self, sequence, normalize=False, aas=translate.AAs()):
 		#aas = translate.AAs()
 		if aas is None:
 			aas = ''
 		#seq_aas = aas + ''.join(sorted(list(set([aa for aa in sequence if not aa in aas]))))
 		aa_counts = [(aa,sequence.count(aa)) for aa in aas]
-		return aa_counts
+		res = aa_counts
+		if normalize:
+			tot = float(sum([c for (aa,c) in aa_counts]))
+			res = [(aa,c/tot) for (aa,c) in aa_counts]
+		return res
 	
 	def getLength(self, sequence, stopchr="*", gapchr="-"):
 		# If there's a "*" -- usual way to put in a stop codon -- should we just report the length up to the stop?
@@ -81,7 +85,26 @@ class ProteinProperties(object):
 			seq = sequence
 		res = len(seq.replace(gapchr,''))
 		return res
+
+class Composition(object):
+	def __init__(self, comp):
+		self._comp = comp # list of (aa, frequency) tuples
+	
+	def normalize(self):
+		tot = float(sum([c for (aa,c) in self._comp]))
+		self._comp = [(aa,c/tot) for (aa,c) in self._comp]
+	
+	def write(self, stream, header=True):
+		if header:
+			stream.write("aa\tproportion\n")
+		compdict = dict(self._comp)
+		for aa in sorted([aa for (aa,c) in self._comp]):
+			write("{:s}\t{:1.4f}\n".format(aa, compdict[aa])
+	
+	def read(self, stream, header=True):
 		
+			
+
 
 if __name__=='__main__':
 	parser = ArgumentParser() #usage="%prog [-i fasta] [-s sequence]")
