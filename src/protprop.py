@@ -105,9 +105,12 @@ class Composition(object):
 			write("{:s}\t{:1.4f}\n".format(aa, self._comp_dict[aa]))
 	
 	def read(self, stream, header=True):
-		ldf = util.LightDataFrame(stream, header=header)
-		for flds in ldf.dictrows:
+		tab = util.readTable(stream, header=header)
+		for flds in tab.dictrows:
 			self._comp_dict[flds['aa']] = flds['proportion']
+	
+	def __getitem__(self, aa):
+		return self._comp_dict[aa]
 			
 
 

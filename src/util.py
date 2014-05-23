@@ -595,6 +595,11 @@ class LightDataFrame:
 		return self._data[col_index]
 	
 	@property
+	def rows(self):
+		for ri in range(self.nrows):
+			yield self.row(ri)
+
+	@property
 	def dictrows(self):
 		for ri in range(self.nrows):
 			yield self.rowDict(ri)

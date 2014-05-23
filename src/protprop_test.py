@@ -1,15 +1,15 @@
 #! python
 
 import sys, os, math, random, stats, unittest
-import util, biofile, protprop
+import util, biofile, protprop, translate
 
-class ProtPropBasic(unittest.TestCase):
+class test001(unittest.TestCase):
 	def setUp(self):
 		self.pp = protprop.ProteinProperties()
 		
 	def test_pI(self):
+		"""Same isoelectric point if you add non-ionizable amino acids"""
 		pp = self.pp
-		# Same isoelectric point if you add non-ionizable amino acids
 		self.assertTrue(pp.getIsoelectricPoint('KKKKKKKKKKLL')==pp.getIsoelectricPoint('KKKKKKKKKK'))
 		# net charge at isoelectric point is zero
 		tol = 1e-5
@@ -17,7 +17,7 @@ class ProtPropBasic(unittest.TestCase):
 		self.assertAlmostEqual(pp.getCharge('KKKKKKKKKKLL',pI),0.0,places=4)
 	
 	def test_YDR114C(self):
-		"""test that maximum number of iterations prevents overlong searches"""
+		"""Maximum number of iterations prevents overlong searches"""
 		pp = self.pp
 		# This sequence takes an eternity to search for pI.
 		pp = protprop.ProteinProperties()
@@ -36,7 +36,22 @@ class ProtPropBasic(unittest.TestCase):
 		self.assertTrue(L==7)
 		L = pp.getLength("KKKKK--KKK*")
 		self.assertTrue(L==8)
-	
+
+class test002(unittest.TestCase):
+	def test_run(self):
+		"""Composition"""
+		comp = protprop.Composition()
+		fname = "tmp_composition.txt"
+		inf = file(fname, 'w')
+		inf.write("aa\tproportion\n")
+		for aa in translate.AAs():
+			inf.write("{}\t{}\n".format(aa, 1.0/20))
+		inf.close()
+		inf = file(fname, 'r')
+		comp.read(inf)
+		self.assertAlmostEqual(comp['A'], 1.0/20)
+		inf.close()
+		os.remove(fname)
 
 if __name__=='__main__':
 	unittest.main(verbosity=2)
