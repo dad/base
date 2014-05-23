@@ -87,22 +87,27 @@ class ProteinProperties(object):
 		return res
 
 class Composition(object):
-	def __init__(self, comp):
-		self._comp = comp # list of (aa, frequency) tuples
+	def __init__(self):
+		aas = translate.AAs()
+		self._comp_dict = dict([(aa,0.0) for aa in aas]) # list of (aa, frequency) tuples
+	
+	def initFromList(self, tuple_list):
+		self._comp_dict = dict(tuple_list)
 	
 	def normalize(self):
-		tot = float(sum([c for (aa,c) in self._comp]))
-		self._comp = [(aa,c/tot) for (aa,c) in self._comp]
+		tot = float(sum([c for (aa,c) in self._comp_dict.items()]))
+		self._comp_dict = dict([(aa,c/tot) for (aa,c) in self._comp_dict.items()])
 	
 	def write(self, stream, header=True):
 		if header:
 			stream.write("aa\tproportion\n")
-		compdict = dict(self._comp)
-		for aa in sorted([aa for (aa,c) in self._comp]):
-			write("{:s}\t{:1.4f}\n".format(aa, compdict[aa])
+		for aa in sorted(self._comp_dict.keys()):
+			write("{:s}\t{:1.4f}\n".format(aa, self._comp_dict[aa]))
 	
 	def read(self, stream, header=True):
-		
+		ldf = util.LightDataFrame(stream, header=header)
+		for flds in ldf.dictrows:
+			self._comp_dict[flds['aa']] = flds['proportion']
 			
 
 

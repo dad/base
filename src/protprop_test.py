@@ -14,18 +14,19 @@ class ProtPropBasic(unittest.TestCase):
 		# net charge at isoelectric point is zero
 		tol = 1e-5
 		pI = pp.getIsoelectricPoint('KKKKKKKKKKLL', tolerance=tol)
-		self.assertTrue(abs(pp.getCharge('KKKKKKKKKKLL',pI))<=tol)
+		self.assertAlmostEqual(pp.getCharge('KKKKKKKKKKLL',pI),0.0,places=4)
 	
 	def test_YDR114C(self):
+		"""test that maximum number of iterations prevents overlong searches"""
 		pp = self.pp
-		# This sequence takes an eternity to search for pI; test that maximum number of iterations prevents that.
+		# This sequence takes an eternity to search for pI.
 		pp = protprop.ProteinProperties()
 		ydr = "MPLFARLCQPQSRRMFSSISSFSALSVLRPQTGMLLNSSPLKTPSFTPLGFGLIGQRRWKSRGNTYQPSTLKRKRTFGFLARAKSKQGSKILKRRKLKGRWFLSH"
 		pI = pp.getIsoelectricPoint(ydr)
 		charge = pp.getCharge(ydr, pH=7.2)
 	
 	def test_length(self):
-		# Lengths of proteins with gaps or stop codons
+		"""Lengths of proteins with gaps or stop codons"""
 		pp = self.pp
 		L = pp.getLength("KKKKKKKKKK")
 		self.assertTrue(L==10)
