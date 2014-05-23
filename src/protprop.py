@@ -94,6 +94,11 @@ class Composition(object):
 	def initFromList(self, tuple_list):
 		self._comp_dict = dict(tuple_list)
 	
+	def initFromSequence(self, seq):
+		pp = ProteinProperties()
+		comp = pp.getComposition(seq, aas=translate.AAs())
+		self._comp_dict = dict(comp)
+	
 	def normalize(self):
 		tot = float(sum([c for (aa,c) in self._comp_dict.items()]))
 		self._comp_dict = dict([(aa,c/tot) for (aa,c) in self._comp_dict.items()])
