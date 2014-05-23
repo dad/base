@@ -641,3 +641,29 @@ def readTable(stream, header=True, sep='\t', header_name_processor=defaultHeader
 				data_dict[h].append(flds[h])
 	return LightDataFrame(header_flds, [data_dict[h] for h in header_flds])
 
+
+
+class Header(object):
+	def __init__(self, name, htype, description):
+		self.name = name
+		self.header_type = htype
+		self.description = description
+
+class DelimitedOutput(object):
+	def __init__(self, sep='\t'):
+		self._sep = sep
+		self._header_list = []
+	
+	def addHeader(self, header, header_type='string', description=''):
+		self._header_list.append(Header(header, header_type, description))
+	
+	def writeHeader(self, stream):
+		line = self._sep.join([h.name for h in self._header_list]) + '\n'
+		stream.write(line)
+	
+	def describeHeader(self, stream, comment='#'):
+		stream.write("{}\n".format(comment))
+		for h in self._header_list:
+			line = "{com}\t{h.name} [{h.header_type}] = {h.description}\n".format(com=comment, h=h)
+			stream.write(line)
+
