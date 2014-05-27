@@ -644,18 +644,24 @@ def readTable(stream, header=True, sep='\t', header_name_processor=defaultHeader
 
 
 class Header(object):
-	def __init__(self, name, htype, description):
+	format_types = {'f':'float', 'd':'int', 's':'string', 'e':'float'}
+	def __init__(self, name, description, format):
 		self.name = name
-		self.header_type = htype
 		self.description = description
+		self.format = format
+		try:
+			self.type_desc = Header.format_types[format]
+		except KeyError:
+			self.type_desc = ''
+
 
 class DelimitedOutput(object):
 	def __init__(self, sep='\t'):
 		self._sep = sep
 		self._header_list = []
 	
-	def addHeader(self, header, header_type='string', description=''):
-		self._header_list.append(Header(header, header_type, description))
+	def addHeader(self, header, description='', format='s'):
+		self._header_list.append(Header(header, description, format))
 	
 	def writeHeader(self, stream):
 		line = self._sep.join([h.name for h in self._header_list]) + '\n'
@@ -664,6 +670,9 @@ class DelimitedOutput(object):
 	def describeHeader(self, stream, comment='#'):
 		stream.write("{}\n".format(comment))
 		for h in self._header_list:
-			line = "{com}\t{h.name} [{h.header_type}] = {h.description}\n".format(com=comment, h=h)
+			line = "{com}\t{h.name} [{h.type_desc}] = {h.description}\n".format(com=comment, h=h)
 			stream.write(line)
+
+	def getFormat(self):
+		return self._sep.join(["\{\:{}\}".format(h.format) for h in self._header_list])
 
