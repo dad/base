@@ -422,7 +422,7 @@ class test020(unittest.TestCase):
 
 class test021(unittest.TestCase):
 	def test_run(self):
-		"""readTable"""
+		"""readTable basic"""
 		fname = "tmp_lightdataframe.txt"
 		inf = file(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
@@ -439,7 +439,7 @@ class test021(unittest.TestCase):
 
 class test022(unittest.TestCase):
 	def test_run(self):
-		"""readTable"""
+		"""readTable dictrows"""
 		fname = "tmp_lightdataframe.txt"
 		inf = file(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
