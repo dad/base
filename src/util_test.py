@@ -536,6 +536,22 @@ class test026(unittest.TestCase):
 		inf.close()
 		os.remove(fname)
 
+class test027(unittest.TestCase):
+	def test_run(self):
+		"""readTable header"""
+		fname = "tmp_lightdataframe.txt"
+		inf = file(fname, 'w')
+		inf.write("one\ttwo\tthree\n")
+		inf.write("a\tb\t3\n")
+		inf.write("a\tb\t33\n")
+		inf.close()
+		inf = file(fname, 'r')
+		with open(fname,'r') as inf:
+			ldf = util.readTable(inf, header=True)
+			h = ldf.header
+			self.assertTrue(h[1]=='two')
+		os.remove(fname)
+
 
 
 if __name__=="__main__":

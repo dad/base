@@ -578,17 +578,17 @@ class DelimitedLineReader:
 # Read
 
 class LightDataFrame:
-	def __init__(self, headers, data):
-		self._headers = basicHeaderFixer(headers)
+	def __init__(self, header, data):
+		self._header = basicHeaderFixer(header)
 		# Data must be a list of lists, each list is a column.
 		self._data = data
-		self._header_lookup = dict([(h, self._headers.index(h)) for h in self._headers])
+		self._header_lookup = dict([(h, self._header.index(h)) for h in self._header])
 
 	def row(self, row_index):
 		return [d[row_index] for d in self._data]
 
 	def rowDict(self, row_index):
-		return dict(zip(self._headers,self.row(row_index)))
+		return dict(zip(self._header,self.row(row_index)))
 
 	def col(self, column_key):
 		"""Index by column, given by column_key"""
@@ -602,7 +602,11 @@ class LightDataFrame:
 		"""Index by column, given by column_key"""
 		col_index = self._header_lookup[column_key]
 		return self._data[col_index]
-	
+
+	@property
+	def header(self):
+		return self._header
+
 	@property
 	def rows(self):
 		for ri in range(self.nrows):
@@ -626,10 +630,10 @@ class LightDataFrame:
 		return self._headers[:]
 	
 	def __str__(self):
-		s = "\t".join(self.headers)+"\n"
+		s = "\t".join(self.header)+"\n"
 		for ri in range(self.nrows):
 			rd = self.rowDict(ri)
-			for h in self.headers:
+			for h in self.header:
 				s += '\t' + str(rd[h])
 			s += '\n'
 		return s
@@ -671,6 +675,15 @@ class DelimitedOutput(object):
 	
 	def addHeader(self, header, description='', format='s'):
 		self._header_list.append(Header(header, description, format))
+
+	def addHeaders(self, headers, descriptions=None):
+		if not descriptions is None:
+			assert(len(descriptions) == len(headers))
+			for (h,d) in zip(headers, descriptions):
+				self.addHeader(h,d)
+		else:
+			for h in headers:
+				self.addHeader(h)
 	
 	def writeHeader(self, stream):
 		line = self._sep.join([h.name for h in self._header_list]) + '\n'
