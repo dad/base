@@ -294,10 +294,11 @@ class DelimitedLineReader:
 	"""
 	handler_dict = {"s":str, "f":naFloatParser, "d":naIntParser}
 
-	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=False, comment_str="#", save_comments=False, custom_handler_dict=None, header_name_processor=basicHeaderFixer):
+	def __init__(self, in_file, header=True, field_defs=None, sep="\t", skip=0, strip=False, comment_str="#", save_comments=False, custom_handler_dict=None, header_name_processor=basicHeaderFixer):
 		self.infile = in_file
 		self.delim = sep
 		self.strip = strip
+		self.skip = skip
 		self.comment_str = comment_str
 		# Data
 		self.cache = LineCache(self.infile, comment_str=self.comment_str)
@@ -310,6 +311,10 @@ class DelimitedLineReader:
 		self.field_defs = field_defs
 		self.handlers = []
 		self.header_name_processor = header_name_processor
+		
+		# Move past lines to skip
+		for nskip in range(0,self.skip):
+			self.next(process=False)
 
 		if self.has_header:
 			# Position reader right after header
@@ -626,8 +631,8 @@ class LightDataFrame:
 		return s
 
 
-def readTable(stream, header=True, sep='\t', header_name_processor=defaultHeader):
-	dlr = DelimitedLineReader(stream, header=header, sep=sep, header_name_processor=header_name_processor)
+def readTable(stream, header=True, sep='\t', skip=0, header_name_processor=defaultHeader):
+	dlr = DelimitedLineReader(stream, header=header, sep=sep, skip=skip, header_name_processor=header_name_processor)
 	header_flds = dlr.getHeader()
 	data_dict = {}
 	initialized = False
