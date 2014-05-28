@@ -289,8 +289,11 @@ class DelimitedLineReader:
 	Typical usage:
 	dlr = DelimitedLineReader(file(...,'r'), delim='\t')
 	headers = dlr.getHeader()
-	while not dlr.atEnd():
-	    flds = dlr.next()
+	for fields in dlr.entries:
+	    print fields[1]
+	# or
+	for fields in dlr.dictentries:
+		print fields['foo'] + fields['bar']
 	"""
 	handler_dict = {"s":str, "f":naFloatParser, "d":naIntParser}
 
@@ -346,7 +349,6 @@ class DelimitedLineReader:
 			if process: # Split the line into fields, parse by types according to handlers if specified
 				self.cur_flds = self.process(apply_handlers)
 				res = self.cur_flds
-		#print "$%d-%s^" % (self.getNumRead(), self.getRawLine())
 		return res
 
 	def nextDict(self, apply_handlers=True):
@@ -388,13 +390,11 @@ class DelimitedLineReader:
 						res = [self.handlers[hi](flds[hi]) for hi in range(len(flds))]
 						done_processing = True
 					except ValueError, ve:
-						#print "updating handler %d" % hi
 						# Adaptively update handlers if there was a value error.
 						handler_key = self.inferHandlerKey(flds[hi])
 						self.handlers[hi] = self.handler_dict[handler_key]
 						# Reapply the new handlers to get the data.
 						#res = [self.handlers[i](flds[i]) for i in range(len(flds))]
-
 			else:
 				res = flds
 		else:
@@ -557,7 +557,11 @@ class DelimitedLineReader:
 					self.setHandlerType(column_id, type_string)
 			except ValueError:
 				raise ReaderError("Column {} not in header".format(column_name))
-		
+	
+	def setHeaderNames(self, names):
+		headers = self.getHeader()
+		assert(len(names)==len(headers))
+		self.headers = names
 	
 	# Generators for iteration
 	@property
