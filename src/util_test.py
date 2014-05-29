@@ -456,6 +456,102 @@ class test022(unittest.TestCase):
 		inf.close()
 		os.remove(fname)
 
+class test023(unittest.TestCase):
+	def test_run(self):
+		"""skip, positive case"""
+		fname = "tmp_skip.txt"
+		inf = file(fname, 'w')
+		inf.write("blah\nblah\nblah\n")
+		inf.write("one\ttwo\tthree\n")
+		inf.write("a\tb\t3\n")
+		inf.write("a\tb\t33\n")
+		inf.close()
+		with open(fname,'r') as inf:
+			dlr = util.DelimitedLineReader(inf, header=True, skip=3)
+			for (ri, flds) in enumerate(dlr.dictentries):
+				if ri == 0:
+					self.assertTrue(flds['three'] == 3)
+				if ri == 1:
+					self.assertTrue(flds['three'] == 33)
+		inf.close()
+		os.remove(fname)
+
+class test024(unittest.TestCase):
+	def test_run(self):
+		"""skip, negative case"""
+		fname = "tmp_skip.txt"
+		inf = file(fname, 'w')
+		inf.write("blah\nblah\nblah\n")
+		inf.write("one\ttwo\tthree\n")
+		inf.write("a\tb\t3\n")
+		inf.write("a\tb\t33\n")
+		inf.close()
+		with open(fname,'r') as inf:
+			dlr = util.DelimitedLineReader(inf, header=True, skip=3)
+			for (ri, flds) in enumerate(dlr.dictentries):
+				try:
+					flds['three']
+				except KeyError:
+					self.assertTrue(True)
+		inf.close()
+		os.remove(fname)
+
+class test025(unittest.TestCase):
+	def test_run(self):
+		"""skip, off by one"""
+		fname = "tmp_skip.txt"
+		inf = file(fname, 'w')
+		inf.write("blah\nblah\nblah\n")
+		inf.write("one\ttwo\tthree\n")
+		inf.write("a\tb\t3\n")
+		inf.write("a\tb\t33\n")
+		inf.close()
+		with open(fname,'r') as inf:
+			dlr = util.DelimitedLineReader(inf, header=True, skip=2)
+			for (ri, flds) in enumerate(dlr.dictentries):
+				try:
+					flds['three']
+				except KeyError:
+					self.assertTrue(True)
+		inf.close()
+		os.remove(fname)
+
+class test026(unittest.TestCase):
+	def test_run(self):
+		"""set header names"""
+		fname = "tmp_setheader.txt"
+		inf = file(fname, 'w')
+		inf.write("one\ttwo\tthree\n")
+		inf.write("a\tb\t3\n")
+		inf.write("a\tb\t33\n")
+		inf.close()
+		with open(fname,'r') as inf:
+			dlr = util.DelimitedLineReader(inf, header=True)
+			dlr.setHeaderNames(['a','b','c'])
+			for (ri, flds) in enumerate(dlr.dictentries):
+				if ri == 0:
+					self.assertTrue(flds['c'] == 3)
+				if ri == 1:
+					self.assertTrue(flds['c'] == 33)
+		inf.close()
+		os.remove(fname)
+
+class test027(unittest.TestCase):
+	def test_run(self):
+		"""readTable header"""
+		fname = "tmp_lightdataframe.txt"
+		inf = file(fname, 'w')
+		inf.write("one\ttwo\tthree\n")
+		inf.write("a\tb\t3\n")
+		inf.write("a\tb\t33\n")
+		inf.close()
+		inf = file(fname, 'r')
+		with open(fname,'r') as inf:
+			ldf = util.readTable(inf, header=True)
+			h = ldf.header
+			self.assertTrue(h[1]=='two')
+		os.remove(fname)
+
 
 
 if __name__=="__main__":

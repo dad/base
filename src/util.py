@@ -289,15 +289,19 @@ class DelimitedLineReader:
 	Typical usage:
 	dlr = DelimitedLineReader(file(...,'r'), delim='\t')
 	headers = dlr.getHeader()
-	while not dlr.atEnd():
-	    flds = dlr.next()
+	for fields in dlr.entries:
+	    print fields[1]
+	# or
+	for fields in dlr.dictentries:
+		print fields['foo'] + fields['bar']
 	"""
 	handler_dict = {"s":str, "f":naFloatParser, "d":naIntParser}
 
-	def __init__(self, in_file, header=True, field_defs=None, sep="\t", strip=False, comment_str="#", save_comments=False, custom_handler_dict=None, header_name_processor=basicHeaderFixer):
+	def __init__(self, in_file, header=True, field_defs=None, sep="\t", skip=0, strip=False, comment_str="#", save_comments=False, custom_handler_dict=None, header_name_processor=basicHeaderFixer):
 		self.infile = in_file
 		self.delim = sep
 		self.strip = strip
+		self.skip = skip
 		self.comment_str = comment_str
 		# Data
 		self.cache = LineCache(self.infile, comment_str=self.comment_str)
@@ -310,6 +314,10 @@ class DelimitedLineReader:
 		self.field_defs = field_defs
 		self.handlers = []
 		self.header_name_processor = header_name_processor
+		
+		# Move past lines to skip
+		for nskip in range(0,self.skip):
+			self.next(process=False)
 
 		if self.has_header:
 			# Position reader right after header
@@ -341,7 +349,6 @@ class DelimitedLineReader:
 			if process: # Split the line into fields, parse by types according to handlers if specified
 				self.cur_flds = self.process(apply_handlers)
 				res = self.cur_flds
-		#print "$%d-%s^" % (self.getNumRead(), self.getRawLine())
 		return res
 
 	def nextDict(self, apply_handlers=True):
@@ -383,13 +390,11 @@ class DelimitedLineReader:
 						res = [self.handlers[hi](flds[hi]) for hi in range(len(flds))]
 						done_processing = True
 					except ValueError, ve:
-						#print "updating handler %d" % hi
 						# Adaptively update handlers if there was a value error.
 						handler_key = self.inferHandlerKey(flds[hi])
 						self.handlers[hi] = self.handler_dict[handler_key]
 						# Reapply the new handlers to get the data.
 						#res = [self.handlers[i](flds[i]) for i in range(len(flds))]
-
 			else:
 				res = flds
 		else:
@@ -552,7 +557,11 @@ class DelimitedLineReader:
 					self.setHandlerType(column_id, type_string)
 			except ValueError:
 				raise ReaderError("Column {} not in header".format(column_name))
-		
+	
+	def setHeaderNames(self, names):
+		headers = self.getHeader()
+		assert(len(names)==len(headers))
+		self.headers = names
 	
 	# Generators for iteration
 	@property
@@ -569,17 +578,17 @@ class DelimitedLineReader:
 # Read
 
 class LightDataFrame:
-	def __init__(self, headers, data):
-		self._headers = basicHeaderFixer(headers)
+	def __init__(self, header, data):
+		self._header = basicHeaderFixer(header)
 		# Data must be a list of lists, each list is a column.
 		self._data = data
-		self._header_lookup = dict([(h, self._headers.index(h)) for h in self._headers])
+		self._header_lookup = dict([(h, self._header.index(h)) for h in self._header])
 
 	def row(self, row_index):
 		return [d[row_index] for d in self._data]
 
 	def rowDict(self, row_index):
-		return dict(zip(self._headers,self.row(row_index)))
+		return dict(zip(self._header,self.row(row_index)))
 
 	def col(self, column_key):
 		"""Index by column, given by column_key"""
@@ -593,7 +602,11 @@ class LightDataFrame:
 		"""Index by column, given by column_key"""
 		col_index = self._header_lookup[column_key]
 		return self._data[col_index]
-	
+
+	@property
+	def header(self):
+		return self._header
+
 	@property
 	def rows(self):
 		for ri in range(self.nrows):
@@ -617,17 +630,17 @@ class LightDataFrame:
 		return self._headers[:]
 	
 	def __str__(self):
-		s = "\t".join(self.headers)+"\n"
+		s = "\t".join(self.header)+"\n"
 		for ri in range(self.nrows):
 			rd = self.rowDict(ri)
-			for h in self.headers:
+			for h in self.header:
 				s += '\t' + str(rd[h])
 			s += '\n'
 		return s
 
 
-def readTable(stream, header=True, sep='\t', header_name_processor=defaultHeader):
-	dlr = DelimitedLineReader(stream, header=header, sep=sep, header_name_processor=header_name_processor)
+def readTable(stream, header=True, sep='\t', skip=0, header_name_processor=defaultHeader):
+	dlr = DelimitedLineReader(stream, header=header, sep=sep, skip=skip, header_name_processor=header_name_processor)
 	header_flds = dlr.getHeader()
 	data_dict = {}
 	initialized = False
@@ -662,6 +675,15 @@ class DelimitedOutput(object):
 	
 	def addHeader(self, header, description='', format='s'):
 		self._header_list.append(Header(header, description, format))
+
+	def addHeaders(self, headers, descriptions=None):
+		if not descriptions is None:
+			assert(len(descriptions) == len(headers))
+			for (h,d) in zip(headers, descriptions):
+				self.addHeader(h,d)
+		else:
+			for h in headers:
+				self.addHeader(h)
 	
 	def writeHeader(self, stream):
 		line = self._sep.join([h.name for h in self._header_list]) + '\n'
