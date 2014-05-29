@@ -583,6 +583,13 @@ def secondField(x):
 	h = x.split()[1].strip()
 	return h
 
+def secondOrFirstField(x):
+	try:
+		h = secondField(x)
+	except IndexError:
+		h = firstField(x)
+	return h
+
 class FASTAEntry(object):
 	def __init__(self, header, sequence):
 		self.header = header

@@ -33,5 +33,14 @@ class testCDS(unittest.TestCase):
 					#print len(entry.sequence)
 					self.assertTrue(len(entry.sequence)==1092)
 
+class test002(unittest.TestCase):
+	def test_run(self):
+		"""secondOrFirstField"""
+		x = 'FIRST SECOND'
+		self.assertTrue(biofile.firstField(x)=='FIRST')
+		self.assertTrue(biofile.secondField(x)=='SECOND')
+		y = 'FIRST'
+		self.assertTrue(biofile.secondOrFirstField(y)=='FIRST')
+
 if __name__=="__main__":
 	unittest.main(verbosity=2)
