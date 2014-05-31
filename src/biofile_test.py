@@ -1,6 +1,9 @@
 import time, os, random, string, sys, math, traceback, unittest
 import biofile
 
+def writeGFF(stream):
+	stream.write()
+
 class testExons(unittest.TestCase):
 	def test_reading(self):
 		mfr = biofile.MultipleFASTAReader(file('./test-biofile/test-multiple-fasta-001.fa', 'r'), biofile.UCSCExonHeader)
@@ -41,6 +44,12 @@ class test002(unittest.TestCase):
 		self.assertTrue(biofile.secondField(x)=='SECOND')
 		y = 'FIRST'
 		self.assertTrue(biofile.secondOrFirstField(y)=='FIRST')
+
+class test003(unittest.TestCase):
+	def test_run(self):
+		"""GFF basic"""
+		pass
+
 
 if __name__=="__main__":
 	unittest.main(verbosity=2)
