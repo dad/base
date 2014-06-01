@@ -367,7 +367,7 @@ class GFFRecord:
 	def __init__( self ):
 		self.seqname = ''
 		self.source = ''
-		self.stype = ''
+		self.feature = ''
 		self.start = 0
 		self.end = 0
 		self.score = 0
@@ -383,7 +383,19 @@ class GFFRecord:
 	def readFromFields(self, flds):
 		self.seqname = flds[0]
 		self.source = flds[1]
-		self.stype = flds[2]
+		self.feature = flds[2]
+		self.start = int(flds[3])
+		self.end = int(flds[4])
+		self.score = flds[5]
+		self.strand = flds[6]
+		self.phase = flds[7]
+		self._attributes_str = flds[8]
+		self.attributes = dict([(x.split('=')[0], x.split('=')[1]) for x in self._attributes_str.split(';')])
+
+	def readFrom(self, flds):
+		self.seqname = flds[0]
+		self.source = flds[1]
+		self.feature = flds[2]
 		self.start = int(flds[3])
 		self.end = int(flds[4])
 		self.score = flds[5]
@@ -396,14 +408,14 @@ class GFFRecord:
 		n = GFFRecord()
 		n.seqname = self.seqname
 		n.source = self.source
-		n.stype = self.stype
+		n.feature = self.feature
 		n.start = self.start
 		n.end = self.end
 		n.score = self.score
 		n.strand = self.strand
 		n.phase = self.phase
 		n._attributes_str = self._attributes_str
-		n.attributes = dict([(x.split('=')[0], x.split('=')[1]) for x in self._attributes_str.split(';')])
+		n.attributes = dict(self.attributes.items())
 		return n
 
 	def toCodingExonRecord(self):
@@ -425,6 +437,9 @@ class GFFRecord:
 	def getAttribute(self, key):
 		return self.attributes.get(key,None)
 
+	def __getitem__(self, key):
+		return self.getAttribute(key)
+
 	def getAttributesString(self):
 		return self._attributes_str
 
@@ -433,7 +448,7 @@ class GFFRecord:
 		return index >= self.start and index <= self.end
 
 	def __str__(self):
-		return "{x.seqname}\t{x.source}\t{x.stype}\t{x.start}\t{x.end}\t{x.score}\t{x.strand}\t{x.phase}\t{x._attributes_str}\n".format(x=self)
+		return "{x.seqname}\t{x.source}\t{x.feature}\t{x.start}\t{x.end}\t{x.score}\t{x.strand}\t{x.phase}\t{x._attributes_str}\n".format(x=self)
 
 	def write(self, stream):
 		stream.write(str(self))
@@ -869,3 +884,31 @@ def readFASTADict(infile_name, key_fxn = firstField):
 		s = sequences[i]
 		fdict[h_key] = s
 	return fdict
+
+class GFFReader(object):
+	def __init__(self, infile):
+		self._infile = infile
+		if not isinstance(infile,file):
+			infile_name = os.path.expanduser(infile)
+			if not os.path.isfile(infile_name):
+				raise BioFileError, "Cannot find the FASTA file {}.".format(infile_name)
+			else:
+				self._infile = file(infile_name, 'r')
+
+	@property
+	def entries(self):
+		# ##gff-version 3
+		#<seqname> <source> <feature> <start> <end> <score> <strand> <frame> [attributes] [comments]
+		gff_req_fields = ['seqname','source','feature','start','end','score','strand','frame']
+		n_req_fields = len(gff_req_fields)
+		gff_addl_fields = ['attributes','comments']
+		dlr = util.DelimitedLineReader(self._infile, header=False, sep='\t')
+		for flds in dlr.entries:
+			n = len(flds)
+			names = gff_req_fields + gff_addl_fields[:(n-n_req_fields)] # Only take additional fields if provided
+			rec = GFFRecord()
+			rec.readFromFields(flds)
+			yield rec
+
+
+

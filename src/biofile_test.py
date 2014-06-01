@@ -48,7 +48,14 @@ class test002(unittest.TestCase):
 class test003(unittest.TestCase):
 	def test_run(self):
 		"""GFF basic"""
-		pass
+		gffinf = file("./test-biofile/test-gff-001.gff",'r')
+		gff = biofile.GFFReader(gffinf)
+		i = 0
+		for entry in gff.entries:
+			i += 1
+			if i == 2:
+				self.assertTrue(entry.feature == 'CDS')
+				self.assertTrue(entry['orf_classification'] == 'Verified')
 
 
 if __name__=="__main__":
