@@ -69,8 +69,16 @@ def geneticCode(rna, code=None):
 		res = dict([(k,v) for (k,v) in res.items() if not 'U' in k])
 	return res
 
+
+def codons(seq):
+	n = len(seq)
+	over_nts = n % 3
+	max_aas = (n-over_nts)/3
+	for ci in xrange(max_aas):
+		yield seq[3*ci : 3*(ci+1)]
+
 #--------------------------------------------------------------------------------
-def translate(seq):
+def translate(seq, genetic_code=_genetic_code):
 	"""Translates a gene sequence to a protein sequence.
 
 	'seq' is the gene sequence to be translated. It can begin with any codon
@@ -80,25 +88,25 @@ def translate(seq):
 	translated.  If the translation is successful, returns a string
 	corresponding to the protein sequence.  If the translation
 	fails, returns 'None'."""
+	seq = seq.upper()
 	if len(seq) % 3 != 0:
 		return None # gene length not a multiple of three
 	prot_length = len(seq) / 3
 	prot = ""
-	for i in range(prot_length - 1):
-		codon = seq[3 * i : 3 * (i + 1)]
+	stop_codon = False
+	for codon in codons(seq):
 		try:
-			aa = codonToAA(codon)
-		except BioUtilsError: # unrecognized codon
-			return None
-		if aa == '*': # premature stop codon
-			return None
-		prot += aa
-	# last codon, might be stop codon
-	codon = seq[3 * (prot_length - 1) : 3 * prot_length]
-	aa = codonToAA(codon)
-	if aa != '*':
-		prot += aa
-	assert len(prot) in [prot_length, prot_length - 1]
+			aa = genetic_code[codon]
+			if aa == '*':
+				stop_codon = True
+				break
+			prot += aa
+		except KeyError:
+			prot = None
+			break
+	if stop_codon:
+		if len(prot)<(prot_length-1):
+			prot = None
 	return prot
 
 def Translate(seq):
@@ -113,13 +121,9 @@ def translateRaw(seq, genetic_code=_genetic_code, bad_aa = 'x'):
 	code.
 
 	If the translation is successful, returns a string corresponding to the
-	protein sequence plus stop codons and ."""
-	prot = ""
-	max_aas = int(math.floor(len(seq)/3.0))
-	for i in range(max_aas):
-		codon = seq[3 * i : 3 * (i + 1)]
-		aa = genetic_code.get(codon,bad_aa)
-		prot += aa
+	protein sequence plus the stop codon if present."""
+	seq = seq.upper()
+	prot = ''.join([genetic_code.get(codon,bad_aa) for codon in codons(seq)])
 	return prot
 
 def reverseTranslate(prot, rna=False, bad_codon ='---'):
@@ -132,16 +136,6 @@ def reverseTranslate(prot, rna=False, bad_codon ='---'):
 			gene += bad_codon
 	assert(len(gene)==3*len(prot))
 	return gene
-
-# Test the reverse translator
-def __test_reverseTranslate():
-	N = 1000
-	aas = 'ACDEFGHIKLMNPQRSTVWY'
-	for i in range(N):
-		prot = ''.join([random.choice(aas) for xi in range(100)])
-		gene = reverseTranslate(prot)
-		newprot = translate(gene)
-		assert(prot == newprot)
 
 def randomReverseTranslate(prot, rna=False, bad_codon='---'):
 	"""
@@ -161,16 +155,6 @@ def randomReverseTranslate(prot, rna=False, bad_codon='---'):
 		gene += codon
 	#print sequenceDiffs(prot, translate.TranslateRaw(gene))
 	return gene
-
-# Test the reverse translator
-def __test_randomReverseTranslate():
-	N = 1000
-	aas = 'ACDEFGHIKLMNPQRSTVWY'
-	for i in range(N):
-		prot = ''.join([random.choice(aas) for xi in range(100)])
-		gene = randomReverseTranslate(prot)
-		newprot = translate(gene)
-		assert(prot == newprot)
 
 
 _three_letter_codes = {
@@ -210,32 +194,20 @@ def sequenceIdentity(aligned_seq1, aligned_seq2):
 		seq_identity = float(num_identical)/num_aligned
 	return seq_identity, num_identical, num_aligned
 #---------------------------------------------------------------------------------
+_dna_complement = {'A':'T','T':'A','U':'A','G':'C','C':'G','a':'t','t':'a','u':'a','g':'c','c':'g'}
+_rna_complement = {'A':'U','U':'A','G':'C','C':'G','a':'u','u':'a','g':'c','c':'g'}
 def complement(a, rna=True):
 	if rna:
-		tu = 'U'
-	else:
-		tu = 'T'
-	a = a.upper()
-	if a == "A":
-		return tu
-	elif a == 'T' or a == 'U':
-		return "A"
-	elif a == "C":
-		return "G"
-	elif a == "G":
-		return "C"
-	# If we don't know the complement, return the base
-	return a
+		return _rna_complement[a]
+	return _dna_complement[a]
 #---------------------------------------------------------------------------------
 def reverse_complement(seq):
 	return reverseComplement(seq)
 
 def reverseComplement(seq):
 	rna = 'U' in seq.upper()
-	rc = [x for x in seq]
+	rc = [complement(x,rna) for x in seq]
 	rc.reverse()
-	for i in range(len(rc)):
-		rc[i] = complement(rc[i], rna)
 	return ''.join(rc)
 
 def get_codons_for_aa(aa, rna=True):
