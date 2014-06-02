@@ -118,7 +118,7 @@ def translateRaw(seq, genetic_code=_genetic_code, bad_aa = 'x'):
 	'seq' is the gene sequence to be translated. It can begin with any codon
 	(does not have to be ATG), and the length must be at least 3 nucleotides.
 	'bad_aa' is the character used to indicate any codon not in the standard
-	code.
+	code. Internal stop codons are translated as '*'.
 
 	If the translation is successful, returns a string corresponding to the
 	protein sequence plus the stop codon if present."""
