@@ -54,6 +54,24 @@ class Tester(unittest.TestCase):
 		self.assertTrue(translate.translate(s) is None)
 		self.assertTrue(translate.translateRaw(s) == '')
 
+	def test008(self):
+		"""zero-length nucleotides"""
+		s = ''
+		c = [cod for cod in translate.codons(s)]
+		self.assertTrue(len(c)==0)
+		self.assertTrue(translate.translate(s) == '')
+		self.assertTrue(translate.translateRaw(s) == '')
+
+	def test009(self):
+		"""odd-length coding sequence"""
+		s = 'TCTCGTAAGTACGCAGC'
+		c = [cod for cod in translate.codons(s)]
+		self.assertTrue(len(c)==5)
+		self.assertTrue(c[-1]=='GCA')
+		self.assertTrue(translate.translate(s) is None)
+		self.assertTrue(translate.translateRaw(s) == 'SRKYA')
+
+
 if __name__=='__main__':
 	unittest.main(verbosity=2)
 
