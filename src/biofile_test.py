@@ -4,8 +4,9 @@ import biofile
 def writeGFF(stream):
 	stream.write()
 
-class testExons(unittest.TestCase):
+class test001(unittest.TestCase):
 	def test_reading(self):
+		"""Reading multiple FASTA"""
 		mfr = biofile.MultipleFASTAReader(file('./test-biofile/test-multiple-fasta-001.fa', 'r'), biofile.UCSCExonHeader)
 		n = 15
 		while not mfr.atEnd():
@@ -14,8 +15,9 @@ class testExons(unittest.TestCase):
 				self.assertTrue(len(ex_list) == n)
 			#print ''
 	
-class testCDS(unittest.TestCase):
+class test002(unittest.TestCase):
 	def test_reading(self):
+		"""Reading and length"""
 		mfr = biofile.MultipleFASTAReader(file('./test-biofile/test-multiple-fasta-001.fa', 'r'), biofile.UCSCExonHeader)
 		for cds_alignment in mfr.CDSs():
 			L = None
@@ -27,6 +29,7 @@ class testCDS(unittest.TestCase):
 				self.assertTrue(len(entry.sequence)==L)
 	
 	def test_length(self):
+		"""Length"""
 		mfr = biofile.MultipleFASTAReader(file('./test-biofile/test-multiple-fasta-002.fa', 'r'), biofile.UCSCExonHeader)
 		for cds_alignment in mfr.CDSs():
 			#print len(cds_alignment[0].sequence)
@@ -36,7 +39,7 @@ class testCDS(unittest.TestCase):
 					#print len(entry.sequence)
 					self.assertTrue(len(entry.sequence)==1092)
 
-class test002(unittest.TestCase):
+class test003(unittest.TestCase):
 	def test_run(self):
 		"""secondOrFirstField"""
 		x = 'FIRST SECOND'
@@ -45,18 +48,20 @@ class test002(unittest.TestCase):
 		y = 'FIRST'
 		self.assertTrue(biofile.secondOrFirstField(y)=='FIRST')
 
-class test003(unittest.TestCase):
+class test004(unittest.TestCase):
 	def test_run(self):
 		"""GFF basic"""
 		gffinf = file("./test-biofile/test-gff-001.gff",'r')
 		gff = biofile.GFFReader(gffinf)
 		i = 0
+		tested = False
 		for entry in gff.entries:
 			i += 1
 			if i == 2:
+				tested = True
 				self.assertTrue(entry.feature == 'CDS')
 				self.assertTrue(entry['orf_classification'] == 'Verified')
-
+		self.assertTrue(tested)
 
 if __name__=="__main__":
 	unittest.main(verbosity=2)

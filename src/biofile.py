@@ -362,7 +362,11 @@ chr22  TeleGene enhancer  1000000  1001000  500 +  .  touch1
 chr22  TeleGene promoter  1010000  1010100  900 +  .  touch1
 chr22  TeleGene promoter  1020000  1020000  800 -  .  touch2
 '''
-
+'''
+import HTMLParser
+html_parser = HTMLParser.HTMLParser()
+unescaped = html_parser.unescape(my_string)
+'''
 class GFFRecord:
 	def __init__( self ):
 		self.seqname = ''
@@ -389,8 +393,9 @@ class GFFRecord:
 		self.score = flds[5]
 		self.strand = flds[6]
 		self.phase = flds[7]
-		self._attributes_str = flds[8]
-		self.attributes = dict([(x.split('=')[0], x.split('=')[1]) for x in self._attributes_str.split(';')])
+		if len(flds)>8:
+			self._attributes_str = flds[8]
+			self.attributes = dict([(x.split('=')[0], x.split('=')[1]) for x in self._attributes_str.split(';')])
 
 	def readFrom(self, flds):
 		self.seqname = flds[0]
@@ -440,7 +445,8 @@ class GFFRecord:
 	def __getitem__(self, key):
 		return self.getAttribute(key)
 
-	def getAttributesString(self):
+	@property
+	def attributes_string(self):
 		return self._attributes_str
 
 	def contains(self, index):
