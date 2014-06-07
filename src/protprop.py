@@ -86,7 +86,13 @@ class ProteinProperties(object):
 		res = len(seq.replace(gapchr,''))
 		return res
 
+	def _count_vector(self, sequence, aas_list):
+		res = [self.count(sequence, aas) for aas in aas_list]
+		return res
+
 	def count(self, sequence, aas):
+		if isinstance(aas, list):
+			return self._count_vector(sequence, aas)
 		the_count = 0
 		for aa in sequence:
 			if aa in aas:
