@@ -100,7 +100,10 @@ class ProteinProperties(object):
 				aa_dict[aa] = ord('a')+xi
 		mot = ''
 		for aa in sequence:
-			mot += symbol_map(aa_dict[aa])
+			try:
+				mot += symbol_map(aa_dict[aa])
+			except KeyError:
+				pass
 		return mot
 
 class Composition(object):

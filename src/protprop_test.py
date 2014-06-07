@@ -53,7 +53,7 @@ class test002(unittest.TestCase):
 		inf.close()
 		os.remove(fname)
 
-def genAlternatingMotif(aas_list, num_samples_list):
+def genMotif(aas_list, num_samples_list):
 	"""Generate a motif that has"""
 	res = ''
 	for (i,n) in num_samples_list:
@@ -67,11 +67,23 @@ class test003(unittest.TestCase):
 		pp = protprop.ProteinProperties()
 		aa_classes = ['FY','P','NQ']
 		for xi in range(5):
-			seq = genAlternatingMotif(aa_classes, [(0,2),(1,1),(2,2),(0,2),(1,1),(2,2)])
+			seq = genMotif(aa_classes, [(0,2),(1,1),(2,2),(0,2),(1,1),(2,2)])
 			self.assertTrue(pp.count(seq, 'FY')==4)
 			mot = pp.motif(seq, aa_classes)
 			#print seq, mot
 			self.assertTrue(mot=='aabccaabcc')
+
+	def test_run_skip(self):
+		"""Composition and motifs with skips"""
+		comp = protprop.Composition()
+		pp = protprop.ProteinProperties()
+		aa_classes = ['FY','P','NQ']
+		for xi in range(5):
+			seq = genMotif(aa_classes, [(0,2),(1,1),(2,2),(0,2),(1,1),(2,2)])
+			self.assertTrue(pp.count(seq, 'FY')==4)
+			mot = pp.motif(seq, ['FY','NQ'])
+			#print seq, mot
+			self.assertTrue(mot=='aabbaabb')
 
 if __name__=='__main__':
 	unittest.main(verbosity=2)
