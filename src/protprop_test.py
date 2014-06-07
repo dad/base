@@ -56,8 +56,8 @@ class test002(unittest.TestCase):
 def genAlternatingMotif(aas_list, num_samples_list):
 	"""Generate a motif that has"""
 	res = ''
-	for (aa_list, n) in zip(aas_list, num_samples_list):
-		res += ''.join(stats.sample_wr(aa_list,n))
+	for (i,n) in num_samples_list:
+		res += ''.join(stats.sample_wr(aas_list[i],n))
 	return res
 
 class test003(unittest.TestCase):
@@ -66,9 +66,9 @@ class test003(unittest.TestCase):
 		comp = protprop.Composition()
 		pp = protprop.ProteinProperties()
 		for xi in range(5):
-			seq = genAlternatingMotif(['FY','P','NQ','FY','P','NQ'], [2,1,2,2,1,2])
+			seq = genAlternatingMotif(['FY','P','NQ'], [(0,2),(1,1),(2,2),(0,2),(1,1),(2,2)])
 			self.assertTrue(pp.count(seq, 'FY')==4)
-
+			#self.assertTrue(comp.motif(seq)=='aabccddeff')
 
 if __name__=='__main__':
 	unittest.main(verbosity=2)
