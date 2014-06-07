@@ -91,13 +91,15 @@ class ProteinProperties(object):
 		return res
 
 	def count(self, sequence, aas):
-		if isinstance(aas, list):
-			return self._count_vector(sequence, aas)
 		the_count = 0
 		for aa in sequence:
 			if aa in aas:
 				the_count += 1
 		return the_count
+
+	def counts(self, sequence, aas_list):
+		res = [self.count(sequence, aas) for aas in aas_list]
+		return res
 
 	def motif(self, sequence, aa_classes, symbol_map=chr):
 		aa_dict = {}

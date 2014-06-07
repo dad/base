@@ -92,7 +92,7 @@ class test003(unittest.TestCase):
 		aa_classes = ['FY','P','NQ']
 		for xi in range(5):
 			seq = genMotif(aa_classes, [(0,2),(1,1),(2,2),(0,2),(1,1),(2,2)])
-			counts = pp.count(seq, aa_classes)
+			counts = pp.counts(seq, aa_classes)
 			self.assertTrue(counts==[4,2,4])
 
 if __name__=='__main__':
