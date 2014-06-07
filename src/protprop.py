@@ -86,6 +86,13 @@ class ProteinProperties(object):
 		res = len(seq.replace(gapchr,''))
 		return res
 
+	def count(self, sequence, aas):
+		the_count = 0
+		for aa in sequence:
+			if aa in aas:
+				the_count += 1
+		return the_count
+
 class Composition(object):
 	def __init__(self):
 		aas = translate.AAs()
