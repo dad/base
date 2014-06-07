@@ -65,10 +65,13 @@ class test003(unittest.TestCase):
 		"""Composition and motifs"""
 		comp = protprop.Composition()
 		pp = protprop.ProteinProperties()
+		aa_classes = ['FY','P','NQ']
 		for xi in range(5):
-			seq = genAlternatingMotif(['FY','P','NQ'], [(0,2),(1,1),(2,2),(0,2),(1,1),(2,2)])
+			seq = genAlternatingMotif(aa_classes, [(0,2),(1,1),(2,2),(0,2),(1,1),(2,2)])
 			self.assertTrue(pp.count(seq, 'FY')==4)
-			#self.assertTrue(comp.motif(seq)=='aabccddeff')
+			mot = pp.motif(seq, aa_classes)
+			#print seq, mot
+			self.assertTrue(mot=='aabccaabcc')
 
 if __name__=='__main__':
 	unittest.main(verbosity=2)

@@ -93,6 +93,16 @@ class ProteinProperties(object):
 				the_count += 1
 		return the_count
 
+	def motif(self, sequence, aa_classes, symbol_map=chr):
+		aa_dict = {}
+		for (xi,aas) in enumerate(aa_classes):
+			for aa in aas:
+				aa_dict[aa] = ord('a')+xi
+		mot = ''
+		for aa in sequence:
+			mot += symbol_map(aa_dict[aa])
+		return mot
+
 class Composition(object):
 	def __init__(self):
 		aas = translate.AAs()
