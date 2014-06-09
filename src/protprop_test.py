@@ -95,5 +95,21 @@ class test003(unittest.TestCase):
 			counts = pp.counts(seq, aa_classes)
 			self.assertTrue(counts==[4,2,4])
 
+	def test_run_vector(self):
+		"""Distances"""
+		comp = protprop.Composition()
+		pp = protprop.ProteinProperties()
+		aa_classes = ['FY','P','NQ']
+		for xi in range(5):
+			seq = genMotif(aa_classes, [(0,2),(1,1),(2,2),(0,2),(1,1),(2,2)])
+			#print seq
+			dists = pp.nearestDistances(seq, aa_classes)
+			#print dists
+			hist = stats.Histogram(vals=dists['FY'], n_bins=7, min_val=-0.5,max_val=6.5)
+			#print hist
+			self.assertTrue(hist[1].count==2)
+			self.assertTrue(hist[4].count==1)
+			self.assertTrue(hist[2].count==0)
+
 if __name__=='__main__':
 	unittest.main(verbosity=2)
