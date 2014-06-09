@@ -103,7 +103,9 @@ class ProteinProperties(object):
 
 	def _nearestDistances(self, sequence, aas):
 		"""Compute distances between aas."""
+		# Get positions of each amino acid in the specified class
 		positions = [xi for (xi,aa) in enumerate(sequence) if aa in aas]
+		# Compute distances
 		distances = [positions[i]-positions[i-1] for i in range(1,len(positions))]
 		return distances
 
@@ -111,6 +113,23 @@ class ProteinProperties(object):
 		res_dict = {}
 		for aas in aas_list:
 			res_dict[aas] = self._nearestDistances(sequence, aas)
+		return res_dict
+
+	def _allDistances(self, sequence, aas):
+		"""Compute distances between aas."""
+		# Get positions of each amino acid in the specified class
+		positions = [xi for (xi,aa) in enumerate(sequence) if aa in aas]
+		# Compute all pairwise distances
+		distances = []
+		for xi in range(len(positions)-1):
+			for xj in range(xi+1,len(positions)):
+				distances.append(positions[xj]-positions[xi])
+		return distances
+
+	def allDistances(self, sequence, aas_list):
+		res_dict = {}
+		for aas in aas_list:
+			res_dict[aas] = self._allDistances(sequence, aas)
 		return res_dict
 
 	def motif(self, sequence, aa_classes, symbol_map=chr):

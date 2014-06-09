@@ -96,7 +96,7 @@ class test003(unittest.TestCase):
 			self.assertTrue(counts==[4,2,4])
 
 	def test_run_vector(self):
-		"""Distances"""
+		"""Nearest distances"""
 		comp = protprop.Composition()
 		pp = protprop.ProteinProperties()
 		aa_classes = ['FY','P','NQ']
@@ -110,6 +110,25 @@ class test003(unittest.TestCase):
 			self.assertTrue(hist[1].count==2)
 			self.assertTrue(hist[4].count==1)
 			self.assertTrue(hist[2].count==0)
+
+	def test_run_vector(self):
+		"""All distances"""
+		comp = protprop.Composition()
+		pp = protprop.ProteinProperties()
+		aa_classes = ['FY','P','NQ']
+		for xi in range(5):
+			seq = genMotif(aa_classes, [(0,2),(1,1),(2,2),(0,2),(1,1),(2,2)])
+			#print seq
+			dists = pp.allDistances(seq, aa_classes)
+			#print dists
+			hist = stats.Histogram(vals=dists['FY'], n_bins=7, min_val=-0.5,max_val=6.5)
+			#print hist
+			self.assertTrue(hist[1].count==2)
+			self.assertTrue(hist[4].count==1)
+			self.assertTrue(hist[2].count==0)
+			answer = [1, 5, 6, 4, 5, 1]
+			for (a,b) in zip(dists['FY'], answer):
+				self.assertTrue(a==b)
 
 if __name__=='__main__':
 	unittest.main(verbosity=2)
