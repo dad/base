@@ -85,7 +85,7 @@ class test003(unittest.TestCase):
 			#print seq, mot
 			self.assertTrue(mot=='aabbaabb')
 
-	def test_run_vector(self):
+	def test_comp_counts(self):
 		"""Composition and motifs with skips"""
 		comp = protprop.Composition()
 		pp = protprop.ProteinProperties()
@@ -95,7 +95,7 @@ class test003(unittest.TestCase):
 			counts = pp.counts(seq, aa_classes)
 			self.assertTrue(counts==[4,2,4])
 
-	def test_run_vector(self):
+	def test_neardist(self):
 		"""Nearest distances"""
 		comp = protprop.Composition()
 		pp = protprop.ProteinProperties()
@@ -111,7 +111,7 @@ class test003(unittest.TestCase):
 			self.assertTrue(hist[4].count==1)
 			self.assertTrue(hist[2].count==0)
 
-	def test_run_vector(self):
+	def test_alldist(self):
 		"""All distances"""
 		comp = protprop.Composition()
 		pp = protprop.ProteinProperties()
@@ -129,6 +129,18 @@ class test003(unittest.TestCase):
 			answer = [1, 5, 6, 4, 5, 1]
 			for (a,b) in zip(dists['FY'], answer):
 				self.assertTrue(a==b)
+
+	def test_alldistcount(self):
+		"""Number of distances for all distances"""
+		comp = protprop.Composition()
+		pp = protprop.ProteinProperties()
+		aa_classes = ['A']
+		aa = aa_classes[0]
+		for xi in range(2,10):
+			seq = ''.join(aa*xi)
+			#print seq
+			dists = pp.allDistances(seq, aa)
+			self.assertTrue(len(dists[aa])==stats.Choose(xi,2))
 
 if __name__=='__main__':
 	unittest.main(verbosity=2)
