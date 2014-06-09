@@ -154,6 +154,7 @@ class Histogram:
 	def write(self, stream, header=None):
 		stream.write(str(self))
 
+	@property
 	def total(self):
 		return self._total_count
 	

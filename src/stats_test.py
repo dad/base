@@ -103,6 +103,15 @@ class test006(unittest.TestCase):
 		self.assertTrue(hist[7].count == 2)
 		self.assertTrue(hist[-1].count == 0)
 
+	def test_bin(self):
+		"""Histogram total retrieval"""
+		a = [1,3,5,2,4,0,7,7.01]
+		hist = stats.Histogram(a, n_bins=8)
+		#print hist.total
+		self.assertTrue(hist.total==len(a))
+		hist.add([3,-1])
+		self.assertTrue(hist.total==len(a)+2)
+
 
 
 if __name__=='__main__':
