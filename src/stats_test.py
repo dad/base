@@ -71,8 +71,10 @@ class test006(unittest.TestCase):
 		hist.init(min(a), max(a), 10)
 		hist.add(a)
 		self.assertTrue(len(hist.extras) == 0)
+		hist.add(12.0)
+		self.assertTrue(len(hist.extras) == 1)
 
-class test007(unittest.TestCase):
+
 	def testuneq(self):
 		"""Histogram distance, equal"""
 		a = [1,3,5,2,4,0,7,7.01]
@@ -93,6 +95,14 @@ class test007(unittest.TestCase):
 		b = [3,1]
 		d = stats.chiSquaredHistogramDistance(a,b)
 		self.assertAlmostEqual(d,1.0)
+
+	def test_bin(self):
+		"""Histogram bin value retrieval"""
+		a = [1,3,5,2,4,0,7,7.01]
+		hist = stats.Histogram(a, n_bins=8)
+		self.assertTrue(hist[7].count == 2)
+		self.assertTrue(hist[-1].count == 0)
+
 
 
 if __name__=='__main__':
