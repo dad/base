@@ -76,6 +76,13 @@ class HistogramBin(object):
 		if not self._total is None and not self._cumcount is None:
 			res = self._cumcount/float(self._total)
 		return res
+	
+
+class HistogramFactory(object):
+	def integerHistogram(self, min, max):
+		"""Return histogram with bins centered at each integer between min and max, inclusive"""
+		h = Histogram(vals=None, n_bins= int(max)-int(min)+1, min_val=min-0.5, max_val=max+0.5)
+		return h
 
 class Histogram:
 	def __init__(self, vals=None, n_bins=1, min_val=None, max_val=None):
@@ -165,6 +172,9 @@ class Histogram:
 	def _bin_mid(self,binindex):
 		return self._min_val + self._bin_width*(binindex+0.5)
 
+	@property
+	def size(self):
+	    return len(self._bins)
 	
 	@property
 	def bins(self):

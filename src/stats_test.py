@@ -103,7 +103,7 @@ class test006(unittest.TestCase):
 		self.assertTrue(hist[7].count == 2)
 		self.assertTrue(hist[-1].count == 0)
 
-	def test_bin(self):
+	def test_tot(self):
 		"""Histogram total retrieval"""
 		a = [1,3,5,2,4,0,7,7.01]
 		hist = stats.Histogram(a, n_bins=8)
@@ -112,7 +112,12 @@ class test006(unittest.TestCase):
 		hist.add([3,-1])
 		self.assertTrue(hist.total==len(a)+2)
 
-
+	def test_fac(self):
+		"""Integer histogram"""
+		hist = stats.HistogramFactory().integerHistogram(0,11)
+		self.assertTrue(hist.size == 12)
+		for (bi, b) in enumerate(hist.bins):
+			self.assertAlmostEqual(float(bi), b.mid)
 
 if __name__=='__main__':
 	unittest.main(verbosity=2)
