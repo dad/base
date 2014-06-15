@@ -1,0 +1,23 @@
+# From Table 3, Roseman, "Hydrophilicity of Polar Amino Acid Side-chains Is Markedly Reduced by Flanking Peptide Bonds," J. Mol. Biol. (1988) 200, 513-522
+aa	dG.unc	dG.corr
+A	-0.67	-0.67
+V	-2.18	-2.18
+L	-3.02	-3.02
+I	-3.02	-3.02
+F	-3.24	-3.24
+W	-2.86	-2.86
+M	-1.3	-1.67
+P	-1.75	-1.75
+CC	-1.48	-1.48
+G	0	0
+C	-0.34	-2
+Y	0.98	0.98
+S	4.35	0.10
+T	3.86	-0.42
+N	7.23	2.27
+Q	6.39	2.12
+D	8.72	1.57
+E	7.35	1.78
+K	6.13	2.46
+H	3.82	1.09
+R	12.1	3.89
