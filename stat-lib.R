@@ -529,10 +529,10 @@ charlist <- function(x,sep='') {
 }
 
 ## Lower triangle
-lt <- function(x) {x[lower.tri(x)]}
+lt <- function(x,...) {x[lower.tri(x,...)]}
 
 ## Lower triangle
-ut <- function(x) {x[upper.tri(x)]}
+ut <- function(x,...) {x[upper.tri(x,...)]}
 
 ## Trace
 tr <- function(x) {sum(diag(x),na.rm=T)}
