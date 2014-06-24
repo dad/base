@@ -31,6 +31,16 @@ def weighted_choice(choices):
 		upto += w
 	assert False, "Shouldn't get here"
   
+def weighted_choice_index(weights):
+	total = sum(weights)
+	r = random.uniform(0, total)
+	upto = 0
+	for (i,w) in enumerate(weights):
+		if upto + w >= r:
+			return i
+		upto += w
+	assert False, "Shouldn't get here"
+  
 class HistogramBin(object):
 	def __init__(self, mid, width, count, total=None, cumcount=None):
 		self._mid = mid
