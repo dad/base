@@ -2197,3 +2197,93 @@ barscatterplot <- function(x, horiz=TRUE, names.arg=names(x), dispersion=0.02, c
 		mtext(names.arg, side=1, at=1:n, las=las, line=1)
 	}
 }
+
+# Circles!
+
+is.circle <- function(x) {
+	class(x) == 'circle'
+}
+
+circles.overlap <- function(x,y,buffer) {
+	# Is distance between centers less than the sum of the radii, plus a buffer?
+	sqrt(sum((x$pos - y$pos)^2)) < (x$r + y$r + buffer)
+}
+
+collides <- function(c1, c2, buffer=0) {
+	if (is.null(c2)) {
+		return(FALSE)
+	}
+	c2l <- c2
+	if (is.circle(c2)) {
+		c2l <- list(c2)
+	}
+	res <- lapply(c2l, circles.overlap, y=c1, buffer=buffer)
+	# Do any circles overlap?
+	any(unlist(res))
+}
+
+circle <- function(pos, r) {
+	res <- list(pos=pos, r=r)
+	class(res) <- 'circle'
+	res
+}
+
+plot.circles <- function(x, ...) {
+	if (is.circle(x)) {
+		x <- list(x)
+	}
+	invisible(lapply(x, function(circ){draw.ellipse(circ$pos[1], circ$pos[2], a=circ$r, b=circ$r, ...)}))
+}
+
+print.circle <- function(circ) {
+	cat('x=',circ$pos[1], ' y=',circ$pos[2], ' r=',circ$r,'\n',sep='')
+}
+
+random.circle <- function(xlim, ylim, r, buffer=0) {
+	circle(pos=c(runif(1,min=xlim[1]+r+buffer, max=xlim[2]-r-buffer), runif(1,min=ylim[1]+r+buffer, max=ylim[2]-r-buffer)), r=r)
+}
+
+random.circles <- function(radii, xlim, ylim, num.attempts=100, buffer=0, border.buffer=0.2, ...) {
+	# Generate centers for circles such that the circles do not overlap
+	canvas.area <- (xlim[2]-xlim[1])*(ylim[2]-ylim[1])
+	areas <- sapply(radii, function(r){pi*r^2})
+	max.fraction <- 0.5
+	scale.factor <- 1 # Fraction to scale all radii by
+	if (sum(areas) > max.fraction*canvas.area) {
+		scale.factor <- max.fraction * canvas.area/sum(areas)
+	}
+	if (length(radii)==1 | is.null(length(radii))) {
+		# Only one radius provided
+		return(list(circles=list(circle(c(xlim[1] + 0.5*(xlim[2]-xlim[1]),ylim[1] + 0.5*(ylim[2]-ylim[1])),radii))))
+	}
+	r <- radii[1]
+	res <- list(random.circle(xlim, ylim, r, buffer=border.buffer)) # first is free
+	for (r in radii[2:length(radii)]) {
+		circ <- random.circle(xlim, ylim, r, buffer=border.buffer)
+		#print(circ)
+		attempts <- 1
+		#cat("a=",attempts,'\n')
+		#print(r, attempts, circ))
+		while (collides(circ,res,buffer) & attempts<num.attempts) {
+			circ <- random.circle(xlim, ylim, r, buffer=border.buffer)
+			attempts <- attempts + 1
+		}
+		if (attempts<num.attempts) {
+			res <- c(res, list(circ))
+		} else {
+			cat("# Failed to find spot for r =",r,"after",num.attempts,"attempts\n")
+		}
+
+	}
+	#print(res)
+	list(circles=res, scale.factor=scale.factor)
+}
+
+c1 <- circle(c(1,1),r=0.5)
+c2 <- circle(c(2,2),r=0.5)
+c3 <- circle(c(2,2),r=1)
+
+stopifnot(collides(c1,c3))
+stopifnot(collides(c2,c3))
+stopifnot(!collides(c1,c2))
+stopifnot(collides(c1,list(c2,c3)))
