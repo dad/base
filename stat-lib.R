@@ -2,6 +2,7 @@
 #library(Hmisc)
 # For principal component regression functions
 #library(pls)
+library(plotrix)
 #source("~/research/lib/pcr-lib.R")
 # For pcor functions
 source("~/research/lib/pcor.R")
