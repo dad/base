@@ -695,6 +695,16 @@ class DelimitedOutput(object):
 			line = "{com}\t{h.name} [{h.type_desc}] = {h.description}\n".format(com=comment, h=h)
 			stream.write(line)
 
-	def getFormat(self):
-		return self._sep.join(["\{\:{}\}".format(h.format) for h in self._header_list])
+	def _makeFormattable(self, str):
+		for ch in ' .#$%\t()':
+			str = str.replace(ch,'_')
+		return str
+
+	def getFormat(self, named=True):
+		#print "{name:s}\:{fmt:s}".format(name='a',fmt='b')
+		if named:
+			res = self._sep.join(["{{{name:s}:{fmt:s}}}".format(name=self._makeFormattable(h.name), fmt=h.format) for h in self._header_list])+'\n'
+		else:
+			res = self._sep.join(["{{:{fmt:s}}}".format(fmt=h.format) for h in self._header_list])+'\n'
+		return res
 
