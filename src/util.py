@@ -708,3 +708,8 @@ class DelimitedOutput(object):
 			res = self._sep.join(["{{:{fmt:s}}}".format(fmt=h.format) for h in self._header_list])+'\n'
 		return res
 
+	@property
+	def headers(self):
+		for h in self._header_list:
+			yield h
+
