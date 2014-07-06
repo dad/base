@@ -44,6 +44,13 @@ ep <- function(x) {
 	eval(parse(text=x))
 }
 
+mcast <- function(x, cast=as.numeric) {
+	# Convert matrix of lists to matrix of type specified by cast
+	mat <- matrix(cast(x), nrow=nrow(x), ncol=ncol(x))
+	dimnames(mat) <- dimnames(x)
+	mat
+}
+
 # Subset with text conditions, good for dynamic subsets
 tsubset <- function(x,cond.text) {
 	subset(x, eval(parse(text=cond.text)))
