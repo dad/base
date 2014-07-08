@@ -3,7 +3,7 @@ import cai, translate, util, biofile
 
 if __name__=='__main__':
 	parser = argparse.ArgumentParser(description="Assay/optimize codon sequences", usage="%(prog)s [options]")
-	parser.add_argument("sequence", default="", help="sequence to be assayed/optimized")
+	parser.add_argument(dest="sequence", default="", help="sequence to be assayed/optimized")
 	parser.add_argument("-o", "--out", dest="out_fname", default=None, help="output filename")
 	parser.add_argument("-r", "--reverse-translate", dest="reverse_translate", action="store_true", help="interpret sequences as amino acids, and convert back to codons?")
 	parser.add_argument("--species", dest="species", default="scer", help="species for identifying optimal codons")
@@ -11,7 +11,9 @@ if __name__=='__main__':
 	parser.add_argument("-s", "--seed", dest="seed", type=int, default=111, help="random-number generator seed")
 	parser.add_argument("-p", "--optimize", dest="optimize", action="store_true", default=False, help="optimize the codons?")
 	options = parser.parse_args()
-	seq = options.sequence.upper()
+
+	# Fetch sequence
+	seq = options.sequence
 	
 	random.seed(options.seed)
 
@@ -25,15 +27,15 @@ if __name__=='__main__':
 	else:
 		data_outs.addStream(sys.stdout)
 
-	# Read sequences from a FASTA file
+	# Read sequences from a FASTA file?
 	fname = os.path.expanduser(seq)
 	if os.path.isfile(fname):
 		(headers, seq_list) = biofile.readFASTA(fname)
 		seqs = zip(headers,seq_list)
 		info_outs.write("# Read {0:d} sequences from {1}\n".format(len(seqs), fname))
 	else:
-		seqs = [("<input>",seq)]
-		info_outs.write("# Read sequence from standard input\n")
+		seqs = [("command-line input",seq.upper())]
+		info_outs.write("# Read sequence L={:d} from standard input\n".format(len(seqs[0][1])))
 
 	# If reverse-translation is desired, do it.
 	if options.reverse_translate:
@@ -44,7 +46,7 @@ if __name__=='__main__':
 		seqs = new_seqs
 
 	# Obtain gene sequence using only optimal codons
-	info_outs.write("# Using optimal codons for %s\n" % options.species)
+	info_outs.write("# Using optimal codons for {}\n".format(options.species))
 	opt_codons = cai.getOptimalCodons(options.species)
 	relad_dict = cai.getRelativeAdaptivenessValues(options.species)
 	cai_fxn = cai.getCAIFunction(options.species)
@@ -85,13 +87,18 @@ if __name__=='__main__':
 					opt_seq += random.choice(codons[aa])
 				assert translate.translate(opt_seq) == prot_seq
 				header_line = "{0} Fop = {1:.4f}, CAI = {2:.4f}, GC = {3:.2f}".format(id, cai.getFop(opt_seq, opt_codons), cai_fxn(opt_seq), cai.getGC(opt_seq))
-				info_outs.write("# Optimized %s\n" % header_line)
+				info_outs.write("# Optimized {}\n".format(header_line))
 				opt_headers.append(header_line)
 				opt_seqs.append(opt_seq)
+		out_seqs = opt_seqs
+		out_headers = opt_headers
+		biofile.writeFASTA(out_seqs, data_outs, headers=out_headers)
+	elif options.reverse_translate: # Write out sequences but don't optimize
+		(out_headers,out_seqs) = zip(*seqs)
+		biofile.writeFASTA(out_seqs, data_outs, headers=out_headers)
 
-		biofile.writeFASTA(opt_seqs, data_outs, headers=opt_headers)
-		if not options.out_fname is None:
-			info_outs.write("# Wrote {0} optimized sequences to {1}\n".format(len(opt_seqs), options.out_fname))
-			outf.close()
+	if not options.out_fname is None:
+		info_outs.write("# Wrote {0} optimized sequences to {1}\n".format(len(opt_seqs), options.out_fname))
+		outf.close()
 
 
