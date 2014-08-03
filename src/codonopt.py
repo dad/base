@@ -6,6 +6,7 @@ if __name__=='__main__':
 	parser.add_argument(dest="sequence", default="", help="sequence to be assayed/optimized")
 	parser.add_argument("-o", "--out", dest="out_fname", default=None, help="output filename")
 	parser.add_argument("-r", "--reverse-translate", dest="reverse_translate", action="store_true", help="interpret sequences as amino acids, and convert back to codons?")
+	parser.add_argument("-a", "--avoid", dest="avoid_sequence", action="store_true", help="avoid the codons in the provided sequence?")
 	parser.add_argument("--species", dest="species", default="scer", help="species for identifying optimal codons")
 	parser.add_argument("--min-ra", dest="min_rel_adapt", type=float, default=1.0, help="minimum relative adaptiveness for optimization")
 	parser.add_argument("-s", "--seed", dest="seed", type=int, default=111, help="random-number generator seed")
@@ -77,14 +78,22 @@ if __name__=='__main__':
 		opt_seqs = []
 		# optimize the codon sequences
 		for (id, seq) in seqs:
+			orig_codons = [c for c in translate.codons(seq)]
 			prot_seq = translate.translate(seq)
 			if not prot_seq is None:
 				for aa in translate.AAs():
 					codons[aa] = [c for c in translate.getCodonsForAA(aa, rna=False) if relad_dict[c] >= options.min_rel_adapt]
 				opt_seq = ''
-				for aa in prot_seq:
+				for (aai, aa) in enumerate(prot_seq):
 					#opt_seq += opt_codon_dict[aa] #random.choice(codons[aa])
-					opt_seq += random.choice(codons[aa])
+					codons_to_choose_from = codons[aa]
+					# If avoiding codons and we have a choice, eliminate the avoided codon.
+					if options.avoid_sequence and len(codons_to_choose_from)>1:
+						try:
+							codons_to_choose_from.remove(orig_codons[aai])
+						except ValueError: # codon to be avoided not among codon choices anyway
+							pass
+					opt_seq += random.choice(codons_to_choose_from)
 				assert translate.translate(opt_seq) == prot_seq
 				header_line = "{0} Fop = {1:.4f}, CAI = {2:.4f}, GC = {3:.2f}".format(id, cai.getFop(opt_seq, opt_codons), cai_fxn(opt_seq), cai.getGC(opt_seq))
 				info_outs.write("# Optimized {}\n".format(header_line))
@@ -96,6 +105,7 @@ if __name__=='__main__':
 	elif options.reverse_translate: # Write out sequences but don't optimize
 		(out_headers,out_seqs) = zip(*seqs)
 		biofile.writeFASTA(out_seqs, data_outs, headers=out_headers)
+
 
 	if not options.out_fname is None:
 		info_outs.write("# Wrote {0} optimized sequences to {1}\n".format(len(opt_seqs), options.out_fname))
