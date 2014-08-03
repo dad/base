@@ -1,0 +1,27 @@
+# From 'Volume changes on protein folding', Harpaz, Gerstein & Chothia Structure 1994
+# http://www.cell.com/structure/pdf/S0969-2126(00)00065-4.pdf
+# Mean volumes of residues buried in protein interiors: Table 1
+aa	aa.3	number.buried.residues	mean.volume.a3	se.volume.a3	sd.volume.a3	sd.volume.pct
+G	Gly	323	63.8	0.2	2.9	4.6
+A	Ala	387	90.1	0.2	4.2	4.6
+P	Pro	64	123.1	0.7	5.9	4.8
+V	Val	353	139.1	0.2	4.7	3.4
+L	Leu	276	164.6	0.4	5.9	3.6
+I	Ile	234	164.9	0.4	6.2	3.7
+M	Met	72	167.7	0.8	6.7	4.0
+H	His	23	159.3	1.0	4.9	3.1
+F	Phe	115	193.5	0.6	5.9	3.1
+Y	Tyr	41	197.1	1.0	6.5	3.3
+W	Trp	26	231.7	1.1	5.6	2.4
+S	Ser	137	94.2	0.3	3.7	3.9
+T	Thr	102	120.0	0.5	4.8	4.0
+C	Cys	43	103.5	0.8	5.0	4.8
+# Cys = C involved in disulfide; Cyh = C not in disulfide
+#C	Cyh	30	113.2	0.7	3.8	3.3
+D	Asp	36	117.1	0.7	4.0	3.4
+N	Asn	41	127.5	0.6	4.2	3.3
+E	Glu	7	140.8	2.0	5.3	3.7
+Q	Gln	17	149.4	1.2	4.9	3.3
+K	Lys	6	170.0	2.1	5.1	3.0
+R	Arg	13	192.8	1.8	6.6	3.4
+Peptide	Peptide	1866	39.2	0.1	5.4	2.1
