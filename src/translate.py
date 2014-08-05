@@ -1,10 +1,9 @@
-#!/usr/bin/python
-# Begin my_bio_utils.py
+#!python
 """Module for performing various basic biology operations.
 
-Original version by Jesse Bloom, 2004.
-Expanded by D. Allan Drummond, 2004-2011."""
-#
+Seed version by Jesse Bloom, 2004.
+Expanded by D. Allan Drummond, 2004-2014."""
+
 import os, sys, string, math, random
 #-----------------------------------------------------------------------------------
 class BioUtilsError(Exception):
@@ -196,6 +195,66 @@ def sequenceIdentity(aligned_seq1, aligned_seq2):
 	if num_aligned > 0:
 		seq_identity = float(num_identical)/num_aligned
 	return seq_identity, num_identical, num_aligned
+
+class SiteConsensus(object):
+	def __init__(self, threshold=0.0, no_consensus_char='.'):
+		self.amino_acid = None
+		self.proportion = None
+		self.frequency = None
+		self._no_consensus_char = no_consensus_char
+		self._threshold = threshold
+
+	def computeFrom(self, aa_list):
+		if len(aa_list)>0:
+			counts = [(aa_list.count(aa),aa) for aa in AAs()]
+			counts.sort(reverse=True)
+			self.frequency = counts[0][0]
+			self.proportion = self.frequency/float(len(counts))
+			self.amino_acid = counts[0][1]
+			if self.proportion < self._threshold:
+				self.amino_acid = self._no_consensus_char
+
+class ConsensusSequence(object):
+	def __init__(self, threshold=0.0, no_consensus_char='.'):
+		self._seq = ''
+		self._len = -1
+		self._no_consensus_char = no_consensus_char
+		self._threshold = threshold
+		self._cons_list = None
+
+	def computeFrom(self, seq_list):
+		n = len(seq_list[0])
+		self._len = n
+		self._cons_list = []
+		self._seq = ''
+		for ai in range(n):
+			cons = SiteConsensus(self._threshold, self._no_consensus_char)
+			cons.computeFrom([s[ai] for s in seq_list])
+			self._cons_list.append(cons)
+			self._seq += cons.amino_acid
+
+	def identityTo(self, seq):
+		assert len(seq)==len(self._seq)
+		num_id = 0
+		num_tot = 0
+		for (ai,s) in enumerate(seq):
+			cons = self._cons_list[ai]
+			if self._seq[ai] != self._no_consensus_char:
+				num_tot += 1
+				if s==cons.amino_acid:
+					num_id += 1
+		return float(num_id)/num_tot
+
+	def __getitem__(self, ind):
+		return self._cons_list[ind]
+
+	@property
+	def noconsensus(self):
+		return self._no_consensus_char
+
+	def __str__(self):
+		return self._seq
+
 #---------------------------------------------------------------------------------
 _dna_complement = {'A':'T','T':'A','U':'A','G':'C','C':'G','a':'t','t':'a','u':'a','g':'c','c':'g'}
 _rna_complement = {'A':'U','U':'A','G':'C','C':'G','a':'u','u':'a','g':'c','c':'g'}
