@@ -1,6 +1,6 @@
 #! python
 
-import sys, os, random, string, argparse
+import sys, os, random, string, argparse, subprocess
 import biofile, util, translate, stats
 
 class MuscleError(Exception):
@@ -20,11 +20,12 @@ def alignSequences(seq_list, max_iters=16, exepath=const_default_muscle_exepath)
 
 	cmd = "muscle -in {} -out {} -quiet -maxiters {:d}".format(tmp_fasta_file, outfile_name, max_iters)
 	#print cmd
-	print os.path.expanduser(exepath)
+	#print os.path.expanduser(exepath)
 	#print exepath
-	if not os.path.isfile(os.path.expanduser(exepath)):
-		raise MuscleError, "Can't find muscle executable at {}".format(os.path.expanduser(exepath))
-	error = os.spawnv(os.P_WAIT, os.path.expanduser(exepath), [x for x in cmd.split()])
+	#if not os.path.isfile(os.path.expanduser(exepath)):
+	#	raise MuscleError, "Can't find muscle executable at {}".format(os.path.expanduser(exepath))
+	#error = os.spawnv(os.P_WAIT, os.path.expanduser(exepath), [x for x in cmd.split()])
+	error = subprocess.call([exepath] + cmd.split()[1:])
 
 	if not error:
 		seq_dict = biofile.readFASTADict(outfile_name)
