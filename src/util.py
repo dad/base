@@ -407,6 +407,13 @@ class DelimitedLineReader:
 	def atEnd(self):
 		return self.cache.isEmpty()
 
+	@property
+	def ncol(self):
+		res = None
+		if self.handlers:
+			res = len(self.handlers)
+		return res
+
 	def getRawLine(self):
 		return self.cur_line
 
@@ -641,11 +648,14 @@ class LightDataFrame:
 
 def readTable(stream, header=True, sep='\t', skip=0, header_name_processor=defaultHeader):
 	dlr = DelimitedLineReader(stream, header=header, sep=sep, skip=skip, header_name_processor=header_name_processor)
-	header_flds = dlr.getHeader()
 	data_dict = {}
 	initialized = False
 	for flds in dlr.dictentries:
 		if not initialized:
+			if header:
+				header_flds = dlr.getHeader()
+			else:
+				header_flds = range(len(flds))
 			for h in header_flds:
 				data_dict[h] = [flds[h]]
 			initialized = True
