@@ -212,14 +212,18 @@ class SiteConsensus(object):
 		if len(aa_list)>0:
 			counts = [(aa_list.count(aa),aa) for aa in AAs()]
 			counts.sort(reverse=True)
-			ungapped_len = float(sum(counts))
-			props = [ct/ungapped_len for (ct,aa) in counts if ct>0]
-			self.entropy = sum([-p*math.log(p,20.0) for p in props])
+			ungapped_len = float(sum([c for (c,a) in counts]))
+			self.amino_acid = self._no_consensus_char
+			if counts[0][0]>0:
+				self.amino_acid = counts[0][1]
 			self.frequency = counts[0][0]
 			self.gap_frequency = len(aa_list)-ungapped_len
 			self.gap_proportion = self.gap_frequency/len(aa_list)
-			self.proportion = self.frequency/ungapped_len
-			self.amino_acid = counts[0][1]
+			#print self.amino_acid, self.gap_proportion, self.gap_frequency, len(aa_list)
+			if ungapped_len>0.0:
+				props = [ct/ungapped_len for (ct,aa) in counts if ct>0]
+				self.entropy = sum([-p*math.log(p,20.0) for p in props])
+				self.proportion = self.frequency/ungapped_len
 			if self.gap_proportion >= self._gap_threshold:
 				self.amino_acid = self._no_consensus_char
 
@@ -237,6 +241,7 @@ class ConsensusSequence(object):
 		self._cons_list = []
 		self._seq = ''
 		for ai in range(n):
+			#print ai,
 			cons = SiteConsensus(self._threshold, self._no_consensus_char)
 			cons.computeFrom([s[ai] for s in seq_list])
 			self._cons_list.append(cons)
@@ -253,6 +258,16 @@ class ConsensusSequence(object):
 				if s==cons.amino_acid:
 					num_id += 1
 		return float(num_id)/num_tot
+
+	def coverage(self, seq):
+		assert len(seq)==len(self._seq)
+		# How many positions are there to be covered?
+		cons_length = len(self._seq)-self._seq.count(self._no_consensus_char)
+		covered = 0
+		for (ai,s) in enumerate(seq):
+			if s != '-' and self._seq[ai] != self._no_consensus_char:
+				covered += 1
+		return float(covered)/cons_length
 
 	def __getitem__(self, ind):
 		return self._cons_list[ind]
