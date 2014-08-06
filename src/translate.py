@@ -197,21 +197,30 @@ def sequenceIdentity(aligned_seq1, aligned_seq2):
 	return seq_identity, num_identical, num_aligned
 
 class SiteConsensus(object):
-	def __init__(self, threshold=0.0, no_consensus_char='.'):
+	def __init__(self, gap_threshold=0.0, no_consensus_char='.'):
 		self.amino_acid = None
 		self.proportion = None
 		self.frequency = None
+		self.gap_frequency = None
+		self.gap_proportion = None
+		self.entropy = None
 		self._no_consensus_char = no_consensus_char
-		self._threshold = threshold
+		#self._proportion_threshold = threshold
+		self._gap_threshold = gap_threshold # Proportion of gaps above which there is no consensus
 
 	def computeFrom(self, aa_list):
 		if len(aa_list)>0:
 			counts = [(aa_list.count(aa),aa) for aa in AAs()]
 			counts.sort(reverse=True)
+			ungapped_len = float(sum(counts))
+			props = [ct/ungapped_len for (ct,aa) in counts if ct>0]
+			self.entropy = sum([-p*math.log(p,20.0) for p in props])
 			self.frequency = counts[0][0]
-			self.proportion = self.frequency/float(len(counts))
+			self.gap_frequency = len(aa_list)-ungapped_len
+			self.gap_proportion = self.gap_frequency/len(aa_list)
+			self.proportion = self.frequency/ungapped_len
 			self.amino_acid = counts[0][1]
-			if self.proportion < self._threshold:
+			if self.gap_proportion >= self._gap_threshold:
 				self.amino_acid = self._no_consensus_char
 
 class ConsensusSequence(object):
