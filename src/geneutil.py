@@ -2,6 +2,68 @@
 
 import sys, os, math, string, random, pickle
 import translate, muscle, biofile, util
+import re
+
+
+def longestRun(seq, character, max_interruptions=0):
+	"""Find the longest run of character in seq, permitting no more than max_interruptions.
+		E.g. longestRun('AAAAA','A') = 5
+		longestRun('AAATAA','A',1) = 6
+		longestRun('AAATTAA','A',1) = 3
+	"""
+	#print seq
+	# Trivial case where character does not occur in sequence
+	if not character in seq:
+		return 0
+	# Trivial case where sequence is 1 characters long
+	if len(seq)<2:
+		return len(seq)
+	chars = list(set([x for x in seq]))
+	other_chars = chars[:]
+	other_chars.remove(character)
+	# No other characters? Also trivial.
+	if len(other_chars)==0:
+		return len(seq)
+	# Mask the sequence, making all non-character elements into mask_char
+	mask_char = '@'
+	assert not mask_char in chars
+	masked_seq = seq
+	for c in other_chars:
+		masked_seq = masked_seq.replace(c,mask_char)
+		#print masked_seq
+
+	longest_run = -1
+	if max_interruptions == 0:
+		# Easy case
+		runs = masked_seq.split(mask_char)
+		longest_run = max([len(r) for r in runs])
+	elif max_interruptions>0:
+		char_match_pat = re.compile('{}+'.format(character))
+		char_matches = re.findall(char_match_pat, masked_seq)
+		other_match_pat = re.compile('{}+'.format(mask_char))
+		other_matches = re.findall(other_match_pat, masked_seq)
+		if masked_seq[0] == mask_char:
+			other_matches = other_matches[1:]
+		if masked_seq[-1] == character:
+			other_matches.append('')
+		run_lens = [len(r) for r in char_matches]
+		irun_lens = [len(r) for r in other_matches]
+		for xi in range(len(run_lens)):
+			run_length = run_lens[xi]
+			irun_length = irun_lens[xi]
+			last_irun_length = 0
+			yi = xi+1
+			while irun_length<=max_interruptions and yi<len(run_lens):
+				run_length += run_lens[yi]
+				last_irun_length = irun_length
+				irun_length += irun_lens[yi]
+				yi += 1
+			# Include the last interrupting run length as well,
+			# to yield the total tract length
+			# E.g. AAATAAATTT = 7, not 6
+			if run_length+last_irun_length>longest_run:
+				longest_run = run_length+last_irun_length
+	return longest_run
 
 def default_alignment_print_fxn(num_alignments, prots, alignment, headers, orf):
 	print num_alignments, orf, len(alignment), " ".join(["%s-%s"%(x,y) for (x,y) in headers])
