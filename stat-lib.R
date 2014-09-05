@@ -280,11 +280,19 @@ mrev <- function(x) {
 	res
 }
 
-sderr <- function(x) {
+sderr <- function(x, na.rm=F) {
 	if (is.null(dim(x))) {
+		if (na.rm) {
+			x <- na.omit(x)
+		}
 		res <- sd(x)/sqrt(length(x))
 	} else {
-		res <- apply(x, 1, function(m) {sd(m)/sqrt(length(m))})
+		res <- apply(x, 1, function(m) {
+			if (na.rm){
+				m <- na.omit(m)
+			}
+			sd(m)/sqrt(length(m))
+			})
 	}
 	res
 }
@@ -1862,9 +1870,13 @@ noop <- function(x) {
 
 na.len <- function(x) {length(na.omit(x))}
 
-multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
-	equal.height=F, relative.heights=NULL, xlab="x", ylab="Empirical CDF", weight.list=NULL, ...) {
+multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, 
+	xlim=NULL, ylim=NULL,
+	bty='o', yaxt='s', yaxs='r', las=1, ylab='Empirical CDF', xlab='x', 
+	legend.at=NULL, legend.cex=1, legend.bty="n", points=FALSE, points.pch=NA, line.col=col,
+	weight.list=NULL, add=FALSE, ...) {
 	extra.args <- list(...)
+	log.transform <- log
 	if (is.data.frame(x) || is.matrix(x)) {
 		col.names <- colnames(x)
 		x <- lapply(1:ncol(x),function(m){x[,m]})
@@ -1880,8 +1892,8 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 	lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))
 	#cat("h2\n")
 	if (log) {
-		trans <- log10
-		inv.trans <- function(y) {10^y}
+		trans <- log.nz
+		inv.trans <- function(y) {exp(y)}
 	}
 	else {
 		trans <- noop
@@ -1907,11 +1919,26 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 		xlim <- c(xmin, max(sapply(x,max,na.rm=T),na.rm=T))
 	}
 
+	# Use prettier log axis if xaxt is unset
+	use.log.axis <- FALSE
+	xaxt <- extra.args$xaxt
+	if (is.null(xaxt) & log.transform) {
+		use.log.axis <- TRUE
+		xaxt <- 'n'
+	}
+
     length.out <- 1000
     at <- seq(trans(xlim[1]), trans(xlim[2]), length.out=length.out)
 
-	if (log) {log.str <- "x"} else {log.str <- ""}
-	plot(c(0,inv.trans(at),1.0), c(0,densities[[1]](at),1.0), type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, ...)
+	if (log.transform) {log.str <- "x"} else {log.str <- ""}
+
+	if (!add) {
+		plot(c(0,inv.trans(at),1.0), c(0,densities[[1]](at),1.0), type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, bty=bty, yaxt=yaxt, las=las, ...)
+		#plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, bty=bty, yaxt=yaxt, ...)
+		if (use.log.axis) {
+			my.axis(1, xlim, log=TRUE, expand.range=FALSE)
+		}
+	}
 	for (i in 1:length(x)) {
 		d <- densities[[i]]
 		lines(c(0,inv.trans(at),1.0), c(0,d(at),1.0), col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
@@ -1923,7 +1950,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, legend.at=NULL, x
 		  legend.names = as.character(1:length(x))
 		}
 		legend.cols <- col[1:min(length(x), length(col))]
-		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys)
+		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, bty=legend.bty)
 	}
 	densities
 }
@@ -1941,10 +1968,11 @@ flatpolygon <- function(x, y, min=0, horiz=TRUE, ...) {
 
 ## Takes a list of variables, plots kernel densities
 multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='SJ', col=NULL, lty="solid", 
-	fill=FALSE, lwd=1, legend.at=NULL, xlim=NULL, ylim=NULL,
+	fill=FALSE, lwd=1, xlim=NULL, ylim=NULL,
 	bty='n', yaxt='n', yaxs='i', ylab='', xlab='x', 
 	relative.heights=NULL, max.height=1.0, 
-	legend.cex=1, legend.bty="o", points=FALSE, points.pch=NA, line.col=col,
+	legend.at=NULL, legend.cex=1, legend.bty="o", 
+	points=FALSE, points.pch=NA, line.col=col,
 	weight.list=NULL, logodds=FALSE, add=FALSE, ...) {
 	
 	fxncall <- match.call(expand.dots=TRUE)
