@@ -1871,7 +1871,7 @@ noop <- function(x) {
 na.len <- function(x) {length(na.omit(x))}
 
 multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1, 
-	xlim=NULL, ylim=NULL,
+	xlim=NULL, ylim=c(0,1),
 	bty='o', yaxt='s', yaxs='r', las=1, ylab='Empirical CDF', xlab='x', 
 	legend.at=NULL, legend.cex=1, legend.bty="n", points=FALSE, points.pch=NA, line.col=col,
 	weight.list=NULL, add=FALSE, ...) {
@@ -1891,7 +1891,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1,
 	ltys <- as.vector(replicate(length(x)/length(c(lty))+1,lty))
 	lwds <- as.vector(replicate(length(x)/length(c(lwd))+1,lwd))
 	#cat("h2\n")
-	if (log) {
+	if (log.transform) {
 		trans <- log.nz
 		inv.trans <- function(y) {exp(y)}
 	}
@@ -1912,7 +1912,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1,
 	if (is.null(xlim)) {
 		## Make xlims
 		valid.x <- x
-		if (log) {
+		if (log.transform) {
 			valid.x <- lapply(x, function(y) {y[y>0]})
 		}
 		xmin <- min(sapply(valid.x,min,na.rm=T),na.rm=T)
@@ -1933,7 +1933,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1,
 	if (log.transform) {log.str <- "x"} else {log.str <- ""}
 
 	if (!add) {
-		plot(c(0,inv.trans(at),1.0), c(0,densities[[1]](at),1.0), type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, bty=bty, yaxt=yaxt, las=las, ...)
+		plot(1, 1, type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, bty=bty, yaxt=yaxt, las=las, ...)
 		#plot(inv.trans(d$x), (d$y/data.max.heights[[1]])*abs.max.heights[[1]], type='n', col=col[1], xlim=xlim, ylim=ylim, lty=lty, lwd=lwd, log=log.str, xlab=xlab, ylab=ylab, xaxt=xaxt, yaxs=yaxs, bty=bty, yaxt=yaxt, ...)
 		if (use.log.axis) {
 			my.axis(1, xlim, log=TRUE, expand.range=FALSE)
@@ -1941,7 +1941,8 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1,
 	}
 	for (i in 1:length(x)) {
 		d <- densities[[i]]
-		lines(c(0,inv.trans(at),1.0), c(0,d(at),1.0), col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
+		xvals <- inv.trans(at)
+		lines(c(xvals[1],xvals,xvals[length(xvals)]), c(0,d(at),1.0), col=cols[i], lty=ltys[i], lwd=lwds[i], ylim=ylim, ...)
 	}
 
 	if (!is.null(legend.at)) {
@@ -1952,8 +1953,8 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1,
 		legend.cols <- col[1:min(length(x), length(col))]
 		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, bty=legend.bty)
 	}
-	densities
-}
+	names(densities) <- names(x)
+	return(invisible(densities))}
 
 # Make a polygon with a flat bottom.
 flatpolygon <- function(x, y, min=0, horiz=TRUE, ...) {
