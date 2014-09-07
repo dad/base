@@ -302,13 +302,17 @@ gen.err <- function(x, mean.fn=mean, var.fn=sderr, ...) {
 		xm <- sapply(x, mean.fn, ...)
 		xv <- sapply(x, var.fn, ...)
 	}
-	else if (!is.null(dim(x)) & dim(x)[1]>1) {
-		xm <- unlist(apply(x, 1, mean.fn, ...))
-		xv <- unlist(apply(x, 1, var.fn, ...))
-	} else if (!is.null(dim(x)) & dim(x)[1]==1) {
-		xm <- mean.fn(x, ...)
-		xv <- var.fn(x, ...)
-	} else {
+	else if (!is.null(dim(x))) {
+		if (dim(x)[1]>1) {
+			xm <- unlist(apply(x, 1, mean.fn, ...))
+			xv <- unlist(apply(x, 1, var.fn, ...))
+		}
+		else if (dim(x)[1]==1) {
+			xm <- mean.fn(x, ...)
+			xv <- var.fn(x, ...)
+		}
+	}
+	else {
 		xm <- x
 		xv <- 0*x
 	}
