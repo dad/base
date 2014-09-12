@@ -14,6 +14,10 @@ tol.col <- function(n) {
 }
 myrainbow <- function(n) { tol.col(n) }
 
+enum <- function(x) {
+	lapply(1:length(x), function(m){data.frame(i=m,x=x[m])})
+}
+
 down.arrow <- function(x0, y0, x1, y1, prop, col='black', head.col=NULL, ...) {
 	if (is.null(head.col)) {
 		head.col <- col
@@ -36,7 +40,7 @@ my.arrows <- function(x, y=0, prop=0.2, arrow.prop=0.1, col='black', head.col=co
 	segments(x,y,x,y+arrow.length, col=col, ...)
 	xy.aspect.ratio <- abs((pu[2]-pu[1])/(pu[4]-pu[3]))
 	# Make arrowhead
-	polygon(c(x,x-arrow.prop*0.7*arrow.length*xy.aspect.ratio, x+arrow.prop*0.7*arrow.length*xy.aspect.ratio),c(y, y+arrow.prop*arrow.length, y+arrow.prop*arrow.length), col=head.col, ...)
+	polygon(c(x,x-arrow.prop*0.7*arrow.length*xy.aspect.ratio, x+arrow.prop*0.7*arrow.length*xy.aspect.ratio),c(y, y+arrow.prop*arrow.length, y+arrow.prop*arrow.length), col=head.col, border=col, ...)
 	invisible(c(x,y,x,y+arrow.length))
 }
 

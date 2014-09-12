@@ -46,7 +46,6 @@ def timestamp(zone='US/Central', timeformat='%Y-%m-%d %H:%M:%S %Z%z'):
 	#timest = localtime.strftime(timeformat)
 	return timest
 
-
 def printTiming(func):
 	"""Use as follows. Given a function foo(arg1,arg2), define as:
 	@util.printTiming
