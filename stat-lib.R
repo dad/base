@@ -14,6 +14,32 @@ tol.col <- function(n) {
 }
 myrainbow <- function(n) { tol.col(n) }
 
+down.arrow <- function(x0, y0, x1, y1, prop, col='black', head.col=NULL, ...) {
+	if (is.null(head.col)) {
+		head.col <- col
+	}
+	segments(x0,y0,x1,y1, ...)
+	arrow.length <- sqrt(sum((c(x0,y0)-c(x1,y1))^2))
+	pu <- par('usr')
+	xy.aspect.ratio <- abs((pu[2]-pu[1])/(pu[4]-pu[3]))
+	polygon(c(x1,x1-prop*0.7*arrow.length*xy.aspect.ratio, x1+prop*0.7*arrow.length*xy.aspect.ratio),c(y1, y1+prop*arrow.length, y1+prop*arrow.length), col=head.col, ...)
+}
+
+my.arrows <- function(x, y=0, prop=0.2, arrow.prop=0.1, col='black', head.col=col, ...) {
+	if (is.null(head.col)) {
+		head.col <- col
+	}
+	pu <- par('usr')
+	# Arrows point down, with length equal to prop times graph size
+	arrow.length <- (pu[4]-pu[3])*prop #sqrt(sum((c(x0,y0)-c(x1,y1))^2))
+	# Make segments
+	segments(x,y,x,y+arrow.length, col=col, ...)
+	xy.aspect.ratio <- abs((pu[2]-pu[1])/(pu[4]-pu[3]))
+	# Make arrowhead
+	polygon(c(x,x-arrow.prop*0.7*arrow.length*xy.aspect.ratio, x+arrow.prop*0.7*arrow.length*xy.aspect.ratio),c(y, y+arrow.prop*arrow.length, y+arrow.prop*arrow.length), col=head.col, ...)
+	invisible(c(x,y,x,y+arrow.length))
+}
+
 dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="svg", ...) {
 	if (output.type=='pdf') {
 		full.fname = paste(fdir,fname,".pdf",sep="")
