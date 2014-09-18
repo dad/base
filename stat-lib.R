@@ -29,7 +29,9 @@ down.arrow <- function(x0, y0, x1, y1, prop, col='black', head.col=NULL, ...) {
 	polygon(c(x1,x1-prop*0.7*arrow.length*xy.aspect.ratio, x1+prop*0.7*arrow.length*xy.aspect.ratio),c(y1, y1+prop*arrow.length, y1+prop*arrow.length), col=head.col, ...)
 }
 
-my.arrows <- function(x, y=0, prop=0.2, arrow.prop=0.1, col='black', head.col=col, ...) {
+my.arrows <- function(x, y=0, prop=0.2, arrowhead.prop=0.1, col='black', head.col=col, lwd=1, arrowhead.lwd=1, ...) {
+	# prop = proportion of drawing that arrow length will cover
+	# arrow.prop = proportion of arrow that arrowhead will cover
 	if (is.null(head.col)) {
 		head.col <- col
 	}
@@ -37,10 +39,15 @@ my.arrows <- function(x, y=0, prop=0.2, arrow.prop=0.1, col='black', head.col=co
 	# Arrows point down, with length equal to prop times graph size
 	arrow.length <- (pu[4]-pu[3])*prop #sqrt(sum((c(x0,y0)-c(x1,y1))^2))
 	# Make segments
-	segments(x,y,x,y+arrow.length, col=col, ...)
+	segments(x,y,x,y+arrow.length, col=col, lwd=lwd, ...)
 	xy.aspect.ratio <- abs((pu[2]-pu[1])/(pu[4]-pu[3]))
 	# Make arrowhead
-	polygon(c(x,x-arrow.prop*0.7*arrow.length*xy.aspect.ratio, x+arrow.prop*0.7*arrow.length*xy.aspect.ratio),c(y, y+arrow.prop*arrow.length, y+arrow.prop*arrow.length), col=head.col, border=col, ...)
+	# Golden ratio 1.618034 between height and width
+	golden.ratio <- 1.618034
+	arrowhead.height <- arrow.length*arrowhead.prop
+	arrowhead.width <- arrowhead.height*xy.aspect.ratio/golden.ratio
+
+	polygon(c(x,x-arrowhead.width/2, x+arrowhead.width/2),c(y, y+arrowhead.height, y+arrowhead.height), col=head.col, border=col, lwd=arrowhead.lwd, ...)
 	invisible(c(x,y,x,y+arrow.length))
 }
 
