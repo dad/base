@@ -98,20 +98,24 @@ strReverse <- function(x) sapply(lapply(strsplit(x, NULL), rev), paste, collapse
 #alias	filename	description	fraction1	fraction2	fraction3
 #30C MDY748	../data/ms/mdy748-ss.clar.72.150-erlic.txt	NA	L	H	NA
 #30C BY4741	../data/ms/by4741-30C.txt	NA	M	H	L
-load.maxquant.data.triple <- function(control.filename, additional.fields=c("n.proteins","n.peptides","ms.ms.count")) {
+load.maxquant.data.triple <- function(control.filename, additional.fields=c("n.proteins","n.peptides","ms.ms.count"), verbose=TRUE) {
 	# Read in the data
 	run.files <- read.delim(control.filename, comment.char='#', stringsAsFactors=FALSE)
 
 	run.data <- lapply(1:nrow(run.files), function(id) {
 		x <- run.files[id,]
 		fname <- x$filename
-		cat("Reading ", fname, sep='')
+		if (verbose) {
+			cat("Reading ", fname, sep='')
+		}
 		raw <- read.delim(fname, comment.char='#', stringsAsFactors=FALSE)
 		res <- NULL
 		# Assign intensities
 		# Assign ratios, inverting if necessary
 		n.fractions <- length(which(x[,paste('fraction',1:3,sep='')]!='NA'))
-		cat(" (", n.fractions, " fractions)", sep='')
+		if (verbose) {
+			cat(" (", n.fractions, " fractions)", sep='')
+		}
 		for (irnn in 1:n.fractions) {
 			fracstr <- paste('fraction',irnn,sep='')
 			if (!is.na(x[[fracstr]])) {
@@ -143,7 +147,9 @@ load.maxquant.data.triple <- function(control.filename, additional.fields=c("n.p
 		}
 		# Append remaining non-label-specific fields
 		res <- data.frame(orf=raw$orf, res, raw[,additional.fields])
-		cat(" ", nrow(res),"lines\n", sep=' ')
+		if (verbose) {
+			cat(" ", nrow(res),"lines\n", sep=' ')
+		}
 		res
 	}) # End of loading run.data
 	names(run.data) <- run.files$alias
