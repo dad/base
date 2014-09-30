@@ -2200,7 +2200,7 @@ multi.density <- function(x, log=FALSE, type='l', kernel="rectangular", bw='SJ',
 			}
 			legend.cols <- col[1:min(length(x), length(col))]
 			if (fill) {
-				legend(legend.at[1], legend.at[2], legend=legend.names, fill=legend.cols, cex=legend.cex, bty=legend.bty)
+				legend(legend.at[1], legend.at[2], legend=legend.names, fill=legend.cols, cex=legend.cex, bty=legend.bty, lwd=lwds)
 			}
 			else {
 				legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, cex=legend.cex, bty=legend.bty, lwd=lwds)
