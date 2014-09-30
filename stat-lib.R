@@ -12,7 +12,16 @@ tol.color.values <- c('#332288','#88ccee','#44aa99','#117733','#999933','#ddcc77
 tol.col <- function(n) {
 	colorRampPalette(tol.color.values, space='rgb')(n)
 }
-myrainbow <- function(n) { tol.col(n) }
+myrainbow <- function(n) {
+	if (n>7) {
+		res <- tol.col(n)
+	} else if (n==2) {
+		res <- tol.col(7)[c(1,5)]
+	} else {
+		res <- tol.col(7)[ceiling(seq(1,7,length.out=n))]
+	}
+	res
+}
 
 enum <- function(x) {
 	lapply(1:length(x), function(m){data.frame(i=m,x=x[m],stringsAsFactors=F)})
