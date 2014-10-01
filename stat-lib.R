@@ -24,7 +24,7 @@ myrainbow <- function(n) {
 }
 
 enum <- function(x) {
-	lapply(1:length(x), function(m){data.frame(i=m,x=x[m],stringsAsFactors=F)})
+	lapply(1:length(x), function(m){list(i=m,x=x[[m]],stringsAsFactors=F)})
 }
 
 down.arrow <- function(x0, y0, x1, y1, prop, col='black', head.col=NULL, ...) {
