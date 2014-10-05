@@ -579,7 +579,7 @@ llm <- function(form, data=NULL, log=T, na.rm=F, ...) {
 	if (is.null(data)) {
 		# Get variables from the environment
 		x <- lm(form, method='model.frame')
-		print(x)
+		#print(x)
 	} else {
 		x <- data[,vars]
 	}
@@ -591,6 +591,13 @@ llm <- function(form, data=NULL, log=T, na.rm=F, ...) {
 	}
 	#print(x)
 	lm(form, data=x, ...)
+}
+
+labline <- function(g, x, length.out=100, ...) {
+	# Take result of log y ~ log x regression
+	# Plot line
+	expx <- exp(seq(log(min(x,na.rm=T)),log(max(x,na.rm=T)),length.out=length.out))
+	lines(expx, exp(coef(g)[1])*expx^(coef(g)[2]), ...)
 }
 
 charlist <- function(x,sep='') {
