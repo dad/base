@@ -547,8 +547,10 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, 
 }
 
 # Log-transform values
-llmodel2 <- function(y, x, log.fxn=log.nz, base=10, nperm=1, range.x='interval', range.y='interval', ...) {
-	lmodel2(log.fxn(y,log,base)~log.fxn(x,log,base), nperm=nperm, range.x=range.x, range.y=range.y, ...)
+llmodel2 <- function(x, y, log.fxn=log.nz, base=exp(1), nperm=1, range.x='interval', range.y='interval', ...) {
+	lx <- log.fxn(x,log,base)
+	ly <- log.fxn(y,log,base)
+	lmodel2(ly~lx, nperm=nperm, range.x=range.x, range.y=range.y, ...)
 }
 
 # Extract coefficients from lmodel2 fit
@@ -593,11 +595,18 @@ llm <- function(form, data=NULL, log=T, na.rm=F, ...) {
 	lm(form, data=x, ...)
 }
 
-labline <- function(g, x, length.out=100, ...) {
+labline <- function(g, x, length.out=100, method='OLS', ...) {
 	# Take result of log y ~ log x regression
 	# Plot line
 	expx <- exp(seq(log(min(x,na.rm=T)),log(max(x,na.rm=T)),length.out=length.out))
-	lines(expx, exp(coef(g)[1])*expx^(coef(g)[2]), ...)
+	if (class(g)=='lm') {
+		lines(expx, exp(coef(g)[1])*expx^(coef(g)[2]), ...)
+	} else if (class(g)=='lmodel2') {
+		r <- g$regression.results
+		coefs <- as.numeric(r[r$Method==method,2:3])
+		ey <- exp(coefs[1])*expx^(coefs[2])
+		lines(expx, ey, ...)
+	}
 }
 
 charlist <- function(x,sep='') {
