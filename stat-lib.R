@@ -110,6 +110,14 @@ p.0 <- function(...) {
 	paste(..., sep='.')
 }
 
+# Odds to probability
+o2p <- function(x) {x/(1+x)}
+# Probability to odds
+p2o <- function(x) {x/(1-x)}
+lo2p <- function(x, expf=exp){o2p(expf(x))}
+p2lo <- function(x, logf=log){logf(p2o(x))}
+
+
 # Make log-zeros into NA's
 log.nozero <- function(x, log.fxn=log, ...){
 	x[x<=0 | x==Inf] <- NA
