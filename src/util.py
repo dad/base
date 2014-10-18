@@ -225,7 +225,8 @@ class LineCache:
 				break
 			else:
 				if not line.strip().startswith(self.comment_str):
-					self.add(line)
+					if  not line.strip()=='':
+						self.add(line)
 				else:
 					if self._save_comments:
 						self.comment_cache.append(line)
@@ -242,7 +243,7 @@ class LineCache:
 		while not eof and (index >= len(self.cache)):
 			eof = self.refill()
 		if index >= len(self.cache):
-			raise ReaderEOFError("Attempt to read past end of stream (%d, %d)" % (index, len(self.cache)))
+			raise ReaderEOFError("Attempt to read past end of stream ({:d}, {:d})".format(index, len(self.cache)))
 		return self.cache[index]
 
 	def isEmpty(self):
@@ -269,13 +270,13 @@ def basicHeaderFixer(flds):
 				new_flds[fi] = f
 			else:  # more than one instance
 				i = 1
-				new_fld_name = '%s.%d' % (f,i)
+				new_fld_name = '{:s}.{:d}'.format(f,i)
 				# only look at field names up to this one.
 				# if this is the first instance of a repeated field name,
 				# it will not be changed.
 				while new_fld_name in set(new_flds + flds[0:fi-1]):
 					i += 1
-					new_fld_name = '%s.%d' % (f,i)
+					new_fld_name = '{:s}.{:d}'.format(f,i)
 				new_flds[fi] = new_fld_name
 		# Ensure we've actually fixed the problem
 		assert len(new_flds) == len(set(new_flds))
@@ -438,6 +439,14 @@ class DelimitedLineReader:
 				res = line[0] == self.comment_str
 		return res
 
+	def isBlank(self):
+		res = False
+		if self.isValid():
+			#print self.cur_line, self.cache.len()
+			line = self.cur_line.strip()
+			res = isBlank(line)
+		return res
+
 	def getHeaders(self, move_to_data=True):
 		return self.getHeader(move_to_data)
 	
@@ -486,7 +495,7 @@ class DelimitedLineReader:
 		self.handlers = None
 		inferred_string = []
 		while not handlers_identified and li < max_lines and self.isValid():
-			if not self.isComment():
+			if not self.isComment() and not self.isBlank():
 				# Not a comment line -- parse it.
 				if self.strip:
 					self.cur_line = self.cur_line.strip()

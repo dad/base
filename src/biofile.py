@@ -900,6 +900,10 @@ class GFFReader(object):
 				raise BioFileError, "Cannot find the FASTA file {}.".format(infile_name)
 			else:
 				self._infile = file(infile_name, 'r')
+		self._dlr = util.DelimitedLineReader(self._infile, header=False, sep='\t')
+
+	def reader(self):
+		return self._dlr
 
 	@property
 	def entries(self):
@@ -908,8 +912,7 @@ class GFFReader(object):
 		gff_req_fields = ['seqname','source','feature','start','end','score','strand','frame']
 		n_req_fields = len(gff_req_fields)
 		gff_addl_fields = ['attributes','comments']
-		dlr = util.DelimitedLineReader(self._infile, header=False, sep='\t')
-		for flds in dlr.entries:
+		for flds in self._dlr.entries:
 			n = len(flds)
 			names = gff_req_fields + gff_addl_fields[:(n-n_req_fields)] # Only take additional fields if provided
 			rec = GFFRecord()
