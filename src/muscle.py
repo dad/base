@@ -72,7 +72,7 @@ if __name__=='__main__':
 	outs = util.OutStreams()
 	if not options.out_fname is None:
 		fname = os.path.expanduser(options.out_fname)
-		print fname
+		#print fname
 		outf = file(fname,'w')
 		outs.addStream(outf)
 	else:
