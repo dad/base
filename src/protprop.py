@@ -148,7 +148,7 @@ class ProteinProperties(object):
 class Composition(object):
 	def __init__(self):
 		aas = translate.AAs()
-		self._comp_dict = dict([(aa,0.0) for aa in aas]) # list of (aa, frequency) tuples
+		self._comp_dict = dict([(aa,0) for aa in aas]) # list of (aa, frequency) tuples
 	
 	def initFromList(self, tuple_list):
 		self._comp_dict = dict(tuple_list)
@@ -277,8 +277,12 @@ if __name__=='__main__':
 		#print seq
 		line = "#{}\n{}\t{:d}\t{:1.4f}\t{:1.4f}\t{:1.4f}".format(h, biofile.firstField(h), pp.getLength(degapped_seq), pp.getCharge(degapped_seq, options.pH), pp.getIsoelectricPoint(degapped_seq), pp.getHydrophobicity(degapped_seq))
 		if not aas is None:
-			counts = dict(pp.getComposition(degapped_seq, aas))
-			line += '\t' + '\t'.join(["{:1.4f}".format(counts[aa]/float(len(degapped_seq))) for aa in aas]) + '\t' + '\t'.join(["{:d}".format(counts[aa]) for aa in aas])
+			counts = Composition()
+			counts.initFromSequence(degapped_seq)
+			freqs = Composition()
+			freqs.initFromSequence(degapped_seq)
+			freqs.normalize()
+			line += '\t' + '\t'.join(["{:1.4f}".format(freqs[aa]) for aa in aas]) + '\t' + '\t'.join(["{:d}".format(counts[aa]) for aa in aas])
 		outs.write(line + '\n')
 	#print seqs
 	if not options.out_fname is None:
