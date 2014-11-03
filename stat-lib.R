@@ -2034,13 +2034,15 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1,
 	return(invisible(densities))}
 
 # Make a polygon with a flat bottom.
-flatpolygon <- function(x, y, min=0, horiz=TRUE, ...) {
+flatpolygon <- function(x, y, minv=0, horiz=TRUE, ...) {
+	d <- na.omit(data.frame(x=x,y=y))
+	with(d,
 	if (horiz) {
-		polygon(c(min(x,na.rm=TRUE),x,max(x,na.rm=TRUE)), c(min,y,min), ...)
+		polygon(c(min(x,na.rm=TRUE),x,max(x,na.rm=TRUE)), c(minv,y,minv), ...)
+	} else {
+		polygon(c(minv,x,minv), c(min(y,na.rm=TRUE),y,min(y,na.rm=TRUE)), ...)
 	}
-	else {
-		polygon(c(min,x,min), c(min(y,na.rm=TRUE),y,min(y,na.rm=TRUE)), ...)
-	}
+	)
 }
 
 

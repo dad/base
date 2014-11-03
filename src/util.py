@@ -679,9 +679,9 @@ class Header(object):
 	def __init__(self, name, description, format):
 		self.name = name
 		self.description = description
-		self.format = format
+		self.format = format[-1].lower()
 		try:
-			self.type_desc = Header.format_types[format]
+			self.type_desc = Header.format_types[self.format]
 		except KeyError:
 			self.type_desc = ''
 
