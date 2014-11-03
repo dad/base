@@ -5,22 +5,34 @@ import translate, muscle, biofile, util
 import re
 
 
-def longestRun(seq, character, max_interruptions=0):
+def longestRun(seq, character_list, max_interruptions=0):
 	"""Find the longest run of character in seq, permitting no more than max_interruptions.
 		E.g. longestRun('AAAAA','A') = 5
 		longestRun('AAATAA','A',1) = 6
 		longestRun('AAATTAA','A',1) = 3
 	"""
 	#print seq
-	# Trivial case where character does not occur in sequence
-	if not character in seq:
+	# Trivial case where characters do not occur in sequence
+	if isinstance(character_list, str):
+		character_list = [x for x in character_list]
+
+	# No characters
+	if len(character_list)==0:
 		return 0
+
+	in_seq = True
+	for character in character_list:
+		in_seq = in_seq or (character in seq)
+	if not in_seq:
+		return 0
+			
 	# Trivial case where sequence is 1 characters long
 	if len(seq)<2:
 		return len(seq)
 	chars = list(set([x for x in seq]))
 	other_chars = chars[:]
-	other_chars.remove(character)
+	for character in character_list:
+		other_chars.remove(character)
 	# No other characters? Also trivial.
 	if len(other_chars)==0:
 		return len(seq)
@@ -31,6 +43,15 @@ def longestRun(seq, character, max_interruptions=0):
 	for c in other_chars:
 		masked_seq = masked_seq.replace(c,mask_char)
 		#print masked_seq
+
+	# Mask sequence 
+	target_char = '~'
+	if target_char in seq:
+		raise ValueError, "# Current implementation does not work if {} in sequence".format(target_char)
+	for c in character_list:
+		masked_seq = masked_seq.replace(c,target_char)
+
+	character = target_char
 
 	longest_run = -1
 	if max_interruptions == 0:
