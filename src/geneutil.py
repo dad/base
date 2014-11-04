@@ -32,7 +32,8 @@ def longestRun(seq, character_list, max_interruptions=0):
 	chars = list(set([x for x in seq]))
 	other_chars = chars[:]
 	for character in character_list:
-		other_chars.remove(character)
+		if character in other_chars:
+			other_chars.remove(character)
 	# No other characters? Also trivial.
 	if len(other_chars)==0:
 		return len(seq)
