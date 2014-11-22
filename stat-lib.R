@@ -554,11 +554,32 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, 
 	my.axis(2, ylim, log=T, las=las)
 }
 
+.fetch.data <- function(form, data=NULL, col.names=c('y','x')) {
+	vars <- all.vars(as.formula(form))
+	x <- NULL # will contain the data
+	# All of this will filter down into a y~x regression
+	new.form <- as.formula(paste(col.names, collapse='~'))
+	if (is.null(data)) {
+		# Get variables from the environment
+		x <- lm(form, method='model.frame')
+	} else {
+		# Get variables from provided data and regression formula
+		stopifnot(length(vars)==2)
+		x <- data[,vars]
+	}
+	colnames(x) <- col.names
+	list(data=x, formula=new.form)
+}
+
 # Log-transform values
-llmodel2 <- function(x, y, log.fxn=log.nz, base=exp(1), nperm=1, range.x='interval', range.y='interval', ...) {
-	lx <- log.fxn(x,log,base)
-	ly <- log.fxn(y,log,base)
-	lmodel2(ly~lx, nperm=nperm, range.x=range.x, range.y=range.y, ...)
+llmodel2 <- function(form, data=NULL, log.fxn=log.nz, base=exp(1), na.rm=FALSE, nperm=1, range.x='interval', range.y='interval', ...) {
+	dat <- .fetch.data(form, data, col.names=c('y','x'))
+	x <- log.fxn(dat$data,base=base)
+	# Omit NAs if requested
+	if (na.rm) {
+		x <- na.omit(x)
+	}
+	lmodel2(dat$formula, data=x, nperm=nperm, range.x=range.x, range.y=range.y, ...)
 }
 
 # Extract coefficients from lmodel2 fit
@@ -582,25 +603,15 @@ confint2 <- function(g, model='OLS') {
 }
 
 
-# Default log-transformed lm()
-llm <- function(form, data=NULL, log=T, na.rm=F, ...) {
-	vars <- all.vars(as.formula(form))
-	x <- NULL
-	if (is.null(data)) {
-		# Get variables from the environment
-		x <- lm(form, method='model.frame')
-		#print(x)
-	} else {
-		x <- data[,vars]
-	}
-	if (log) {
-		x <- log.nozero(x)
-	}
+# log-transformed lm()
+llm <- function(form, data=NULL, log.fxn=log.nz, base=exp(1), na.rm=FALSE, ...) {
+	dat <- .fetch.data(form, data, col.names=c('y','x'))
+	x <- log.fxn(dat$data,base=base)
+	# Omit NAs if requested
 	if (na.rm) {
 		x <- na.omit(x)
 	}
-	#print(x)
-	lm(form, data=x, ...)
+	lm(dat$formula, data=x, ...)
 }
 
 labline <- function(g, x, length.out=100, method='OLS', ...) {
