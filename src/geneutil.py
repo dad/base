@@ -103,6 +103,19 @@ def longestRun(seq, character_list, max_interruptions=0):
 				longest_run = run_length+last_irun_length
 	return longest_run
 
+def maxSlidingCount(seq, character, windowlen=5):
+    """Find the maximum numbers of character in sliding window of length windowlen in seq.
+		E.g. maxSlidingCount('AAAAA','A') = 5
+		maxSlidingCount('AAATAA','A') = 4
+		maxSlidingCount('AAATTAA','A') = 3
+	"""
+    if windowlen <= len(seq):
+        max_count = max([seq[i:(i+windowlen)].count(character) for i in range(len(seq)-windowlen+1)])
+    else:
+        max_count = seq.count(character)
+    return max_count
+
+
 def default_alignment_print_fxn(num_alignments, prots, alignment, headers, orf):
 	print num_alignments, orf, len(alignment), " ".join(["%s-%s"%(x,y) for (x,y) in headers])
 
