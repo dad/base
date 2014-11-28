@@ -4,6 +4,19 @@ import sys, os, math, string, random, pickle
 import translate, muscle, biofile, util
 import re
 
+def gappedFind(seq, substring, start=True, gap='-'):
+	"""Find substring in seq, permitting gaps in seq
+	"""
+	gap_pattern = ('[{}]*'.format(gap)).join([a for a in substring])
+	pat = re.compile(gap_pattern)
+	res = re.search(pat, seq)
+	ind = -1
+	if not res is None:
+		if start:
+			ind = res.start()
+		else:
+			ind = res.end()
+	return ind
 
 def longestRun(seq, character_list, max_interruptions=0):
 	"""Find the longest run of character in seq, permitting no more than max_interruptions.
