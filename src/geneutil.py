@@ -5,7 +5,10 @@ import translate, muscle, biofile, util
 import re
 
 def gappedFind(seq, substring, start=True, gap='-'):
-	"""Find substring in seq, permitting gaps in seq
+	"""Find substring in seq, permitting gaps in seq.
+		e.g.:
+		geneutil.gappedFind('AAASS--SAA','SSS')==3
+		geneutil.gappedFind('AAASS--SAA','SSS',start=False)==8
 	"""
 	gap_pattern = ('[{}]*'.format(gap)).join([a for a in substring])
 	pat = re.compile(gap_pattern)
