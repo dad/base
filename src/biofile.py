@@ -918,6 +918,3 @@ class GFFReader(object):
 			rec = GFFRecord()
 			rec.readFromFields(flds)
 			yield rec
-
-
-
