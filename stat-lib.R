@@ -819,7 +819,7 @@ scale.common <- function(x, ...) {
 }
 
 # Names of, for example, pairwise correlations between variables named in ns
-pair.names <- function(ns, sep='--') {
+pair.names <- function(ns, sep="\u2013") {
   apply(combn(ns,2), 2, function(m){paste(m,collapse=sep)})
 }
 
