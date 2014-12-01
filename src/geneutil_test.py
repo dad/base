@@ -20,6 +20,25 @@ class test001(unittest.TestCase):
 		self.assertTrue(geneutil.longestRun('QQQAANN','QN',2)==7)
 		self.assertTrue(geneutil.longestRun('ANQNQAN','QN',1)==6)
 		self.assertTrue(geneutil.longestRun('ANQNQANP','QN',1)==6)
+	
+	def test_max_sliding_count(self):
+		"""Max Sliding Count testcases"""
+		self.assertTrue(geneutil.maxSlidingCount('AAAAA','A')==5)
+		self.assertTrue(geneutil.maxSlidingCount('AAAAA','Q')==0)
+		self.assertTrue(geneutil.maxSlidingCount('AAATAA','A')==4)
+		self.assertTrue(geneutil.maxSlidingCount('AAATTAA','A')==3)
+		self.assertTrue(geneutil.maxSlidingCount('MMMMMMMMMMABCABCABCDM','M',10)==10)
+		self.assertTrue(geneutil.maxSlidingCount('MMMMMMMMMMABCABCABCDM','C',10)==3)
+
+class test002(unittest.TestCase):
+	def test_gapped_find(self):
+		"""Gapped-find testcases"""
+		self.assertTrue(geneutil.gappedFind('AAASS--SAA','SSS')==3)
+		self.assertTrue(geneutil.gappedFind('AAASS--SAA','SSSS')==-1)
+		#print geneutil.gappedFind('AAASS--SAA','SSS',start=False)
+		self.assertTrue(geneutil.gappedFind('AAASS--SAA','SSS',start=False)==8)
+		self.assertTrue(geneutil.gappedFind('AAASSxxSAA','SSS',start=False)==-1)
+		self.assertTrue(geneutil.gappedFind('AAASSxxSAA','SSS',start=False,gap='x')==8)
 
 if __name__=="__main__":
 	unittest.main(verbosity=2)

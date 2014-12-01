@@ -10,6 +10,22 @@ def primerMinMelting(seq):
 	temp = sum([degs[x] for x in seq])
 	return temp
 
+def gappedFind(seq, substring, start=True, gap='-'):
+	"""Find substring in seq, permitting gaps in seq.
+		e.g.:
+		geneutil.gappedFind('AAASS--SAA','SSS')==3
+		geneutil.gappedFind('AAASS--SAA','SSS',start=False)==8
+	"""
+	gap_pattern = ('[{}]*'.format(gap)).join([a for a in substring])
+	pat = re.compile(gap_pattern)
+	res = re.search(pat, seq)
+	ind = -1
+	if not res is None:
+		if start:
+			ind = res.start()
+		else:
+			ind = res.end()
+	return ind
 
 def longestRun(seq, character_list, max_interruptions=0):
 	"""Find the longest run of character in seq, permitting no more than max_interruptions.
@@ -92,6 +108,19 @@ def longestRun(seq, character_list, max_interruptions=0):
 			if run_length+last_irun_length>longest_run:
 				longest_run = run_length+last_irun_length
 	return longest_run
+
+def maxSlidingCount(seq, character, windowlen=5):
+    """Find the maximum numbers of character in sliding window of length windowlen in seq.
+		E.g. maxSlidingCount('AAAAA','A') = 5
+		maxSlidingCount('AAATAA','A') = 4
+		maxSlidingCount('AAATTAA','A') = 3
+	"""
+    if windowlen <= len(seq):
+        max_count = max([seq[i:(i+windowlen)].count(character) for i in range(len(seq)-windowlen+1)])
+    else:
+        max_count = seq.count(character)
+    return max_count
+
 
 def default_alignment_print_fxn(num_alignments, prots, alignment, headers, orf):
 	print num_alignments, orf, len(alignment), " ".join(["%s-%s"%(x,y) for (x,y) in headers])
