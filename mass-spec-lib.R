@@ -83,7 +83,7 @@ load.maxquant.data <- function(control.filename) {
 	names(run.data) <- run.files$alias
 
 	# Merge data across experiments
-	merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,], yres$sL[yeast.match,], yres$raw[yeast.match,c(yres$fields$prot, yres$fields$mrna)])
+	merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,], yres$est[yeast.match,], yres$raw[yeast.match,c(yres$fields$prot, yres$fields$mrna)])
 	compare.flds <- c("ratio.hl", 'ratio.hl.normalized', 'ratio.hl.sd',"ratio.hl.count","intensity", "intensity.h","intensity.l","n.proteins","n.peptides","ms.ms.count")
 	for (ri in 1:length(run.data)) {
 	  run.flds <- paste(compare.flds,ri,sep='.')
@@ -170,7 +170,7 @@ load.maxquant.data.triple <- function(control.filename, additional.fields=c("n.p
 	names(run.data) <- run.files$alias
 
 	# Merge data across experiments
-	merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,], yres$sL[yeast.match,])
+	merged.sir <- data.frame(orf=all.orfs, yres$bg[yeast.match,], yres$est[yeast.match,])
 	for (ri in 1:length(run.data)) {
 		compare.flds <- colnames(run.data[[ri]])
 		run.flds <- paste(compare.flds,ri,sep='.')
