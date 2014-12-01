@@ -4,6 +4,12 @@ import sys, os, math, string, random, pickle
 import translate, muscle, biofile, util
 import re
 
+def primerMinMelting(seq):
+	"""Return melting temperature of primer"""
+	degs = {'T':2.0, 'A':2.0, 'G':2.0, 'C':2.0}
+	temp = sum([degs[x] for x in seq])
+	return temp
+
 
 def longestRun(seq, character_list, max_interruptions=0):
 	"""Find the longest run of character in seq, permitting no more than max_interruptions.
