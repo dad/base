@@ -2039,7 +2039,7 @@ multi.ecdf <- function(x, log=F, col=NULL, lty="solid", lwd=1,
 		  legend.names = as.character(1:length(x))
 		}
 		legend.cols <- col[1:min(length(x), length(col))]
-		legend(legend.at[1], legend.at[2], col=legend.cols, legend=legend.names, lty=ltys, bty=legend.bty)
+		legend(legend.at[1], legend.at[2], cex=legend.cex, col=legend.cols, legend=legend.names, lty=ltys, bty=legend.bty)
 	}
 	names(densities) <- names(x)
 	return(invisible(densities))}
