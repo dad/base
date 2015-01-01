@@ -484,7 +484,7 @@ class PeptideQuant3(PeptideQuant):
 		assert(n==len(denominator))
 		for i in range(n):
 			if denominator[i] >0:
-				ratios[i] = numerator[i]/denominator[i]
+				ratios[i] = numerator[i]/float(denominator[i])
 		return ratios
 
 	def getIntensityRatioSummary(self, ratio_string):
