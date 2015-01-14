@@ -38,25 +38,48 @@ down.arrow <- function(x0, y0, x1, y1, prop, col='black', head.col=NULL, ...) {
 	polygon(c(x1,x1-prop*0.7*arrow.length*xy.aspect.ratio, x1+prop*0.7*arrow.length*xy.aspect.ratio),c(y1, y1+prop*arrow.length, y1+prop*arrow.length), col=head.col, ...)
 }
 
-my.arrows <- function(x, y=0, prop=0.2, arrowhead.prop=0.1, col='black', head.col=col, lwd=1, arrowhead.lwd=1, ...) {
+my.arrows <- function(x, y=0, prop=0.2, arrowhead.prop=0.1, arrowhead.width.prop=0.02, col='black', head.col=col, lwd=1, arrowhead.lwd=1, log=FALSE, ...) {
 	# prop = proportion of drawing that arrow length will cover
 	# arrow.prop = proportion of arrow that arrowhead will cover
 	if (is.null(head.col)) {
 		head.col <- col
 	}
+	reuse <- function(x,n){rep(x, ceiling(n/length(x))+1)[1:n]}
+	# Check lengths; reuse y, col if necessary
+	n <- length(x)
+	y <- reuse(y,n)
+	col <- reuse(col,n)
+	head.col <- reuse(head.col,n)
+
 	pu <- par('usr')
+	#print(pu)
 	# Arrows point down, with length equal to prop times graph size
 	arrow.length <- (pu[4]-pu[3])*prop #sqrt(sum((c(x0,y0)-c(x1,y1))^2))
-	# Make segments
-	segments(x,y,x,y+arrow.length, col=col, lwd=lwd, ...)
 	xy.aspect.ratio <- abs((pu[2]-pu[1])/(pu[4]-pu[3]))
-	# Make arrowhead
+	# If x-axis log-transformed, account for it.
+	#print(xy.aspect.ratio)
+	if (par("xlog")) {
+		#xy.aspect.ratio <- abs((exp(pu[2])-exp(pu[1]))/(pu[4]-pu[3]))
+	}
+	#print(xy.aspect.ratio)
 	# Golden ratio 1.618034 between height and width
 	golden.ratio <- 1.618034
 	arrowhead.height <- arrow.length*arrowhead.prop
-	arrowhead.width <- arrowhead.height*xy.aspect.ratio/golden.ratio
-
-	polygon(c(x,x-arrowhead.width/2, x+arrowhead.width/2),c(y, y+arrowhead.height, y+arrowhead.height), col=head.col, border=col, lwd=arrowhead.lwd, ...)
+	arrowhead.width <- (pu[2]-pu[1])*arrowhead.width.prop #arrowhead.height*xy.aspect.ratio/golden.ratio
+	#print(arrowhead.width)
+	# Make segments
+	for (xi in 1:n) {
+		segments(x[xi],y[xi],x[xi],y[xi]+arrow.length, col=col[xi], lwd=lwd, ...)
+		# Make arrowhead
+		if (par("xlog")) {
+			arrowhead.lowerx = exp(log(x[xi])-arrowhead.width/2)
+			arrowhead.upperx = exp(log(x[xi])+arrowhead.width/2)
+		} else {
+			arrowhead.lowerx = x[xi]-arrowhead.width/2
+			arrowhead.upperx = x[xi]+arrowhead.width/2
+		}
+		polygon(c(x[xi],arrowhead.lowerx, arrowhead.upperx),c(y[xi], y[xi]+arrowhead.height, y[xi]+arrowhead.height), col=head.col[xi], border=col[xi], lwd=arrowhead.lwd, ...)
+	}
 	invisible(c(x,y,x,y+arrow.length))
 }
 
