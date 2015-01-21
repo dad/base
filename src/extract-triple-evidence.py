@@ -243,7 +243,8 @@ if __name__=='__main__':
 	for rat in ['hl','ml','hm']:
 		header += "\tratio.{0}\tratio.{0}.mean\tratio.{0}.normalized\tratio.{0}.normalized.mean\tratio.{0}.normalized.lower.95\tratio.{0}.normalized.upper.95\tratio.{0}.count\tratio.{0}.sd\tratio.{0}.normalized.sd".format(rat)
 		header += "\tiratio.{0}\tiratio.{0}.mean\tiratio.{0}.count\tiratio.{0}.sd".format(rat)
-	header += "\tintensity\tintensity.h\tintensity.m\tintensity.l\tms.ms.count\n"
+	header += "\tintensity\tintensity.h\tintensity.m\tintensity.l\tms.ms.count"
+	header += "\ttop3\ttop3.h\ttop3.m\ttop3.l\n"
 	outs.write(header)
 	n_written = 0
 	prot_list = [(x.id, x) for x in merged_ex.proteins]
@@ -286,6 +287,11 @@ if __name__=='__main__':
 		output_fields.append(util.FieldFormatter(prot.medium_intensity,"{0:e}"))
 		output_fields.append(util.FieldFormatter(prot.light_intensity,"{0:e}"))
 		output_fields.append(util.FieldFormatter(prot.msms_count,"{0:d}"))
+		output_fields.append(util.FieldFormatter(prot.top3,"{0:e}"))
+		output_fields.append(util.FieldFormatter(prot.heavy_top3,"{0:e}"))
+		output_fields.append(util.FieldFormatter(prot.medium_top3,"{0:e}"))
+		output_fields.append(util.FieldFormatter(prot.light_top3,"{0:e}"))
+
 		line += "\t" + "\t".join([str(f) for f in output_fields])
 		outs.write("{}\n".format(line))
 		n_written += 1

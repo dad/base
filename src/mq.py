@@ -101,6 +101,41 @@ class ProteinQuant(object):
 	def msms_count(self):
 		return int(self.getMSMSCountSummary().sum)
 
+	def getTopN(self, n=3, fetch=lambda x: x.intensity):
+		pep_int_dict = {}
+		for pep in self.peptides:
+			pep_inte = fetch(pep)
+			try:
+				inte = pep_int_dict[pep.sequence]
+				if pep_inte>inte:
+					pep_int_dict[pep.sequence] = pep_inte
+			except KeyError:
+				pep_int_dict[pep.sequence] = pep_inte
+		# DAD: assert different peptides?
+		peps = sorted(pep_int_dict.values(),reverse=True)
+		if len(peps)>=n:
+			res = sum(peps[0:n])
+		else:
+			res = None
+		return res
+
+	@property
+	def top3(self):
+		return self.getTopN(3)
+	
+	@property
+	def heavy_top3(self):
+		return self.getTopN(3, lambda x: x.heavy_intensity)
+	
+	@property
+	def medium_top3(self):
+		return self.getTopN(3, lambda x: x.medium_intensity)
+	
+	@property
+	def light_top3(self):
+		return self.getTopN(3, lambda x: x.light_intensity)
+	
+
 	@property
 	def degeneracy(self):
 		min_proteins = None
