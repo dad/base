@@ -142,7 +142,7 @@ p2lo <- function(x, logf=log){logf(p2o(x))}
 
 
 # Make log-zeros into NA's
-log.nozero <- function(x, log.fxn=log, ...){
+log.nozero <- function(x, log.fxn=base::log, ...){
 	x[x<=0 | x==Inf] <- NA
 	log.fxn(x, ...)
 }
