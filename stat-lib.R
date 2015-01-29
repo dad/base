@@ -357,7 +357,8 @@ mrev <- function(x) {
 	res
 }
 
-sderr <- function(x, na.rm=F) {
+# Standard error
+sderr <- function(x, na.rm=F, mult=1.0) {
 	if (is.null(dim(x))) {
 		if (na.rm) {
 			x <- na.omit(x)
@@ -371,8 +372,15 @@ sderr <- function(x, na.rm=F) {
 			sd(m)/sqrt(length(m))
 			})
 	}
-	res
+	mult*res
 }
+
+# 95% CI on standard error assuming normal
+sderr95 <- function(x, na.rm=F) {
+	sderr(x, na.rm=na.rm, mult=1.96)
+}
+
+
 # Turn data into data.frame with 
 gen.err <- function(x, mean.fn=mean, var.fn=sderr, ...) {
 	if (is.list(x)) {
