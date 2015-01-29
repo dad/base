@@ -510,6 +510,16 @@ poly.err <- function(x, y, x.lower=NULL, x.upper=NULL, y.lower=NULL, y.upper=NUL
 	#plot.err(x,y,x.lower,x.upper,y.lower,y.upper,add=add, bar.col=bar.col, ...)
 }
 
+# double.lines helps with drawing easier-to-see dotted/dashed etc. lines.
+# It first draws a default-translucent solid line, then overdraws this line with
+# the desired broken line. If lty='solid', then it falls back to lines(...).
+double.lines <- function(x,y, col='black', lty='solid', alpha=0.3, ...) {
+	if (lty != 'solid') {
+		lines(x, y, col=tcol(col,alpha), lty='solid', ...)
+	}
+	lines(x, y, col=col, lty=lty, ...)
+}
+
 my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, explicit=FALSE, labels=T, las=1, ...) {
 	if (log) {
 		at <- unlist(at)
