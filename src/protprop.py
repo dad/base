@@ -15,6 +15,11 @@ class ProteinProperties(object):
 		self.hydrophobicity_scales = {
 			'Kyte-Doolittle':{'A':1.800,'R':-4.500,'N':-3.500,'D':-3.500,'C':2.500,'Q':-3.500,'E':-3.500,'G':-0.400,'H':-3.200,'I':4.500,'L':3.800,'K':-3.900,'M':1.900,'F':2.800,'P':-1.600,'S':-0.800,'T':-0.700,'W':-0.900,'Y':-1.300,'V':4.200}
 		}
+		# Molecular weights of the amino acids in Da, not residues; subtract 18 for residue weight
+		self.mw = {'A': 89.09, 'C': 121.16, 'E': 147.13, 'D': 133.10, 'G': 75.07, 'F': 165.19, 
+			'I': 131.18, 'H': 155.16, 'K': 146.19, 'M': 149.21, 'L': 131.18, 'N': 132.12, 'Q': 146.15, 
+			'P': 115.13, 'S': 105.09, 'R': 174.20, 'T': 119.12, 'W': 204.23, 'V': 117.15, 'Y': 181.19,
+			'B': 132.61, 'Z': 146.64}
 
 	def _aminoAcidCharge(self, amino_acid, pH):
 		proportion = 1 / (1 + 10**(pH - self.pKa[amino_acid]))
@@ -32,6 +37,14 @@ class ProteinProperties(object):
 		for aa in self.charges.keys():
 			protein_charge += sequence.count(aa) * self._aminoAcidCharge(aa, pH)
 		return protein_charge
+
+	# Molecular weight in daltons
+	def getMolecularWeight(self, sequence):
+		# Remove water from amino acids; add back in for full protein.
+		h2o = 18.0153
+		weight = sum(self.mw[aa]-h2o for aa in sequence)+h2o
+		return weight
+	
 
 	def getIsoelectricPoint(self, sequence, tolerance=1e-4):
 		min_pH, max_pH = 3, 13
