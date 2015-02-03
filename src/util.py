@@ -718,12 +718,15 @@ class DelimitedOutput(object):
 			str = str.replace(ch,'_')
 		return str
 
-	def getFormat(self, named=True):
+	def getFormat(self, named=True, force_string=False):
 		#print "{name:s}\:{fmt:s}".format(name='a',fmt='b')
+		formatfxn = lambda x: x
+		if force_string:
+			formatfxn = lambda x: 's'
 		if named:
-			res = self._sep.join(["{{{name:s}:{fmt:s}}}".format(name=self._makeFormattable(h.name), fmt=h.format) for h in self._header_list])+'\n'
+			res = self._sep.join(["{{{name:s}:{fmt:s}}}".format(name=self._makeFormattable(h.name), fmt=formatfxn(h.format)) for h in self._header_list])+'\n'
 		else:
-			res = self._sep.join(["{{:{fmt:s}}}".format(fmt=h.format) for h in self._header_list])+'\n'
+			res = self._sep.join(["{{:{fmt:s}}}".format(fmt=formatfxn(h.format)) for h in self._header_list])+'\n'
 		return res
 
 	@property
