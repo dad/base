@@ -655,13 +655,13 @@ llm <- function(form, data=NULL, log.fxn=log.nz, base=exp(1), na.rm=FALSE, ...) 
 	lm(dat$formula, data=x, ...)
 }
 
-labline <- function(g, x, length.out=100, method='OLS', log.x=TRUE, ...) {
+labline <- function(g, x, length.out=100, method='OLS', log.x=TRUE, slope=NULL, ...) {
 	# Take result of log y ~ log x regression
 	# log.x => regression was done as ...~log(x)
 	# log.y => regression was done as log(y)~...
 	# Plot line
-	fnx <- if(log.x) log else noop
-	inv.fnx <- if(log.x) exp else noop
+	fnx <- if(log.x) base::log else noop
+	inv.fnx <- if(log.x) base::exp else noop
 	# Get regularly spaced x values, accounting for different spacing if log-transformed.
 	xx <- inv.fnx(seq(fnx(min(x,na.rm=T)),fnx(max(x,na.rm=T)),length.out=length.out))
 	# DAD: expand range by 10% by default?
@@ -672,11 +672,14 @@ labline <- function(g, x, length.out=100, method='OLS', log.x=TRUE, ...) {
 		r <- g$regression.results
 		coefs <- as.numeric(r[r$Method==method,2:3])
 	}
+	if (is.null(slope)) {
+		slope <- coefs[2]
+	}
 	# Plot
 	if (log.x) {
-		lines(xx, exp(coefs[1])*xx^(coefs[2]), ...)
+		lines(xx, exp(coefs[1])*xx^(slope), ...)
 	} else {
-		lines(xx, exp(coefs[1])*exp(coefs[2]*xx), ...)
+		lines(xx, exp(coefs[1])*exp(slope*xx), ...)
 	}
 }
 
