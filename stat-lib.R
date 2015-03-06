@@ -176,6 +176,33 @@ count.pairwise <- function (x, y = NULL) {
 	return(n)
 }
 
+cor.sp.matrix <- function(x, y, method='pearson', use='pairwise.complete.obs', log=FALSE, na.rm=FALSE) {
+	d <- data.frame(x,y)
+	fnstr.beg <- ""
+	fnstr.end <- ""
+	if (log) {
+		fnstr.beg <- "log.nz("
+		fnstr.end <- ")"
+	}
+	if (log) {
+		d <- log.nozero(d)
+	}
+	if (na.rm) {
+		d <- na.omit(d)
+	}
+	if (nrow(na.omit(d))<3) {
+		warning("Insufficient data to compute correlations")
+	}
+	r <- cor(d, method=method, use=use)
+	# Extract reliabilities and correlations
+	mrelx <- geom.mean(lt(r[1:ncol(x),1:ncol(x)]))
+	mrely <- geom.mean(lt(r[(ncol(x)+1):ncol(d),(ncol(x)+1):ncol(d)]))
+	rr <- r[1:ncol(x),(ncol(x)+1):ncol(d)]
+	mr <- geom.mean(rr)
+	res <- mr/sqrt(mrelx*mrely)
+	list(r=res, n=nrow(d), r.unc=mr)
+}
+
 # Spearman's correction for attenuation in a correlation coefficient.
 cor.sp <- function(x, x2=NULL, y=NULL, y2=NULL, method='pearson', use='pairwise.complete.obs', log=FALSE, na.rm=FALSE) {
 	# Formula: r_corrected = sqrt[ r(x1,y1)*r(x2,y2) / (r(x1,x2)*r(y1,y2)) ]
