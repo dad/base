@@ -176,6 +176,13 @@ count.pairwise <- function (x, y = NULL) {
 	return(n)
 }
 
+cor.sp2 <- function(x, y) {
+	# Assume 
+	if (!is.list(x)) {
+		
+	}
+}
+
 # Spearman's correction for attenuation in a correlation coefficient.
 cor.sp <- function(x, x2=NULL, y=NULL, y2=NULL, method='pearson', use='pairwise.complete.obs', log=FALSE, na.rm=FALSE) {
 	# Formula: r_corrected = sqrt[ r(x1,y1)*r(x2,y2) / (r(x1,x2)*r(y1,y2)) ]

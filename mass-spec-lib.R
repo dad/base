@@ -28,7 +28,7 @@ load.ms.data <- function(fname, invert=FALSE) {
 	zd <- match(all.orfs, d.raw$orf)
 	zy <- match(all.orfs, yres$sXc.avg$orf)
 	#z.desc <- match(d.raw$orf, desc$orf)
-	d <- data.frame(d.raw[zd,], yres$sXc.avg[zy,], yres$raw[zy,yres$fields$prot], yres$bg[zy,c('gene','desc')])
+	d <- data.frame(d.raw[zd,], yres$sXc.avg[zy,], yres$raw[zy,yres$fields$prot], yres$bg[zy,c('gene','description')])
 	y <- yres$raw
 	intensity.fld <- 'intensity'
 	prot.fld <- 'prot.degodoy'
