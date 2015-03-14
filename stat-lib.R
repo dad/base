@@ -220,7 +220,7 @@ cor.sp.matrix <- function(x, y, method='pearson', use='pairwise.complete.obs', l
 	rr <- r[1:nx,(nx+1):ncol(d)]
 	mr <- geom.mean(rr)
 	res <- mr/sqrt(mrelx*mrely)
-	list(r=res, n=nrow(d), r.unc=mr, rc=r, nx, ny, mrelx, mrely)
+	list(r=res, n=nrow(d), r.unc=mr, cor=r, nx=nx, ny=ny, relx=mrelx, rely=mrely)
 }
 
 # Spearman's correction for attenuation in a correlation coefficient.
