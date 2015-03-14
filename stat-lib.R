@@ -193,14 +193,34 @@ cor.sp.matrix <- function(x, y, method='pearson', use='pairwise.complete.obs', l
 	if (nrow(na.omit(d))<3) {
 		warning("Insufficient data to compute correlations")
 	}
+
+	# Dimensions: do the right thing if there's only one measurement of x or y.
+	nx <- 1
+	if (!is.null(dx <- dim(x))) {
+		nx <- dx[2]
+	}
+	ny <- 1
+	if (!is.null(dy <- dim(y))) {
+		ny <- dy[2]
+	}
+	# Calculate the full correlation matrix
 	r <- cor(d, method=method, use=use)
 	# Extract reliabilities and correlations
-	mrelx <- geom.mean(lt(r[1:ncol(x),1:ncol(x)]))
-	mrely <- geom.mean(lt(r[(ncol(x)+1):ncol(d),(ncol(x)+1):ncol(d)]))
-	rr <- r[1:ncol(x),(ncol(x)+1):ncol(d)]
+	if (nx>1) {
+		mrelx <- geom.mean(lt(r[1:nx,1:nx]))
+	} else {
+		mrelx <- r[1,1]
+	}
+
+	if (ny>1) {
+		mrely <- geom.mean(lt(r[(nx+1):ncol(d),(nx+1):ncol(d),drop=F]))
+	} else {
+		mrely <- r[ncol(d),ncol(d)]
+	}
+	rr <- r[1:nx,(nx+1):ncol(d)]
 	mr <- geom.mean(rr)
 	res <- mr/sqrt(mrelx*mrely)
-	list(r=res, n=nrow(d), r.unc=mr)
+	list(r=res, n=nrow(d), r.unc=mr, rc=r, nx, ny, mrelx, mrely)
 }
 
 # Spearman's correction for attenuation in a correlation coefficient.
@@ -647,7 +667,9 @@ llmodel2 <- function(form, data=NULL, log.fxn=log.nz, base=exp(1), na.rm=FALSE, 
 	if (na.rm) {
 		x <- na.omit(x)
 	}
-	lmodel2(dat$formula, data=x, nperm=nperm, range.x=range.x, range.y=range.y, ...)
+	res <- lmodel2(dat$formula, data=x, nperm=nperm, range.x=range.x, range.y=range.y, ...)
+	res$x <- dat$data
+	res
 }
 
 # Extract coefficients from lmodel2 fit
@@ -679,16 +701,26 @@ llm <- function(form, data=NULL, log.fxn=log.nz, base=exp(1), na.rm=FALSE, ...) 
 	if (na.rm) {
 		x <- na.omit(x)
 	}
-	lm(dat$formula, data=x, ...)
+	res <- lm(dat$formula, data=x, ...)
+	res$x <- dat$data
+	res
 }
 
-labline <- function(g, x, length.out=100, method='OLS', log.x=TRUE, slope=NULL, ...) {
+labline <- function(g, x=NULL, length.out=100, method='OLS', log.x=TRUE, slope=NULL, ...) {
 	# Take result of log y ~ log x regression
 	# log.x => regression was done as ...~log(x)
 	# log.y => regression was done as log(y)~...
 	# Plot line
 	fnx <- if(log.x) base::log else noop
 	inv.fnx <- if(log.x) base::exp else noop
+	# Get ordinate values
+	if (is.null(x)) {
+		if (class(g)=='lm') {
+			x <- g$x
+		} else if (class(g)=='lmodel2') {
+			x <- g$x
+		}
+	}
 	# Get regularly spaced x values, accounting for different spacing if log-transformed.
 	xx <- inv.fnx(seq(fnx(min(x,na.rm=T)),fnx(max(x,na.rm=T)),length.out=length.out))
 	# DAD: expand range by 10% by default?
