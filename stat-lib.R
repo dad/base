@@ -191,6 +191,7 @@ cor.sp.matrix <- function(x, y, method='pearson', use='pairwise.complete.obs', l
 		d <- na.omit(d)
 	}
 	if (nrow(na.omit(d))<3) {
+		# Correlations with fewer than 3 points throw errors (and are probably garbage anyway)
 		warning("Insufficient data to compute correlations")
 	}
 
@@ -209,13 +210,13 @@ cor.sp.matrix <- function(x, y, method='pearson', use='pairwise.complete.obs', l
 	if (nx>1) {
 		mrelx <- geom.mean(lt(r[1:nx,1:nx]))
 	} else {
-		mrelx <- r[1,1]
+		mrelx <- r[1,1] # Just one X value
 	}
 
 	if (ny>1) {
 		mrely <- geom.mean(lt(r[(nx+1):ncol(d),(nx+1):ncol(d),drop=F]))
 	} else {
-		mrely <- r[ncol(d),ncol(d)]
+		mrely <- r[ncol(d),ncol(d)] # Just one Y value
 	}
 	rr <- r[1:nx,(nx+1):ncol(d)]
 	mr <- geom.mean(rr)
