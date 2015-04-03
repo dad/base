@@ -5,7 +5,7 @@
 library(plotrix)
 #source("~/research/lib/pcr-lib.R")
 # For pcor functions
-source("~/research/lib/pcor.R")
+source("~/research/base/pcor.R")
 
 # From Paul Tol: http://www.sron.nl/~pault/colourschemes.pdf
 tol.color.values <- c('#332288','#88ccee','#44aa99','#117733','#999933','#ddcc77','#cc6677','#882255','#aa4499')
