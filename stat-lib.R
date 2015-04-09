@@ -5,7 +5,7 @@
 library(plotrix)
 #source("~/research/lib/pcr-lib.R")
 # For pcor functions
-source("~/research/lib/pcor.R")
+source("~/research/base/pcor.R")
 
 # From Paul Tol: http://www.sron.nl/~pault/colourschemes.pdf
 tol.color.values <- c('#332288','#88ccee','#44aa99','#117733','#999933','#ddcc77','#cc6677','#882255','#aa4499')
@@ -221,7 +221,9 @@ cor.sp.matrix <- function(x, y, method='pearson', use='pairwise.complete.obs', l
 	rr <- r[1:nx,(nx+1):ncol(d)]
 	mr <- geom.mean(rr)
 	res <- mr/sqrt(mrelx*mrely)
-	list(r=res, n=nrow(d), r.unc=mr, cor=r, nx=nx, ny=ny, relx=mrelx, rely=mrely)
+	# Correlation estimate is the Spearman-corrected correlation
+	# No confidence interval
+	list(r=res, n=nrow(d), r.unc=mr, cor=r, nx=nx, ny=ny, relx=mrelx, rely=mrely, estimate=res, conf.int=c(NA,NA))
 }
 
 # Spearman's correction for attenuation in a correlation coefficient.
@@ -568,7 +570,7 @@ double.lines <- function(x,y, col='black', lty='solid', alpha=0.3, ...) {
 	lines(x, y, col=col, lty=lty, ...)
 }
 
-my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, explicit=FALSE, labels=T, las=1, ...) {
+my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, explicit=FALSE, labels=T, las=1, cex.axis=1, ...) {
 	if (log) {
 		at <- unlist(at)
 		at <- at[at>0]
@@ -590,10 +592,10 @@ my.axis <- function(side, at, log.at=F, log=F, expand.range=0.1, explicit=FALSE,
 			# Put labels at log-transformed locations.
 			place.at <- latseq
 		}
-		axis(side, at=place.at, labels=labs, las=las, ...)
+		axis(side, at=place.at, labels=labs, las=las, cex.axis=cex.axis, ...)
 	}
 	else {
-		axis(side, at, labels, las=las, ...)
+		axis(side, at, labels, las=las, cex.axis=cex.axis, ...)
 	}
 }
 
@@ -612,7 +614,7 @@ my.abline <- function(g, model='OLS', ...) {
 }
 
 # Default log-transformed plot
-lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, pch=16, ...) {
+lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, pch=16, cex.axis=1, ...) {
 	if (is.null(xlab)) {
 		if (is.null(y)) {
 			xlab <- colnames(x)[1]
@@ -639,8 +641,8 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, 
 		ylim <- c(min(y[y>0],na.rm=T), max(y[y<Inf],na.rm=T))
 	}
 	plot(x, y, log='xy', xaxt='n', yaxt='n', xlim=xlim, ylim=ylim, xlab=xlab, ylab=ylab, pch=pch, ...)
-	my.axis(1, xlim, log=T, las=las)
-	my.axis(2, ylim, log=T, las=las)
+	my.axis(1, xlim, log=T, las=las, cex.axis=cex.axis)
+	my.axis(2, ylim, log=T, las=las, cex.axis=cex.axis)
 }
 
 .fetch.data <- function(form, data=NULL, col.names=c('y','x')) {
@@ -659,6 +661,8 @@ lplot <- function(x, y=NULL, xlim=NULL, ylim=NULL, las=1, xlab=NULL, ylab=NULL, 
 	colnames(x) <- col.names
 	list(data=x, formula=new.form)
 }
+
+lnoop <- function(x, base=NULL) { noop(x) }
 
 # Log-transform values
 llmodel2 <- function(form, data=NULL, log.fxn=log.nz, base=exp(1), na.rm=FALSE, nperm=1, range.x='interval', range.y='interval', ...) {
