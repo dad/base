@@ -707,7 +707,7 @@ llm <- function(form, data=NULL, log.fxn=log.nz, base=exp(1), na.rm=FALSE, ...) 
 	res
 }
 
-labline <- function(g, x=NULL, length.out=100, method='OLS', log.x=TRUE, slope=NULL, ...) {
+labline <- function(g, method, x=NULL, length.out=100, log.x=TRUE, slope=NULL, ...) {
 	# Take result of log y ~ log x regression
 	# log.x => regression was done as ...~log(x)
 	# log.y => regression was done as log(y)~...
