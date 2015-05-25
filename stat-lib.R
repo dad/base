@@ -12,6 +12,20 @@ tol.color.values <- c('#332288','#88ccee','#44aa99','#117733','#999933','#ddcc77
 tol.col <- function(n) {
 	colorRampPalette(tol.color.values, space='rgb')(n)
 }
+
+# From http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
+# The palette with grey:
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# The palette with black:
+cbbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# To use for fills, add
+scale_fill_manual(values=cbPalette)
+
+# To use for line and point colors, add
+scale_colour_manual(values=cbPalette)
+
 myrainbow <- function(n) {
 	if (n>7) {
 		res <- tol.col(n)
@@ -82,6 +96,48 @@ my.arrows <- function(x, y=0, prop=0.2, arrowhead.prop=0.1, arrowhead.width.prop
 	}
 	invisible(c(x,y,x,y+arrow.length))
 }
+
+
+# Pretty log labels for ggplot2
+# by Edward W.J. Wallace
+# "this took way more time and effort than I expected"
+# example
+# qplot(x=exp(5*rnorm(100)),geom="density",kernel="rectangular") + scale_x_log10nice()
+
+scientific_10 <- function(x) {
+    xout <- gsub("1e", "10^{", format(x),fixed=TRUE)
+    xout <- gsub("{-0", "{-", xout,fixed=TRUE)
+    xout <- gsub("{+", "{", xout,fixed=TRUE)
+    xout <- gsub("{0", "{", xout,fixed=TRUE)
+    xout <- paste(xout,"}",sep="")
+    return(parse(text=xout))
+}
+
+scale_x_log10nice <- function(name=NULL,omag=seq(-10,20),...) {
+    breaks10 <- 10^omag
+    scale_x_log10(name,breaks=breaks10,labels=scientific_10(breaks10),...)
+}
+
+scale_y_log10nice <- function(name=NULL,omag=seq(-10,20),...) {
+    breaks10 <- 10^omag
+    scale_y_log10(name,breaks=breaks10,labels=scientific_10(breaks10),...)
+}
+
+scale_loglog <- function(...) {
+    list(scale_x_log10nice(...),scale_y_log10nice(...))
+}
+
+# by Edward W.J. Wallace
+# qplot(x=rnorm(100),geom="density",kernel="rectangular") + theme_density
+theme_density <- theme(panel.border=element_blank(),
+                       panel.background=element_blank(),
+                       axis.text.y=element_blank(),
+                       axis.title.y=element_blank(),
+                       axis.ticks.y=element_blank())
+
+
+
+
 
 dev.out <- function(fname, fdir="../figures/", width=7, height=7, output.type="svg", ...) {
 	if (output.type=='pdf') {
