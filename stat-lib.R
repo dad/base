@@ -13,6 +13,7 @@ tol.col <- function(n) {
 	colorRampPalette(tol.color.values, space='rgb')(n)
 }
 
+# colorblind-friendly palette
 # From http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
 # The palette with grey:
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
