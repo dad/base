@@ -3,6 +3,7 @@
 # For principal component regression functions
 #library(pls)
 library(plotrix)
+library(ggplot2)
 #source("~/research/lib/pcr-lib.R")
 # For pcor functions
 source("~/research/base/pcor.R")

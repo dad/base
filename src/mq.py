@@ -263,7 +263,9 @@ class ProteinQuant3(ProteinQuant):
 		return self.getMediumIntensitySummary().sum
 
 		
-	
+class ProteinQuantTMT10:
+	def __init__(self):
+		pass
 
 class PeptideData(object):
 	def __init__(self):
@@ -293,6 +295,16 @@ class PeptideData3(object):
 		self.modified_sequence = None		
 		self.mods = None
 		self._msms_count = None
+
+class PeptideDataTMT10(object):
+	def __init__(self):
+		self.precursor_ion_fraction = 
+		self.reporter_intensities = []
+		self.sequence = None
+		self.modified_sequence = None		
+		self.mods = None
+		self._msms_count = None
+
 
 class PeptideDetectionEvent(object):
 	"""
