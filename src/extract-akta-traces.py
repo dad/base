@@ -2,7 +2,7 @@
 
 import sys, os, math, random, argparse
 from pycorn import pc_res3
-import util, biofile
+import util, biofile, stats
 
 
 
@@ -11,6 +11,7 @@ if __name__=='__main__':
 	# Required arguments
 	parser.add_argument(dest="in_fname", default=None, help="input filename")
 	# Optional arguments
+	parser.add_argument("--resolution-ml", dest="resolution_ml", default=0.005, help="output resolution, in mL: average output over elution-volume ranges no larger than this number")
 	parser.add_argument("-o", "--out", dest="out_fname", default=None, help="output filename")
 	options = parser.parse_args()
 
@@ -62,16 +63,30 @@ if __name__=='__main__':
 	format = dout.getFormat(named=True)
 	data_length = len(resfile[target_column]['data'])
 	n_written = 0
+	last_entry_volume = resfile[target_column]['data'][0][0]
+	last_entry = False
+	cur_entry_volume = None
+	# Tuples of (mL,UV)
+	elution_window = []
 	for i in range(data_length):
-		datdict = {}
-		for x in target_columns:
-			entry = resfile[x]['data'][i]
-			datdict['ml'] = entry[0]
-			datdict[x] = entry[1]
-		#print datdict
-		line = format.format(**datdict)
-		data_outs.write(line)
-		n_written += 1
+		entry = resfile[target_column]['data'][i]
+		cur_entry_volume = entry[0]
+		cur_entry_value = entry[1]
+		#print last_entry_volume, cur_entry_volume
+		if cur_entry_volume-last_entry_volume>=options.resolution_ml or i==data_length-1:
+			# Compute averages
+			datdict = {
+				'ml':stats.mean([x[0] for x in elution_window]),
+				target_column:stats.mean([x[1] for x in elution_window])
+			}
+			# Write out
+			line = format.format(**datdict)
+			data_outs.write(line)
+			n_written += 1
+			# Reset
+			last_entry_volume = cur_entry_volume
+			elution_window = []
+		elution_window.append((cur_entry_volume, cur_entry_value))
 
 	# Write out stopping time
 	data_outs.write("# Run finished {}\n".format(util.timestamp()))
