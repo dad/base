@@ -78,9 +78,8 @@ def processFile(in_fname, out_fname, options, data_outs, info_outs):
 	data_outs.write("# Run finished {}\n".format(util.timestamp()))
 
 	# Shut down output
-	if not options.out_fname is None:
+	if not out_fname is None:
 		info_outs.write("# Wrote {} lines to {}\n".format(n_written, out_fname))
-		outf.close()
 
 if __name__=='__main__':
 	parser = argparse.ArgumentParser(description="Extract tab-delimited data from AKTA .res files")
@@ -109,7 +108,7 @@ if __name__=='__main__':
 			full_fname = os.path.join(basedir, in_fname)
 			if hasExtension(full_fname, 'res'):
 				out_fname = replaceExtension(full_fname, 'txt')
-				print full_fname, out_fname
+				#print full_fname, out_fname
 				data_outs = util.OutStreams(file(out_fname,'w'))
 				processFile(full_fname, out_fname, options, data_outs, info_outs)
 	else: # Not a directory
