@@ -10,6 +10,17 @@ def primerMinMelting(seq):
 	temp = sum([degs[x] for x in seq])
 	return temp
 
+def getGappedIndex(seq, index, gap='-'):
+	"""Find 1-based residue number 'index' in sequence containing arbitrary gaps."""
+	assert index <= len(seq)
+	assert index > 0 # 1-based index
+	putative_index = index
+	sub = seq[0:putative_index]
+	while len(sub)-sub.count(gap)<index:
+		putative_index += 1
+		sub = seq[0:putative_index]
+	return putative_index
+
 def gappedFind(seq, substring, start=True, gap='-'):
 	"""Find substring in seq, permitting gaps in seq.
 		e.g.:

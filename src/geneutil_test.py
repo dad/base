@@ -40,5 +40,12 @@ class test002(unittest.TestCase):
 		self.assertTrue(geneutil.gappedFind('AAASSxxSAA','SSS',start=False)==-1)
 		self.assertTrue(geneutil.gappedFind('AAASSxxSAA','SSS',start=False,gap='x')==8)
 
+class test003(unittest.TestCase):
+	def test_gapped_index(self):
+		seq1 = '----AAAA'
+		seq2 = 'A---AA'
+		self.assertTrue(geneutil.getGappedIndex(seq1, 3)==7)
+		self.assertTrue(geneutil.getGappedIndex(seq2, 2)==5)
+
 if __name__=="__main__":
 	unittest.main(verbosity=2)
