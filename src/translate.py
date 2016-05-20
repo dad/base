@@ -181,13 +181,13 @@ def Codon_to_AA(codon):
 	return codonToAA(codon)
 
 #---------------------------------------------------------------------------------
-def sequenceIdentity(aligned_seq1, aligned_seq2):
+def sequenceIdentity(aligned_seq1, aligned_seq2, gap='-'):
 	num_identical = 0
 	num_aligned = 0
 	for i in range(min(len(aligned_seq1), len(aligned_seq2))):
 		aa1 = aligned_seq1[i]
 		aa2 = aligned_seq2[i]
-		if aa1 != '-' and aa2 != '-':
+		if aa1 != gap and aa2 != gap:
 			num_aligned += 1
 			if aa1 == aa2:
 				num_identical += 1
@@ -226,6 +226,7 @@ class SiteConsensus(object):
 				self.proportion = self.frequency/ungapped_len
 			if self.gap_proportion >= self._gap_threshold:
 				self.amino_acid = self._no_consensus_char
+
 
 class ConsensusSequence(object):
 	def __init__(self, threshold=0.0, no_consensus_char='.'):
