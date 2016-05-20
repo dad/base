@@ -10,15 +10,20 @@ def primerMinMelting(seq):
 	temp = sum([degs[x] for x in seq])
 	return temp
 
-def gappedFind(seq, substring, start=True, gap='-'):
-	"""Find substring in seq, permitting gaps in seq.
+def gappedFind(seq, substring, start=True, gapless=False, gap='-'):
+	"""Find 0-based position of substring in seq, permitting gaps in seq.
 		e.g.:
 		geneutil.gappedFind('AAASS--SAA','SSS')==3
-		geneutil.gappedFind('AAASS--SAA','SSS',start=False)==8
+		geneutil.gappedFind('AAASS--SAA','SSS', start=False)==8
+		geneutil.gappedFind('AAASS--SAA','SSS', start=False, gapless=True)==5
 	"""
+	if gapless:
+		test_seq = ''.join(seq.split(gap))
+	else:
+		test_seq = seq
 	gap_pattern = ('[{}]*'.format(gap)).join([a for a in substring])
 	pat = re.compile(gap_pattern)
-	res = re.search(pat, seq)
+	res = re.search(pat, test_seq)
 	ind = -1
 	if not res is None:
 		if start:

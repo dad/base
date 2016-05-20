@@ -24,17 +24,9 @@ def get_distance(x,y):
 
 def get_consensus_residue(aas):
 	# aas represents a column in a multiple alignment.
-	freqs = dict([(x, 0) for x in 'ACDEFGHIKLMNPQRSTVWXY-'])
-	# Count all the amino acids in the column
-	for aa in aas:
-		freqs[aa] += 1
+	freqs = [(aas.count(x),x) for x in 'ACDEFGHIKLMNPQRSTVWXY-']
 	# Now figure out the most frequent amino acid.
-	max_count = 0
-	for (aa, c) in freqs.items():
-		if c > max_count:
-			res = aa
-			max_count = c
-	return res, max_count
+	return sorted(freqs,reverse=True)[0]
 
 def make_consensus_protein_from_genes(genes):
 	prots = []
