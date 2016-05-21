@@ -10,5 +10,11 @@ class test001(unittest.TestCase):
 		d = orthodbutil.headerDict(header)
 		self.assertTrue(d['organism_name'] == 'Drosophila virilis')
 
+	def test_prime(self):
+		"""Handle prime quote"""
+		header = "1111077:0001b9 M1WGG3_CLAP2 gene=M1WGG3 orthodb8_OG=EOG8JHB13 orthodb8_level=4751 organism_name=`Claviceps purpurea 20.1` uniprot_de=`Probable tRNA 2`-O-ribose methyltransferase`"
+		d = orthodbutil.headerDict(header)
+		self.assertTrue(d['organism_name'] == 'Claviceps purpurea 20.1')
+
 if __name__=="__main__":
 	unittest.main(verbosity=2)

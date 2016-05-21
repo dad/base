@@ -3,6 +3,8 @@ import os, random, string, sys
 def headerDict(header_string):
 	"""Return dictionary from header string"""
 	# >7244:002ce8 FBpp0236088 gene=FBgn0208790 orthodb8_OG=EOG8MGTH1 orthodb8_level=32281 organism_name=`Drosophila virilis` uniprot_de=`GJ21671`
+	# Handling awful cases like uniprot_de=`Probable tRNA 2`-O-ribose methyltransferase`
+	header_string = header_string.replace("`-", "'-")
 	quote_split = header_string.split("`")
 	def garble(x):
 		return x.replace(" ", "@*#/*")
