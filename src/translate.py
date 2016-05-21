@@ -207,6 +207,8 @@ def compare(s1, s2, gap='-'):
 		aa2 = s2[i]
 		if aa1 != gap:
 			simobj.len_x += 1
+		if aa2 != gap:
+			simobj.len_y += 1
 		if aa1 != gap and aa2 != gap:
 			simobj.num_aligned += 1
 			if aa1 == aa2:
@@ -228,6 +230,22 @@ class SequenceSimilarity(object):
 			res = float(self.num_identical)/self.num_aligned
 		return res
 
+	@property
+	def fraction_aligned_x(self):
+		res = 0.0
+		if self.len_x>0:
+			res = float(self.num_aligned)/self.len_x
+		return res
+
+	@property
+	def fraction_aligned_y(self):
+		res = 0.0
+		if self.len_y>0:
+			res = float(self.num_aligned)/self.len_y
+		return res
+
+	def __str__(self):
+		return "nx: {:d}; ny: {:d}; i: {:1.3f}; fax: {:1.3f}; fay: {:1.3f}".format(self.len_x, self.len_y, self.identity, self.fraction_aligned_x, self.fraction_aligned_y)
 
 
 class SiteConsensus(object):

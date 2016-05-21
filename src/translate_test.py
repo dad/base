@@ -71,6 +71,23 @@ class Tester(unittest.TestCase):
 		self.assertTrue(translate.translate(s) is None)
 		self.assertTrue(translate.translateRaw(s) == 'SRKYA')
 
+class TestCompare(unittest.TestCase):
+	def test_comp(self):
+		"""compare"""
+		a = 'ACDEFGHIKLMNPQRSTVWY'
+		b = 'ACDEFGHIKLMNPQRSTVWY'
+		c = 'ACDEFGHIKLMNPQRSTVWq'
+		d = 'ACDEFGHIKLMNPQRS-VWY'
+		simab = translate.compare(a, b)
+		self.assertTrue(simab.identity == 1.0)
+		simac = translate.compare(a, c)
+		self.assertTrue(simac.identity == 19/20.0)
+		simad = translate.compare(a, d)
+		print simad
+		self.assertTrue(simad.identity == 1.0)
+		self.assertTrue(simad.fraction_aligned_x == 19/20.0)
+		self.assertTrue(simad.fraction_aligned_y == 1.0)
+
 
 if __name__=='__main__':
 	unittest.main(verbosity=2)
