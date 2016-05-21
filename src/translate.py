@@ -196,6 +196,40 @@ def sequenceIdentity(aligned_seq1, aligned_seq2, gap='-'):
 		seq_identity = float(num_identical)/num_aligned
 	return seq_identity, num_identical, num_aligned
 
+def compare(s1, s2, gap='-'):
+	simobj = SequenceSimilarity()
+	simobj.num_identical = 0
+	simobj.num_aligned = 0
+	simobj.len_x = simobj.len_y = 0
+	simobj.aligned_x = simobj.aligned_y = 0
+	for i in range(min(len(s1), len(s2))):
+		aa1 = s1[i]
+		aa2 = s2[i]
+		if aa1 != gap:
+			simobj.len_x += 1
+		if aa1 != gap and aa2 != gap:
+			simobj.num_aligned += 1
+			if aa1 == aa2:
+				simobj.num_identical += 1
+	return simobj
+
+class SequenceSimilarity(object):
+	def __init__(self):
+		#self.fraction_identity = None
+		self.num_aligned = None
+		self.num_identical = None
+		self.len_x = 0
+		self.len_y = 0
+
+	@property
+	def identity(self):
+		res = 0.0
+		if self.num_aligned>0:
+			res = float(self.num_identical)/self.num_aligned
+		return res
+
+
+
 class SiteConsensus(object):
 	def __init__(self, gap_threshold=0.0, no_consensus_char='.'):
 		self.amino_acid = None
