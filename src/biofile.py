@@ -56,10 +56,10 @@ class CodingExonRecord:
 		return self.coding_end - self.coding_start + 1
 
 	def printAttributes( self ):
-		print self
+		print(self)
 
 	def printRecord( self ):
-		print self
+		print(self)
 
 	def __repr__(self):
 		return "{} {} {} {} {} {} {} {} {} {}".format( self.chromosome, self.gene_ID, self.transcript_ID, self.peptide_ID,
@@ -797,9 +797,9 @@ def readFASTA(infile):
 	if not isinstance(infile,file):
 		infile_name = os.path.expanduser(infile)
 		if not os.path.isfile(infile_name):
-			raise BioFileError, "Cannot find the FASTA file {}.".format(infile_name)
+			raise BioFileError("Cannot find the FASTA file {}.".format(infile_name))
 		else:
-			infile = file(infile_name, 'r')
+			infile = open(infile_name, 'r')
 	seq = None
 	headers = []
 	sequences = []
@@ -894,12 +894,12 @@ def readFASTADict(infile_name, key_fxn = firstField):
 class GFFReader(object):
 	def __init__(self, infile):
 		self._infile = infile
-		if not isinstance(infile,file):
+		if isinstance(infile, str):
 			infile_name = os.path.expanduser(infile)
 			if not os.path.isfile(infile_name):
-				raise BioFileError, "Cannot find the FASTA file {}.".format(infile_name)
+				raise BioFileError("Cannot find the FASTA file {}.".format(infile_name))
 			else:
-				self._infile = file(infile_name, 'r')
+				self._infile = open(infile_name, 'r')
 		self._dlr = util.DelimitedLineReader(self._infile, header=False, sep='\t')
 
 	def reader(self):
