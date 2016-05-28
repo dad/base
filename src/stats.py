@@ -184,7 +184,7 @@ class Histogram:
 
 	@property
 	def size(self):
-	    return len(self._bins)
+		return len(self._bins)
 	
 	@property
 	def bins(self):
@@ -371,10 +371,10 @@ class LogAccumulator(Accumulator):
 # Sample with replacement
 # http://code.activestate.com/recipes/273085-sample-with-replacement/
 def sample_wr(population, k):
-    "Chooses k random elements (with replacement) from a population"
-    n = len(population)
-    _random, _int = random.random, int  # speed hack
-    return [population[x] for x in [_int(_random() * n) for i in xrange(k)]]
+	"Chooses k random elements (with replacement) from a population"
+	n = len(population)
+	_random, _int = random.random, int  # speed hack
+	return [population[x] for x in [_int(_random() * n) for i in xrange(k)]]
 
 def adjustPValues(p_values, method="fdr"):
 	"""Adjust P values for multiple testing.
@@ -428,7 +428,7 @@ def geometricMean(numlist):
 	If any entries of the list are 'None' or '-', they are removed
 	first."""
 	if len(numlist)==0:
-		raise StatsError, "Empty list."
+		raise StatsError("Empty list.")
 	mean = 0.0
 	log_sum = 0.0
 	n = 0
@@ -497,50 +497,50 @@ def sampleVariance(numlist):
 	return var
 #-------------------------------------------------------------------------------
 def StandardDeviation(numlist):
-    """Returns the sample standard deviation of a list of numbers.
+	"""Returns the sample standard deviation of a list of numbers.
 
-    If any entries of the list are 'None' or '-', they are removed first."""
-    v = Variance(numlist)
-    #print v
-    return math.sqrt(v)
+	If any entries of the list are 'None' or '-', they are removed first."""
+	v = Variance(numlist)
+	#print v
+	return math.sqrt(v)
 #-------------------------------------------------------------------------------
 def sampleStandardDeviation(numlist):
-    """Returns the sample standard deviation of a list of numbers.
+	"""Returns the sample standard deviation of a list of numbers.
 
-    If any entries of the list are 'None' or '-', they are removed first."""
-    v = sampleVariance(numlist)
-    #print v
-    return math.sqrt(v)
+	If any entries of the list are 'None' or '-', they are removed first."""
+	v = sampleVariance(numlist)
+	#print v
+	return math.sqrt(v)
 #-------------------------------------------------------------------------------
 def Kendalls_Tau(xlist, ylist):
-    """Calculates Kendall's tau non-parametric correlation between two variables.
+	"""Calculates Kendall's tau non-parametric correlation between two variables.
 
-    The input data is given in the two lists 'xdata' and 'ydata' which should be
-    of the same length.  If entry i of either list is 'None', this entry is
-    disregarded in both lists.
-    Returns Kendall's partial tau, the one-tailed P-value, and the number of
-    data points as a tuple: (tau, P, N).
-    Includes a correction for ties.
-    Based on Gibbons, JD, "Nonparametric measures of association",
-    Sage University Papers, pg 15 (1983)."""
-    if len(xlist) != len(ylist):
-		raise StatsError, "Data sets have different lengths."
-    xdata = []
-    ydata = []
-    for i in range(len(xlist)):
+	The input data is given in the two lists 'xdata' and 'ydata' which should be
+	of the same length.  If entry i of either list is 'None', this entry is
+	disregarded in both lists.
+	Returns Kendall's partial tau, the one-tailed P-value, and the number of
+	data points as a tuple: (tau, P, N).
+	Includes a correction for ties.
+	Based on Gibbons, JD, "Nonparametric measures of association",
+	Sage University Papers, pg 15 (1983)."""
+	if len(xlist) != len(ylist):
+		raise StatsError("Data sets have different lengths.")
+	xdata = []
+	ydata = []
+	for i in range(len(xlist)):
 		if xlist[i] != None and ylist[i] != None:
 			xdata.append(xlist[i])
 			ydata.append(ylist[i])
-    assert len(xdata) == len(ydata)
-    assert len(xdata) <= len(xlist) - xlist.count(None)
-    assert len(ydata) <= len(ylist) - ylist.count(None)
-    assert len(ydata) >= len(ylist) - xlist.count(None) - ylist.count(None)
-    if len(xdata) == 0:
-		raise StatsError, "No valid data entries."
-    n = len(xdata)
-    # compute the number of concordant and discordant pairs
-    conc = disc = 0.0 # concordant and discordant pairs
-    for i in range(n): # loop over all pairs
+	assert len(xdata) == len(ydata)
+	assert len(xdata) <= len(xlist) - xlist.count(None)
+	assert len(ydata) <= len(ylist) - ylist.count(None)
+	assert len(ydata) >= len(ylist) - xlist.count(None) - ylist.count(None)
+	if len(xdata) == 0:
+		raise StatsError("No valid data entries.")
+	n = len(xdata)
+	# compute the number of concordant and discordant pairs
+	conc = disc = 0.0 # concordant and discordant pairs
+	for i in range(n): # loop over all pairs
 		xi = xdata[i]
 		yi = ydata[i]
 		for j in range(i + 1, n):
@@ -553,36 +553,36 @@ def Kendalls_Tau(xlist, ylist):
 				conc += 1
 			else:
 				disc += 1
-    # compute the tie correction: sum(t * t - t)
-    xcopy = []
-    ycopy = []
-    for i in range(n):
+	# compute the tie correction: sum(t * t - t)
+	xcopy = []
+	ycopy = []
+	for i in range(n):
 		xcopy.append(xdata[i])
 		ycopy.append(ydata[i])
-    xties = yties = 0.0
-    while xcopy:
+	xties = yties = 0.0
+	while xcopy:
 		xi = xcopy[0]
 		t = xcopy.count(xi)
 		xties = xties + t * t - t
 		while xcopy.count(xi) > 0:
 			xcopy.remove(xi)
-    while ycopy:
+	while ycopy:
 		yi = ycopy[0]
 		t = ycopy.count(yi)
 		yties = yties + t * t - t
 		while ycopy.count(yi) > 0:
 			ycopy.remove(yi)
-    # Compute tau
-    n = float(n)
-    denom = math.sqrt((n * n - n - xties) * (n * n - n - yties))
-    try:
-        tau = 2.0 * (conc - disc) / denom
-    except ZeroDivisionError:
-		raise StatsError, "Too few entries: %r." % n
-    # Compute P-value
-    z = 3.0 * tau * math.sqrt(n * (n - 1.0)) / math.sqrt(2.0 * (2.0 * n + 5.0))
-    prob = Prob_Z(z)
-    return (tau, prob, int(n))
+	# Compute tau
+	n = float(n)
+	denom = math.sqrt((n * n - n - xties) * (n * n - n - yties))
+	try:
+		tau = 2.0 * (conc - disc) / denom
+	except ZeroDivisionError:
+		raise StatsError("Too few entries: {:d}.".format(n))
+	# Compute P-value
+	z = 3.0 * tau * math.sqrt(n * (n - 1.0)) / math.sqrt(2.0 * (2.0 * n + 5.0))
+	prob = Prob_Z(z)
+	return (tau, prob, int(n))
 
 #-------------------------------------------------------------------------------
 def Prob_Z(z, twosided=False):
@@ -599,35 +599,35 @@ def probZ(z, twosided=False):
 
 #-------------------------------------------------------------------------------
 def Kendalls_Tau2(xlist, ylist):
-    """Calculates Kendall's tau non-parametric correlation between two variables.
+	"""Calculates Kendall's tau non-parametric correlation between two variables.
 
-    The input data is given in the two lists 'xdata' and 'ydata' which should be
-    of the same length.  If entry i of either list is 'None', this entry is
-    disregarded in both lists.
-    Returns Kendall's partial tau, the one-tailed P-value, and the number of
-    data points as a tuple: (tau, P, N).
-    Includes a correction for ties.
-    Based on Numerical Recipes in C."""
-    if len(xlist) != len(ylist):
-		raise StatsError, "Data sets have different lengths."
-    xdata = xlist
-    ydata = ylist
-    #for i in range(len(xlist)):
+	The input data is given in the two lists 'xdata' and 'ydata' which should be
+	of the same length.  If entry i of either list is 'None', this entry is
+	disregarded in both lists.
+	Returns Kendall's partial tau, the one-tailed P-value, and the number of
+	data points as a tuple: (tau, P, N).
+	Includes a correction for ties.
+	Based on Numerical Recipes in C."""
+	if len(xlist) != len(ylist):
+		raise StatsError("Data sets have different lengths.")
+	xdata = xlist
+	ydata = ylist
+	#for i in range(len(xlist)):
 	#	if xlist[i] != None and ylist[i] != None:
 	#		xdata.append(xlist[i])
 	#		ydata.append(ylist[i])
-    assert len(xdata) == len(ydata)
-    #assert len(xdata) <= len(xlist) - xlist.count(None)
-    #assert len(ydata) <= len(ylist) - ylist.count(None)
-    #assert len(ydata) >= len(ylist) - xlist.count(None) - ylist.count(None)
-    if len(xdata) == 0:
-		raise StatsError, "No valid data entries."
-    n = len(xdata)
-    # compute the number of concordant and discordant pairs
-    conc = disc = 0.0 # concordant and discordant pairs
-    nx = ny = 0.0
-    updown = 0
-    for i in range(n): # loop over all pairs
+	assert len(xdata) == len(ydata)
+	#assert len(xdata) <= len(xlist) - xlist.count(None)
+	#assert len(ydata) <= len(ylist) - ylist.count(None)
+	#assert len(ydata) >= len(ylist) - xlist.count(None) - ylist.count(None)
+	if len(xdata) == 0:
+		raise StatsError("No valid data entries.")
+	n = len(xdata)
+	# compute the number of concordant and discordant pairs
+	conc = disc = 0.0 # concordant and discordant pairs
+	nx = ny = 0.0
+	updown = 0
+	for i in range(n): # loop over all pairs
 		xi = xdata[i]
 		yi = ydata[i]
 		if xi and yi:
@@ -648,38 +648,38 @@ def Kendalls_Tau2(xlist, ylist):
 							nx += 1
 						if yd != 0:
 							ny += 1
-    # Compute tau
-    n = float(n)
-    denom = math.sqrt(nx*ny)
-    try:
-        tau = float(updown) / denom
-    except ZeroDivisionError:
-		raise StatsError, "Too few entries: %r." % n
-    # Compute P-value
-    z = 3.0 * tau * math.sqrt(n * (n - 1.0)) / math.sqrt(2.0 * (2.0 * n + 5.0))
-    prob = Prob_Z(z)
-    return (tau, prob, int(n))
+	# Compute tau
+	n = float(n)
+	denom = math.sqrt(nx*ny)
+	try:
+		tau = float(updown) / denom
+	except ZeroDivisionError:
+		raise StatsError("Too few entries: {:d}".format(n))
+	# Compute P-value
+	z = 3.0 * tau * math.sqrt(n * (n - 1.0)) / math.sqrt(2.0 * (2.0 * n + 5.0))
+	prob = Prob_Z(z)
+	return (tau, prob, int(n))
 #----------------------------------------------------------------------------------
 def Kendalls_Partial_Tau(xdata, ydata, zdata):
-    """Computes Kendall's partial tau of two variables controlling for a third.
+	"""Computes Kendall's partial tau of two variables controlling for a third.
 
-    The correlation is between 'xdata' and 'ydata' controlling for 'zdata'.
-    The data is given in lists that must be of the same length.
-    Returns partial tau as a scalar number.
-    Based on Gibbons JD, "Nonparametric measures of associations",
-    Sage University Papers, pg 49 (1983)."""
-    if not len(xdata) == len(ydata) == len(zdata):
-		raise StatsError, "Data sets have different lengths."
-    txy = Kendalls_Tau(xdata, ydata)[0]
-    tyz = Kendalls_Tau(ydata, zdata)[0]
-    txz = Kendalls_Tau(xdata, zdata)[0]
-    partial_tau = (txy - txz * tyz) / math.sqrt((1 - txz * txz) * (1 - tyz * tyz))
-    return partial_tau
+	The correlation is between 'xdata' and 'ydata' controlling for 'zdata'.
+	The data is given in lists that must be of the same length.
+	Returns partial tau as a scalar number.
+	Based on Gibbons JD, "Nonparametric measures of associations",
+	Sage University Papers, pg 49 (1983)."""
+	if not len(xdata) == len(ydata) == len(zdata):
+		raise StatsError("Data sets have different lengths.")
+	txy = Kendalls_Tau(xdata, ydata)[0]
+	tyz = Kendalls_Tau(ydata, zdata)[0]
+	txz = Kendalls_Tau(xdata, zdata)[0]
+	partial_tau = (txy - txz * tyz) / math.sqrt((1 - txz * txz) * (1 - tyz * tyz))
+	return partial_tau
 #------------------------------------------------------------------------------
 def pearsonCorrelation(x, y):
 	"""Computes the Pearson linear correlation between two data sets.
 
-    Call is '(r, p, n) = PearsonCorrelation(xdata, ydata)'
+	Call is '(r, p, n) = PearsonCorrelation(xdata, ydata)'
 	The input data is given in the two lists 'xdata' and 'ydata' which
 	should be
 	of the same length.  If entry i of either list is 'None', this
@@ -693,7 +693,7 @@ def pearsonCorrelation(x, y):
 	mean_x = x[0]
 	mean_y = y[0]
 	if len(x) != len(y):
-		raise StatsError, "Data sets are of different lengths."
+		raise StatsError("Data sets are of different lengths.")
 	n = len(x)
 	for i in range(1,n):
 		sweep = i / (i+1.0)
@@ -711,7 +711,7 @@ def pearsonCorrelation(x, y):
 	z = math.fabs(r) * math.sqrt(n) / math.sqrt(2.0)
 	p = Prob_Z(z)
 	if not (0.0 <= p <= 1.0):
-		raise StatsError, "Invalid P-value of %r." % r
+		raise StatsError("Invalid P-value of %r." % r)
 	return (r, p, n)
 
 def PearsonCorrelation(xdata, ydata):
@@ -727,13 +727,13 @@ def test_pearsonCorrelation():
 		y = [random.random()+add*x[xi] for xi in range(nv)]
 		(r,p,n) = PearsonCorrelation(x,y)
 		(r2,p2,n2) = pearsonCorrelation2(x,y)
-		print nv, r, r2
+		print(nv, r, r2)
 	return True
 #------------------------------------------------------------------------------
 def PartialPearsonCorrelation(xdata, ydata, zdata):
 	"""Computes the Pearson linear correlation between two data sets controlling for a third set.
 
-    Call is '(r, p, n) = PartialPearsonCorrelation(xdata, ydata, zdata)'
+	Call is '(r, p, n) = PartialPearsonCorrelation(xdata, ydata, zdata)'
 	The input data is given in the two lists 'xdata' and 'ydata' which
 	should be of the same length.
 	Returns Pearson's partial correlation coefficient, the two-tailed P-value,
@@ -744,14 +744,14 @@ def PartialPearsonCorrelation(xdata, ydata, zdata):
 		(rxz, dummy, n) = PearsonCorrelation(xdata, zdata)
 		r = (rxy - ryz*rxz)/math.sqrt((1-ryz**2)*(1-rxz**2))
 	except ZeroDivisionError:
-		raise StatsError, "Standard deviation is zero."
+		raise StatsError("Standard deviation is zero.")
 	if not (-1.0000000001 <= r <= 1.000000001):
-		raise StatsError, "Invalid correlation coefficient of %r." % r
+		raise StatsError("Invalid correlation coefficient of %r." % r)
 	t = r*math.sqrt((n-3)/(1-r*r))
 	z = t
 	p = Prob_Z(z)
 	if not (0.0 <= p <= 1.0):
-		raise StatsError, "Invalid P-value of %r." % r
+		raise StatsError("Invalid P-value of %r." % r)
 	return (r, p, n)
 #------------------------------------------------------------------------------
 def SpearmanRankCorrelation(xdata, ydata, ties="average"):
@@ -793,9 +793,9 @@ def logChoose(n,k):
 
 def logBinom(n,k,p):
 	if p <= 0.0 or p == 1.0:
-		raise StatsError, "Log factorial for p <= 0, %f" % p
+		raise StatsError("Log factorial for p <= 0, %f" % p)
 	if p > 1.0:
-		raise StatsError, "Log factorial for p > 1, %f" % p
+		raise StatsError("Log factorial for p > 1, %f" % p)
 
 	lc = logChoose(n,k)
 	log_p = math.log(p)
@@ -894,44 +894,44 @@ def Means_Differ(pop1, pop2):
 		else:
 			p = 1.0
 	if not (-1e-6 <= p <= 1.0+1e-6):
-		raise StatsError, "Invalid P-value of %r." % p
+		raise StatsError("Invalid P-value of %r." % p)
 	return p
 
 #------------------------------------------------------------------------------
 def Complementary_Error_Function(z):
-    """Calculates the error function of z.
+	"""Calculates the error function of z.
 
-    The complementary error function of z is defined as:
-    erfc(z) = 2 / sqrt(pi) * integral(e^(t^2) dt) where the integral
-    is from z to infinity.
-    Can be used to calculate cumulative normal probabilities: given a
-    distribution with mean m and standard deviation s,
-    the probability of observing x > m  when x > 0 is:
-    P = 0.5 * erfc((x - m) / (s * sqrt(2)))
-    Calculated according to Chebyshev fitting given by Numerical Recipes
-    in C, page 220-221."""
-    x = math.fabs(z)
-    t = 1.0 / (1.0 + 0.5 * x)
-    ans = t * math.exp(-x * x - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))))
-    return ans
+	The complementary error function of z is defined as:
+	erfc(z) = 2 / sqrt(pi) * integral(e^(t^2) dt) where the integral
+	is from z to infinity.
+	Can be used to calculate cumulative normal probabilities: given a
+	distribution with mean m and standard deviation s,
+	the probability of observing x > m  when x > 0 is:
+	P = 0.5 * erfc((x - m) / (s * sqrt(2)))
+	Calculated according to Chebyshev fitting given by Numerical Recipes
+	in C, page 220-221."""
+	x = math.fabs(z)
+	t = 1.0 / (1.0 + 0.5 * x)
+	ans = t * math.exp(-x * x - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))))
+	return ans
 #--------------------------------------------------------------------------------
 def Poisson(n, k):
-    """Returns the Poisson probability of observing a number.
+	"""Returns the Poisson probability of observing a number.
 
-    'Poisson(n, k)' takes as input an integer n >= 0 and a real number k >= 0.0.
-    Returns p, the probability of getting n counts when the average outcome
-    is k, according to the Possion distribution.  Returns 'None' if there is
-    an error."""
-    p = math.exp(-k) * math.pow(k, n) / float(Factorial(n))
-    assert 0.0 <= p <= 1.0, "Error, value of p is invalid probability: " + str(p)
-    return p
+	'Poisson(n, k)' takes as input an integer n >= 0 and a real number k >= 0.0.
+	Returns p, the probability of getting n counts when the average outcome
+	is k, according to the Possion distribution.  Returns 'None' if there is
+	an error."""
+	p = math.exp(-k) * math.pow(k, n) / float(Factorial(n))
+	assert 0.0 <= p <= 1.0, "Error, value of p is invalid probability: " + str(p)
+	return p
 #---------------------------------------------------------------------------
 def Factorial(n):
-    """Returns the factorial of an integer."""
-    x = 1
-    for i in range(1, n + 1):
+	"""Returns the factorial of an integer."""
+	x = 1
+	for i in range(1, n + 1):
 		x *= i
-    return x
+	return x
 #----------------------------------------------------------------------------------
 def Choose(n, k):
 	num = 1
@@ -941,12 +941,12 @@ def Choose(n, k):
 	return num/den
 
 def powerSet(s):
-    d = dict(zip((1<<i for i in range(len(s))), (set([e]) for e in s) ))
-    subset = set()
-    yield subset
-    for i in range(1, 1<<len(s)):
-        subset = subset ^ d[i & -i]
-        yield subset
+	d = dict(zip((1<<i for i in range(len(s))), (set([e]) for e in s) ))
+	subset = set()
+	yield subset
+	for i in range(1, 1<<len(s)):
+		subset = subset ^ d[i & -i]
+		yield subset
 
 def generateChoices(seqin,k):
 	'''returns a generator which returns combinations of argument sequences without replacement
@@ -993,19 +993,19 @@ def __getAVEA(a, b, c, d):
 	   For i'th level, given risk factor ("exposure") E and outcome ("disease") D, the annotated
 	   2x2 contingency table is:
 
-	       |  E  | ~E  | Total
+		   |  E  | ~E  | Total
 	   -----------------------
-	     D | ai  |  bi |  m1i
+		 D | ai  |  bi |  m1i
 	   -----------------------
-	    ~D | ci  |  di |  m0i
+		~D | ci  |  di |  m0i
 	   -----------------------
-	       | n1i | n0i |  ni
+		   | n1i | n0i |  ni
 
 	   The Mantel-Haenszel statistic =
-	     chi-squared_MH = (A - E(A))^2 / Var(A)
-		              A = sum_i a_i         -- Number of disease cases associated with at-risk factor
-	               E(A) = sum_i n1i*m1i/ni  -- Expected disease+at-risk cases if no association
-	             Var(A) = sum_i n1i*n0i*m1i*m0i/((ni-1)*ni^2)
+		 chi-squared_MH = (A - E(A))^2 / Var(A)
+					  A = sum_i a_i         -- Number of disease cases associated with at-risk factor
+				   E(A) = sum_i n1i*m1i/ni  -- Expected disease+at-risk cases if no association
+				 Var(A) = sum_i n1i*n0i*m1i*m0i/((ni-1)*ni^2)
 	"""
 	assert(a>-1)
 	assert(b>-1)
@@ -1073,7 +1073,7 @@ def MantelHaenszelZ(a1,b1,c1,d1):
 	z = __ZStat(a,v,ea)
 	p = Prob_Z(z)
 	if not (0.0 <= p <= 1.0):
-		raise StatsError, "Invalid P-value of %r." % z
+		raise StatsError("Invalid P-value of %r." % z)
 	return z, p
 
 def __ZStat(a,v,ea):
@@ -1088,35 +1088,35 @@ def MantelHaenszelSummaryZ(tables):
 	   For i'th level, given risk factor ("exposure") E and outcome ("disease") D, the annotated
 	   2x2 contingency table is:
 
-	       |  E  | ~E  | Total
+		   |  E  | ~E  | Total
 	   -----------------------
-	     D | ai  |  bi |  m1i
+		 D | ai  |  bi |  m1i
 	   -----------------------
-	    ~D | ci  |  di |  m0i
+		~D | ci  |  di |  m0i
 	   -----------------------
-	       | n1i | n0i |  ni
+		   | n1i | n0i |  ni
 
 	   The Mantel-Haenszel statistic =
-	     chi-squared_MH = (A - E(A) -0.5)^2 / Var(A)
-		              A = sum_i a_i         -- Number of disease cases associated with at-risk factor
-	               E(A) = sum_i n1i*m1i/ni  -- Expected disease+at-risk cases if no association
-	             Var(A) = sum_i n1i*n0i*m1i*m0i/((ni-1)*ni^2)
-	             0.5 is a continuity correction.
+		 chi-squared_MH = (A - E(A) -0.5)^2 / Var(A)
+					  A = sum_i a_i         -- Number of disease cases associated with at-risk factor
+				   E(A) = sum_i n1i*m1i/ni  -- Expected disease+at-risk cases if no association
+				 Var(A) = sum_i n1i*n0i*m1i*m0i/((ni-1)*ni^2)
+				 0.5 is a continuity correction.
 
 	   Because the contingency table includes information on the direction of association, but
 	   the chi-squared statistic destroys this information, the quantity
 
-	       Z = (A-E(A)-0.5)/sqrt(Var(A))
+		   Z = (A-E(A)-0.5)/sqrt(Var(A))
 
 	   is instead returned, along with a probability of this Z-score assuming normality.
 	"""
 	(sum_a, sum_v, sum_ea, sum_odds_num, sum_odds_den) = getSummaryMHStats(tables)
 	if sum_v == 0.0:
-		raise StatsError, "Variance of summary M-H tables is zero; can't compute Z or P."
+		raise StatsError("Variance of summary M-H tables is zero; can't compute Z or P.")
 	z = __ZStat(sum_a,sum_v,sum_ea)
 	p = Prob_Z(z)
 	if not (0.0 <= p <= 1.0):
-		raise StatsError, "Invalid P-value of %r (Z=%E)." % (p, z)
+		raise StatsError("Invalid P-value of %r (Z=%E)." % (p, z))
 	return z, p
 
 def MantelHaenszelOddsRatio(tables):
@@ -1125,23 +1125,23 @@ def MantelHaenszelOddsRatio(tables):
 	   For i'th level, given risk factor ("exposure") E and outcome ("disease") D, the annotated
 	   2x2 contingency table is:
 
-	       |  E  | ~E  | Total
+		   |  E  | ~E  | Total
 	   -----------------------
-	     D | ai  |  bi |  m1i
+		 D | ai  |  bi |  m1i
 	   -----------------------
-	    ~D | ci  |  di |  m0i
+		~D | ci  |  di |  m0i
 	   -----------------------
-	       | n1i | n0i |  ni
+		   | n1i | n0i |  ni
 
 	   The Mantel-Haenszel odds ratio =
-	     chi-squared_MH = X/Y
-		              X = sum_i a_i*d_i/n_i
-	                  Y = sum_i b_i*c_i/n_i
+		 chi-squared_MH = X/Y
+					  X = sum_i a_i*d_i/n_i
+					  Y = sum_i b_i*c_i/n_i
 	"""
 	(sum_a, sum_v, sum_ea, sum_odds_num, sum_odds_den) = getSummaryMHStats(tables)
 	#print (sum_a, sum_v, sum_ea, sum_odds_num, sum_odds_den)
 	if sum_odds_den==0:
-		raise StatsError, "Denominator of odds ratio is zero; can't compute M-H odds ratio."
+		raise StatsError("Denominator of odds ratio is zero; can't compute M-H odds ratio.")
 	else:
 		odds_ratio = sum_odds_num/sum_odds_den
 	return odds_ratio
@@ -1177,13 +1177,13 @@ def MantelHaenszelOddsRatioVariance(tables):
 	"""Returns the Robins et al. variance phi_US(W) for Mantel-Haenszel odds ratio W, per
 	   Robins et al. Biometrics June 42:311-323 (1986).
 
-	       |    E    |   ~E    | Total
+		   |    E    |   ~E    | Total
 	   -------------------------------
-	     D |   X_k   |   Y_k   |  t_k
+		 D |   X_k   |   Y_k   |  t_k
 	   -------------------------------
-	    ~D | n_k-X_k | m_k-Y_k |  N_k - t_k
+		~D | n_k-X_k | m_k-Y_k |  N_k - t_k
 	   -------------------------------
-	       |   n_k   |   m_k   |  N_k
+		   |   n_k   |   m_k   |  N_k
 
 		Var_US(W) = [sum_k P_k R_k/2R_t^2 + sum_k (P_k S_k + Q_k R_k)/(2 R_t S_t) + sum_k Q_k S_k/2S_t^2] (W)^2
 
@@ -1227,10 +1227,10 @@ def MantelHaenszelOddsRatioVariance(tables):
 		S_t += S_k
 	# Now compute M-H odds ratio and variance
 	if S_t <= 0.0:
-		raise StatsError, "Denominator of odds ratio is zero; can't compute M-H odds ratio or variance."
+		raise StatsError("Denominator of odds ratio is zero; can't compute M-H odds ratio or variance.")
 	odds_ratio = R_t / S_t
 	if R_t <= 0.0:
-		raise StatsError, "Denominator R_t <= 0; can't compute M-H odds ratio variance."
+		raise StatsError("Denominator R_t <= 0; can't compute M-H odds ratio variance.")
 	var_odds_ratio = (sum_PR/(2*R_t**2.0) + (sum_PS + sum_QR)/(2*R_t*S_t) + sum_QS/(2*S_t**2.0)) * odds_ratio**2.0
 
 	res = MHVarResult(odds_ratio, var_odds_ratio, n_tables, N_t)
