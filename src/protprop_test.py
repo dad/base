@@ -42,12 +42,12 @@ class test002(unittest.TestCase):
 		"""Composition"""
 		comp = protprop.Composition()
 		fname = "tmp_composition.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("aa\tproportion\n")
 		for aa in translate.AAs():
 			inf.write("{}\t{}\n".format(aa, 1.0/20))
 		inf.close()
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		comp.read(inf)
 		self.assertAlmostEqual(comp['A'], 1.0/20)
 		inf.close()

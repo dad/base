@@ -285,7 +285,7 @@ if __name__=='__main__':
 			assert options.begin_aa < options.end_aa
 			seq = seq[0:(options.begin_aa-1)] + seq[(options.end_aa):]
 		degapped_seq = seq.replace("-","")
-		print degapped_seq
+		#print degapped_seq
 		#print test_seq
 		#print seq
 		line = "#{}\n{}\t{:d}\t{:1.4f}\t{:1.4f}\t{:1.4f}".format(h, biofile.firstField(h), pp.getLength(degapped_seq), pp.getCharge(degapped_seq, options.pH), pp.getIsoelectricPoint(degapped_seq), pp.getHydrophobicity(degapped_seq))

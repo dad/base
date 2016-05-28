@@ -374,7 +374,7 @@ def sample_wr(population, k):
 	"Chooses k random elements (with replacement) from a population"
 	n = len(population)
 	_random, _int = random.random, int  # speed hack
-	return [population[x] for x in [_int(_random() * n) for i in xrange(k)]]
+	return [population[x] for x in [_int(_random() * n) for i in range(k)]]
 
 def adjustPValues(p_values, method="fdr"):
 	"""Adjust P values for multiple testing.
