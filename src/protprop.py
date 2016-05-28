@@ -203,13 +203,14 @@ if __name__=='__main__':
 	parser.add_argument("-a", "--aas", dest="aas", default=None, help="amino acids for frequency counts")
 	parser.add_argument("-g", "--degap", dest="degap", action="store_true", default=False, help="remove gaps before applying begin/end coordinates?")
 	parser.add_argument("-q", "--query", dest="query", default=None, help="specific sequence identifier to query")
+	parser.add_argument("-m", "--merge", dest="merge", action="store_true", default=False, help="merge all sequences together?")
 	parser.add_argument("--pH", dest="pH", type=float, default=7.2, help="pH for charge determination")
 	#parser.add_argument("-r", "--report", dest="report", action="store_true", default=False, help="write long report per protein?")
 	options = parser.parse_args()
 	
 	outs = util.OutStreams()
 	if not options.out_fname is None:
-		outf = file(os.path.expanduser(options.out_fname),'w')
+		outf = open(os.path.expanduser(options.out_fname),'w')
 		outs.addStream(outf)
 	else:
 		outs.addStream(sys.stdout)
@@ -235,7 +236,7 @@ if __name__=='__main__':
 		headers = ['Input']
 		seqs = [options.sequence]
 	else:
-		(headers,seqs) = biofile.readFASTA(file(options.in_fname, 'r'))
+		(headers,seqs) = biofile.readFASTA(open(options.in_fname, 'r'))
 	
 	'''
 	if options.report: # Write a long report per protein
@@ -264,6 +265,9 @@ if __name__=='__main__':
 		outs.write("\t"+"\t".join(["f.{}".format(aa) for aa in aas])) # fractions
 		outs.write("\t"+"\t".join(["n.{}".format(aa) for aa in aas])) # numbers
 	outs.write("\n")
+	if options.merge:
+		seqs = [''.join(seqs)]
+		headers = ["merged"]
 	for (h,seq) in zip(headers,seqs):
 		if options.query:
 			if not h.strip().startswith(options.query):

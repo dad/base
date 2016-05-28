@@ -794,7 +794,7 @@ def readFASTA(infile):
 	sequences[i].
 	Removes the '>' from the headers.
 	Returns None if there is a problem processing the file."""
-	if not isinstance(infile,file):
+	if isinstance(infile,str):
 		infile_name = os.path.expanduser(infile)
 		if not os.path.isfile(infile_name):
 			raise BioFileError("Cannot find the FASTA file {}.".format(infile_name))
