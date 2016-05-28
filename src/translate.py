@@ -72,8 +72,8 @@ def geneticCode(rna, code=None):
 def codons(seq):
 	n = len(seq)
 	over_nts = n % 3
-	max_aas = (n-over_nts)/3
-	for ci in xrange(max_aas):
+	max_aas = int((n-over_nts)/3)
+	for ci in range(max_aas):
 		yield seq[3*ci : 3*(ci+1)]
 
 #--------------------------------------------------------------------------------
@@ -134,7 +134,7 @@ def reverseTranslate(prot, rna=False, bad_codon ='---'):
 	for aa in prot:
 		try:
 			gene += rev_code[aa]
-		except KeyError, ke:
+		except KeyError:
 			gene += bad_codon
 	assert(len(gene)==3*len(prot))
 	return gene
@@ -175,7 +175,7 @@ def codonToAA(codon):
 	try:
 		return _genetic_code[codon]
 	except KeyError:
-		raise BioUtilsError, "Invalid codon '%s'." % codon
+		raise BioUtilsError("Invalid codon '{}.".format(codon))
 
 def Codon_to_AA(codon):
 	return codonToAA(codon)

@@ -83,7 +83,7 @@ class TestCompare(unittest.TestCase):
 		simac = translate.compare(a, c)
 		self.assertTrue(simac.identity == 19/20.0)
 		simad = translate.compare(a, d)
-		print simad
+		#print simad
 		self.assertTrue(simad.identity == 1.0)
 		self.assertTrue(simad.fraction_aligned_x == 19/20.0)
 		self.assertTrue(simad.fraction_aligned_y == 1.0)
