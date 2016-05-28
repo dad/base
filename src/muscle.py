@@ -6,7 +6,7 @@ import biofile, util, translate, stats
 class MuscleError(Exception):
 	"""MUSCLE alignment error"""
 
-const_default_muscle_exepath ="f:/develop/muscle3.8.31/muscle"
+const_default_muscle_exepath ="muscle"
 
 def alignSequences(seq_list, max_iters=16, exepath=const_default_muscle_exepath):
 	tmp_fasta_file = "tmp-muscle-in-{}.txt".format(''.join(random.sample(string.ascii_letters, 20)))
@@ -35,9 +35,9 @@ def alignSequences(seq_list, max_iters=16, exepath=const_default_muscle_exepath)
 		return seqs
 	else:
 		if not os.path.isfile(os.path.expanduser(exepath)):
-			raise MuscleError, "Couldn't find muscle executable at {}".format(os.path.expanduser(exepath))
+			raise MuscleError("Couldn't find muscle executable at {}".format(os.path.expanduser(exepath)))
 		else:
-			raise MuscleError, "Muscle error code {:d}".format(error)
+			raise MuscleError("Muscle error code {:d}".format(error))
 
 def alignGeneFromProtein(gene, prot_align):
 	j = 0

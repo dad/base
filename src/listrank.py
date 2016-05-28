@@ -162,15 +162,15 @@ rank(x, NoneIsLast= None ,decreasing= False ,ties= max ) [7, 8, 3, 4, 3, 0, 7, 7
 rank(x, NoneIsLast= None ,decreasing= False ,ties= random ) [9, 8, 4, 4, 6, 0, 0, 8, 1]
     """
     x = [5, None, None, 6, 2, 3, 2, 0, 5, 5, 1, None]
-    print "vector ", x
+    print("vector ", x)
     for NoneIsLast in [True, False, None]:
         for decreasing in [True, False]:
             O = order(x, NoneIsLast=NoneIsLast, decreasing=decreasing)
-            print "order(NoneIsLast=", NoneIsLast, ",decreasing=", decreasing, ")", O
+            print("order(NoneIsLast=", NoneIsLast, ",decreasing=", decreasing, ")", O)
 
             for ties in ["first", "average", "min", "max", "random"]:
                 R = rank(x, NoneIsLast=NoneIsLast, decreasing=decreasing, ties=ties)
-                print "rank(x, NoneIsLast=", NoneIsLast, ",decreasing=", decreasing, ",ties=", ties, ")", R
-            print
-        print
+                print("rank(x, NoneIsLast=", NoneIsLast, ",decreasing=", decreasing, ",ties=", ties, ")", R)
+            print()
+        print()
 

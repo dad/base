@@ -27,8 +27,8 @@ def test002():
 	try:
 		#als = muscle.alignSequences(seqs, exepath=os.path.expanduser("/Users/dad/develop/muscle3.8.13/muscle"))
 		als = muscle.alignSequences(seqs)
-	except muscle.MuscleError, me:
-		print me
+	except muscle.MuscleError as me:
+		print(me)
 		res = True
 	return res
 
@@ -54,10 +54,10 @@ class test002(unittest.TestCase):
 			#print als
 			self.assertTrue(len(als) == len(seqs))
 			for (i, s) in enumerate(seqs):
-				print als[i]
-				print s
+				#print(als[i])
+				#print(s)
 				self.assertTrue(s == als[i].replace("-",''))
-		except muscle.MuscleError, me:
+		except muscle.MuscleError as me:
 			self.assertTrue(False)
 
 if __name__=="__main__":
