@@ -4,7 +4,7 @@ import util, na
 @util.printTiming
 def test_printTiming():
 	time.sleep(0.5)
-	print 'The next message should show at least 500ms of wait time:\n\t',
+	print('The next message should show at least 500ms of wait time:\n\t', file=sys.stdout)
 
 class test001(unittest.TestCase):
 	def test_run(self):
@@ -14,7 +14,7 @@ class test001(unittest.TestCase):
 		header_list = ["str","float","int","str"]
 		fname = "tmp_normal.txt"
 		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf)
 		header = fp.getHeader()
@@ -36,7 +36,7 @@ class test002(unittest.TestCase):
 		header_list = ["str","float","int","str"]
 		fname = "tmp_normal.txt"
 		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf)
 		while not fp.atEnd():
@@ -52,7 +52,7 @@ class test003(unittest.TestCase):
 		header_list = ["str","float","int","anotherStr"]
 		fname = "tmp_normal.txt"
 		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf)
 		header = fp.getHeader()
@@ -69,7 +69,7 @@ class test004(unittest.TestCase):
 		header_list = ["str","float","int","str"]
 		fname = "tmp_normal.txt"
 		makeFile(fname, None, "sfds", n_lines, '\t', 0.0)
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf)
 		header = fp.getHeader()
@@ -91,7 +91,7 @@ class test005(unittest.TestCase):
 		header_list = ["str","float","int","str"]
 		fname = "tmp_normal.txt"
 		makeFile(fname, None, "sfds", n_lines, '\t', 0.0)
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf)
 		header = fp.getHeader()
@@ -112,7 +112,7 @@ class test006(unittest.TestCase):
 		# Put an NA in the first line -- test the ability to look past to infer types
 		first_lines = [randString() + "\t1.00\tNA\t" + randString() + "\n"]
 		makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf)
 		header = fp.getHeader()
@@ -138,7 +138,7 @@ class test007(unittest.TestCase):
 		first_lines = [randString() + "\t59.3\tNA\t" + randString() + "\n",
 			randString() + "\tNA\t12\t" + randString() + "\n"]
 		makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
-		inf = file(fname,'r')
+		inf = open(fname,'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf, header=False)
 		header = fp.getHeader()
@@ -163,7 +163,7 @@ class test008(unittest.TestCase):
 		# Put an NA in the first line -- test the ability to look past to infer types
 		first_lines = [randString() + "\t59.3\tNA\t" + randString() + "\n"]*100
 		makeFile(fname, None, "sfds", n_lines, '\t', 0.1, first_lines=first_lines, last_lines=None)
-		inf = file(fname,'r')
+		inf = open(fname,'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf, header=False)
 		header = fp.getHeader()
@@ -178,7 +178,7 @@ class test009(unittest.TestCase):
 		header_list = ["int","int.1","int","int"]
 		fname = "tmp_normal.txt"
 		makeFile(fname, header_list, "ffds", n_lines, '\t', 0.1)
-		inf = file(fname,'r')
+		inf = open(fname,'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf)
 		header = fp.getHeader()
@@ -197,7 +197,7 @@ class test010(unittest.TestCase):
 		header_list = ["Ratio (H/L)","float","int","This + That"]
 		fname = "tmp_normal.txt"
 		makeFile(fname, header_list, "ffds", n_lines, '\t', 0.1)
-		inf = file(fname,'r')
+		inf = open(fname,'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf, header=True, header_name_processor=util.maxQuantHeader)
 		header = fp.getHeader()
@@ -215,7 +215,7 @@ class test011(unittest.TestCase):
 		fname = "tmp_normal.txt"
 		last_lines = ["0.2\t0.3\tnot.an.int\twakka\n"]
 		makeFile(fname, header_list, "ffds", n_lines, '\t', 0.01, last_lines=last_lines)
-		inf = file(fname,'r')
+		inf = open(fname,'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf, header=True, header_name_processor=util.maxQuantHeader)
 		header = fp.getHeader()
@@ -232,10 +232,10 @@ class test012(unittest.TestCase):
 		header_list = ["str","float","int","str"]
 		fname = "tmp_comment_last.txt"
 		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0)
-		inf = file(fname, 'a')
+		inf = open(fname, 'a')
 		inf.write("# comment\n")
 		inf.close()
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf)
 		while not fp.atEnd():
@@ -251,7 +251,7 @@ class test013(unittest.TestCase):
 		fname = "tmp_no_header.txt"
 		field_types = "sfds"
 		makeFile(fname, None, field_types, n_lines, '\t', 0.0)
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf, header=False)
 		while not fp.atEnd():
@@ -267,7 +267,7 @@ class test014(unittest.TestCase):
 		header_list = ["str","float","int","str"]
 		fname = "tmp_comment_first.txt"
 		makeFile(fname, header_list, "sfds", n_lines, '\t', 0.0, first_lines="# first line comment\n# second line comment")
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf)
 		while not fp.atEnd():
@@ -283,12 +283,12 @@ class test015(unittest.TestCase):
 		n_lines = 10
 		header_list = ["str","float","int","str"]
 		fname = "tmp_comment_first.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
 		inf.write("  a  b c\n")
 		inf.write(" a   b  c\n")
 		inf.close()
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf, header=True, sep=None)
 		while not fp.atEnd():
@@ -306,12 +306,12 @@ class test016(unittest.TestCase):
 		n_lines = 10
 		header_list = ["str","float","int","str"]
 		fname = "tmp_comment_first.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
 		inf.write("  a  b c\n")
 		inf.write(" a   b  c\n")
 		inf.close()
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf, header=True, sep=None)
 		for flds in fp.entries:
@@ -327,12 +327,12 @@ class test017(unittest.TestCase):
 		n_lines = 10
 		header_list = ["str","float","int","str"]
 		fname = "tmp_comment_first.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
 		inf.write("  a  b c\n")
 		inf.write(" a   b  c\n")
 		inf.close()
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Infer the types
 		fp = util.DelimitedLineReader(inf, header=True, sep=None)
 		for flds in fp.dictentries:
@@ -347,12 +347,12 @@ class test018(unittest.TestCase):
 	def test_run(self):
 		"""set handler type"""
 		fname = "tmp_types.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
 		#inf.write("  NA	NA	NA\n")
 		inf.write(" 1.0  two  3\n")
 		inf.close()
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		# Assume all types are string
 		fp = util.DelimitedLineReader(inf, header=True, field_defs='sss', sep=None)
 		fp.setColumnType("three", "d")
@@ -363,7 +363,7 @@ class test018(unittest.TestCase):
 
 
 def randString():
-	return ''.join(random.sample(string.letters, 10))
+	return ''.join(random.sample(string.ascii_letters, 10))
 	
 def randInt():
 	return random.randint(1,10000)
@@ -376,7 +376,7 @@ def makeFile(fname, headers, fld_types, n_lines, sep, na_prob, first_lines=None,
 	dtype['f'] = randFloat
 	dtype['d'] = randInt
 	dtype['s'] = randString
-	outf = file(fname,'w')
+	outf = open(fname,'w')
 	if first_lines:
 		for line in first_lines:
 			outf.write(line)
@@ -424,12 +424,12 @@ class test021(unittest.TestCase):
 	def test_run(self):
 		"""readTable basic"""
 		fname = "tmp_lightdataframe.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
 		inf.write("a\tb\t3\n")
 		inf.write("a\tb\t33\n")
 		inf.close()
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		ldf = util.readTable(inf, header=True)
 		self.assertTrue(ldf['three'][0] == 3)
 		self.assertTrue(ldf['three'][1] == 33)
@@ -441,12 +441,12 @@ class test022(unittest.TestCase):
 	def test_run(self):
 		"""readTable dictrows"""
 		fname = "tmp_lightdataframe.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
 		inf.write("a\tb\t3\n")
 		inf.write("a\tb\t33\n")
 		inf.close()
-		inf = file(fname, 'r')
+		inf = open(fname, 'r')
 		ldf = util.readTable(inf, header=True)
 		for (ri, flds) in enumerate(ldf.dictrows):
 			if ri == 0:
@@ -460,7 +460,7 @@ class test023(unittest.TestCase):
 	def test_run(self):
 		"""skip, positive case"""
 		fname = "tmp_skip.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("blah\nblah\nblah\n")
 		inf.write("one\ttwo\tthree\n")
 		inf.write("a\tb\t3\n")
@@ -480,7 +480,7 @@ class test024(unittest.TestCase):
 	def test_run(self):
 		"""skip, negative case"""
 		fname = "tmp_skip.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("blah\nblah\nblah\n")
 		inf.write("one\ttwo\tthree\n")
 		inf.write("a\tb\t3\n")
@@ -500,7 +500,7 @@ class test025(unittest.TestCase):
 	def test_run(self):
 		"""skip, off by one"""
 		fname = "tmp_skip.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("blah\nblah\nblah\n")
 		inf.write("one\ttwo\tthree\n")
 		inf.write("a\tb\t3\n")
@@ -520,7 +520,7 @@ class test026(unittest.TestCase):
 	def test_run(self):
 		"""set header names"""
 		fname = "tmp_setheader.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
 		inf.write("a\tb\t3\n")
 		inf.write("a\tb\t33\n")
@@ -540,12 +540,11 @@ class test027(unittest.TestCase):
 	def test_run(self):
 		"""readTable header"""
 		fname = "tmp_lightdataframe.txt"
-		inf = file(fname, 'w')
+		inf = open(fname, 'w')
 		inf.write("one\ttwo\tthree\n")
 		inf.write("a\tb\t3\n")
 		inf.write("a\tb\t33\n")
 		inf.close()
-		inf = file(fname, 'r')
 		with open(fname,'r') as inf:
 			ldf = util.readTable(inf, header=True)
 			h = ldf.header

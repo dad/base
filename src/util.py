@@ -61,7 +61,7 @@ def printTiming(func):
 		res = func(*arg)
 		# Store the current time again, in microseconds
 		t2 = time.time()
-		print '{0} took {1:0.3f} ms'.format(func.func_name, (t2-t1)*1000.0)
+		print('{0} took {1:0.3f} ms'.format(func.__name__, (t2-t1)*1000.0), file=sys.stdout)
 		return res
 	# Return the wrapper function
 	return wrapper
@@ -87,7 +87,7 @@ class OutStreams:
 			outs.flush()
 
 def isNA(x):
-	print "util.isNA() should be updated to na.isNA()"
+	print("util.isNA() should be updated to na.isNA()", file=sys.stderr)
 	return na.isNA(x)
 
 """ Class for applying formatting automatically.
@@ -141,7 +141,7 @@ def naIntParser(x):
 	v = None
 	try:
 		v = int(x)
-	except ValueError, ve:
+	except ValueError as ve:
 		if not na.isNA(x):
 			raise ve
 	return v
@@ -150,7 +150,7 @@ def naFloatParser(x):
 	v = None
 	try:
 		v = float(x)
-	except ValueError, ve:
+	except ValueError as ve:
 		if not na.isNA(x):
 			raise ve
 	return v
@@ -334,7 +334,7 @@ class DelimitedLineReader:
 					if not custom_handler_dict is None:
 						try:
 							self.handlers.append(custom_handler_dict[h])
-						except KeyError, ke:
+						except KeyError as ke:
 							raise ReaderError("No custom handler provided for field-type %s" % h)
 
 	def next(self, process=True, apply_handlers=True):
@@ -378,23 +378,26 @@ class DelimitedLineReader:
 			flds[-1] = flds[-1].strip() # Get rid of \n
 			if apply_handlers:
 				if len(flds) > len(self.handlers):
-					raise ReaderError, "Line {} has {} fields, but only {} expected".format(self.n_lines_read, len(flds), len(self.handlers))
+					raise ReaderError("Line {} has {} fields, but only {} expected".format(self.n_lines_read, len(flds), len(self.handlers)))
 				assert len(flds) <= len(self.handlers)
 				if not self.handlers:
 					# Infer handlers are strings
 					self.handlers = [str for i in range(len(flds))]
 				done_processing = False
 				while not done_processing:
-					try:
-						# Apply the new handlers to get the data.
-						res = [self.handlers[hi](flds[hi]) for hi in range(len(flds))]
-						done_processing = True
-					except ValueError, ve:
-						# Adaptively update handlers if there was a value error.
-						handler_key = self.inferHandlerKey(flds[hi])
-						self.handlers[hi] = self.handler_dict[handler_key]
-						# Reapply the new handlers to get the data.
-						#res = [self.handlers[i](flds[i]) for i in range(len(flds))]
+					res = []
+					for hi in range(len(flds)):
+						try:
+							# Apply the new handlers to get the data.
+							res.append(self.handlers[hi](flds[hi]))
+						except ValueError:
+							# Adaptively update handlers if there was a value error.
+							handler_key = self.inferHandlerKey(flds[hi])
+							self.handlers[hi] = self.handler_dict[handler_key]
+							res.append(self.handlers[hi](flds[hi]))
+							# Reapply the new handlers to get the data.
+							#res = [self.handlers[i](flds[i]) for i in range(len(flds))]
+					done_processing = True
 			else:
 				res = flds
 		else:
@@ -505,8 +508,8 @@ class DelimitedLineReader:
 				if self.handlers is None:
 					self.handlers = [None]*len(flds)
 					inferred_string = ['X']*len(flds)
-				if len(flds) != len(self.handlers):
-					print flds
+				#if len(flds) != len(self.handlers):
+				#	print flds
 				assert len(flds) == len(self.handlers), "Number of fields {} not equal to number of handlers {}".format(len(flds), len(self.handlers))
 				for hi in range(len(self.handlers)):
 					fld = flds[hi]
@@ -551,10 +554,10 @@ class DelimitedLineReader:
 	def setHandlerType(self, handler_index, type_string):
 		try:
 			self.handlers[handler_index] = self.handler_dict[type_string]
-		except KeyError, ke:
-			raise ReaderError, "Unknown handler type {}".format(type_string)
+		except KeyError as ke:
+			raise ReaderError("Unknown handler type {}".format(type_string))
 		except IndexError:
-			raise ReaderError, "Bad handler index {}".format(handler_index)
+			raise ReaderError("Bad handler index {}".format(handler_index))
 	
 	def setColumnType(self, column_name, type_string):
 		headers = self.getHeader()
