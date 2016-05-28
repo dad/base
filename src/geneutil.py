@@ -89,7 +89,7 @@ def longestRun(seq, character_list, max_interruptions=0):
 	# Mask sequence 
 	target_char = '~'
 	if target_char in seq:
-		raise ValueError, "# Current implementation does not work if {} in sequence".format(target_char)
+		raise ValueError("# Current implementation does not work if {} in sequence".format(target_char))
 	for c in character_list:
 		masked_seq = masked_seq.replace(c,target_char)
 
@@ -142,7 +142,7 @@ def maxSlidingCount(seq, character, windowlen=5):
 
 
 def default_alignment_print_fxn(num_alignments, prots, alignment, headers, orf):
-	print num_alignments, orf, len(alignment), " ".join(["%s-%s"%(x,y) for (x,y) in headers])
+	print(num_alignments, orf, len(alignment), " ".join(["%s-%s"%(x,y) for (x,y) in headers]))
 
 def default_filter_fxn(orf, seqs, filter_data=None):
 	return len(seqs)>1
@@ -165,11 +165,11 @@ def makeAlignments(ortho_dict, cdna_dicts, filter_fxn=default_filter_fxn, filter
 				if prot:
 					seqs[spec] = (sorf, prot)
 				else:
-					print "# protein", sorf, "did not translate"
+					print("# protein", sorf, "did not translate")
 					#print seq
 					#print translate.translateRaw(seq)
-			except KeyError, ke:
-				print "#", ke, spec, sorf, orf
+			except KeyError as ke:
+				print("#", ke, spec, sorf, orf)
 				pass
 
 		species = seqs.keys()
@@ -181,8 +181,8 @@ def makeAlignments(ortho_dict, cdna_dicts, filter_fxn=default_filter_fxn, filter
 				alignment_dict[orf] = (len(protal), hdrs, protal)
 				num_aligns += 1
 				alignment_print_fxn(num_aligns, prots, protal, hdrs, orf)
-			except muscle.MuscleError, me:
-				print "#", me
+			except muscle.MuscleError as me:
+				print("#", me)
 
 	return alignment_dict
 
@@ -284,13 +284,3 @@ def getMolecularWeight(prot_seq):
 
 def getAAFraction(seq, aa, pseudocount=0.0):
 	return (seq.count(aa) + pseudocount)/len(seq)
-
-if __name__=='__main__':
-	cdna_dict = biofile.readFASTADict(sys.argv[1])
-	keys = cdna_dict.keys()
-	for i in range(len(keys)-1):
-		for j in range(i+1, len(keys)):
-			s1 = cdna_dict[keys[i]]
-			s2 = cdna_dict[keys[j]]
-			print keys[i], keys[j]
-			print translate.sequenceIdentity(s1,s2)
