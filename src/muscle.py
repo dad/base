@@ -6,11 +6,11 @@ import biofile, util, translate, stats
 class MuscleError(Exception):
 	"""MUSCLE alignment error"""
 
-const_default_muscle_exepath ="muscle"
+const_default_muscle_exepath ="f:/develop/bin/muscle"
 
 def alignSequences(seq_list, max_iters=16, exepath=const_default_muscle_exepath):
 	tmp_fasta_file = "tmp-muscle-in-{}.txt".format(''.join(random.sample(string.ascii_letters, 20)))
-	tmpfile = file(tmp_fasta_file, 'w')
+	tmpfile = open(tmp_fasta_file, 'w')
 	# Write out the sequences
 	for si in range(len(seq_list)):
 		tmpfile.write('>seq{:d}\n{}\n'.format(si, seq_list[si]))
@@ -21,14 +21,14 @@ def alignSequences(seq_list, max_iters=16, exepath=const_default_muscle_exepath)
 	cmd = "muscle -in {} -out {} -quiet -maxiters {:d}".format(tmp_fasta_file, outfile_name, max_iters)
 	#print cmd
 	#print os.path.expanduser(exepath)
-	#print exepath
-	#if not os.path.isfile(os.path.expanduser(exepath)):
-	#	raise MuscleError, "Can't find muscle executable at {}".format(os.path.expanduser(exepath))
-	#error = os.spawnv(os.P_WAIT, os.path.expanduser(exepath), [x for x in cmd.split()])
-	error = subprocess.call([exepath] + cmd.split()[1:])
-
-	if not error:
+	#print(exepath)
+	runcmd = [exepath] + cmd.split()[1:]
+	#print(runcmd)
+	error = subprocess.run(runcmd)
+	#print(error.returncode)
+	if error.returncode == 0:
 		seq_dict = biofile.readFASTADict(outfile_name)
+		#print(seq_dict)
 		seqs = [seq_dict["seq{:d}".format(i)] for i in range(len(seq_list))]
 		os.remove(outfile_name)
 		os.remove(tmp_fasta_file)
@@ -37,7 +37,7 @@ def alignSequences(seq_list, max_iters=16, exepath=const_default_muscle_exepath)
 		if not os.path.isfile(os.path.expanduser(exepath)):
 			raise MuscleError("Couldn't find muscle executable at {}".format(os.path.expanduser(exepath)))
 		else:
-			raise MuscleError("Muscle error code {:d}".format(error))
+			raise MuscleError("Muscle error code {:d}".format(error.returncode))
 
 def alignGeneFromProtein(gene, prot_align):
 	j = 0
@@ -73,12 +73,12 @@ if __name__=='__main__':
 	if not options.out_fname is None:
 		fname = os.path.expanduser(options.out_fname)
 		#print fname
-		outf = file(fname,'w')
+		outf = open(fname,'w')
 		outs.addStream(outf)
 	else:
 		outs.addStream(sys.stdout)
 	
-	(headers, seqs) = biofile.readFASTA(file(options.in_fname,'r'))
+	(headers, seqs) = biofile.readFASTA(open(options.in_fname,'r'))
 	seqs_to_align = seqs
 	if options.translate:
 		seqs_to_align = [translate.translate(s) for s in seqs]

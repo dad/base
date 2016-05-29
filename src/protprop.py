@@ -266,6 +266,7 @@ if __name__=='__main__':
 		outs.write("\t"+"\t".join(["n.{}".format(aa) for aa in aas])) # numbers
 	outs.write("\n")
 	if options.merge:
+		outs.write("# Merging {:d} sequences into one\n".format(len(seqs)))
 		seqs = [''.join(seqs)]
 		headers = ["merged"]
 	for (h,seq) in zip(headers,seqs):
