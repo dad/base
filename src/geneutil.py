@@ -32,7 +32,7 @@ def gappedFind(seq, substring, start=True, gapless=False, gap='-'):
 		geneutil.gappedFind('AAASS--SAA','SSS', start=False, gapless=True)==5
 	"""
 	if gapless:
-		test_seq = ''.join(seq.split(gap))
+		test_seq = seq.replace(gap,'')
 	else:
 		test_seq = seq
 	gap_pattern = ('[{}]*'.format(gap)).join([a for a in substring])
