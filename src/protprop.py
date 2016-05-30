@@ -12,9 +12,12 @@ class ProteinProperties(object):
 		self.pKa     = {'D':3.9, 'E':4.3, 'H':6.1, 'C':8.3, 'Y':10.1, 'K':10.67, 'R':12, 'N-term':8, 'C-term':3.1}
 		self.charges = {'D':-1,  'E':-1,  'H':1,  'C':-1,  'Y':-1,   'K':1,    'R':1,  'N-term':1, 'C-term':-1}
 		#self.charges = {'D':-1, 'E':-1, 'H':1, 'K':1, 'R':1, 'N-term':1, 'C-term':-1}
-		self.hydrophobicity_scales = {
-			'Kyte-Doolittle':{'A':1.800,'R':-4.500,'N':-3.500,'D':-3.500,'C':2.500,'Q':-3.500,'E':-3.500,'G':-0.400,'H':-3.200,'I':4.500,'L':3.800,'K':-3.900,'M':1.900,'F':2.800,'P':-1.600,'S':-0.800,'T':-0.700,'W':-0.900,'Y':-1.300,'V':4.200}
-		}
+		self.hydrophobicity_scales = {}
+		inf = open(os.path.expanduser("~/research/base/data/hydrophobicity-scales.txt"),'r')
+		tab = util.readTable(inf)
+		scales = tab.header[1:]
+		for scale in scales:
+			self.hydrophobicity_scales[scale.replace('.','-')] = dict(zip(tab.col('aa'), tab.col(scale)))
 		# Molecular weights of the amino acids in Da, not residues; subtract 18 for residue weight
 		self.mw = {'A': 89.09, 'C': 121.16, 'E': 147.13, 'D': 133.10, 'G': 75.07, 'F': 165.19, 
 			'I': 131.18, 'H': 155.16, 'K': 146.19, 'M': 149.21, 'L': 131.18, 'N': 132.12, 'Q': 146.15, 
@@ -204,6 +207,7 @@ if __name__=='__main__':
 	parser.add_argument("-g", "--degap", dest="degap", action="store_true", default=False, help="remove gaps before applying begin/end coordinates?")
 	parser.add_argument("-q", "--query", dest="query", default=None, help="specific sequence identifier to query")
 	parser.add_argument("-m", "--merge", dest="merge", action="store_true", default=False, help="merge all sequences together?")
+	parser.add_argument("--hydrophobicity-scale", dest="hydrophobicity_scale", type=str, default='Kyte-Doolittle', help="which hydrophobicity scale to use (Kyte-Doolittle, Hopp-Wood, Cornette, Eisenberg, Rose, Janin, Engelman-GES)")
 	parser.add_argument("--pH", dest="pH", type=float, default=7.2, help="pH for charge determination")
 	#parser.add_argument("-r", "--report", dest="report", action="store_true", default=False, help="write long report per protein?")
 	options = parser.parse_args()
@@ -269,6 +273,7 @@ if __name__=='__main__':
 		outs.write("# Merging {:d} sequences into one\n".format(len(seqs)))
 		seqs = [''.join(seqs)]
 		headers = ["merged"]
+	gap = '-'
 	for (h,seq) in zip(headers,seqs):
 		if options.query:
 			if not h.strip().startswith(options.query):
@@ -276,23 +281,16 @@ if __name__=='__main__':
 		if options.translate:
 			seq = translate.translateRaw(seq)
 		if options.degap:
-			seq = seq.replace('-','')
-		#print seq
-		#print options.begin_aa, options.end_aa, len(seq)
-		test_seq = ''
+			seq = seq.replace(gap,'')
 		if not options.exclude:
 			if not options.end_aa is None and options.end_aa <= len(seq):
 				seq = seq[0:(options.end_aa)]
-			#print seq, seq[(options.begin_aa-1):]
 			seq = seq[(options.begin_aa-1):]
 		else: # Exclude the sequence
 			assert options.end_aa < len(seq)
 			assert options.begin_aa < options.end_aa
 			seq = seq[0:(options.begin_aa-1)] + seq[(options.end_aa):]
-		degapped_seq = seq.replace("-","")
-		#print degapped_seq
-		#print test_seq
-		#print seq
+		degapped_seq = seq.replace(gap,"")
 		line = "#{}\n{}\t{:d}\t{:1.4f}\t{:1.4f}\t{:1.4f}".format(h, biofile.firstField(h), pp.getLength(degapped_seq), pp.getCharge(degapped_seq, options.pH), pp.getIsoelectricPoint(degapped_seq), pp.getHydrophobicity(degapped_seq))
 		if not aas is None:
 			counts = Composition()
@@ -302,7 +300,6 @@ if __name__=='__main__':
 			freqs.normalize()
 			line += '\t' + '\t'.join(["{:1.4f}".format(freqs[aa]) for aa in aas]) + '\t' + '\t'.join(["{:d}".format(counts[aa]) for aa in aas])
 		outs.write(line + '\n')
-	#print seqs
 	if not options.out_fname is None:
 		outf.close()
 
