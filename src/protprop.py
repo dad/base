@@ -13,7 +13,7 @@ class ProteinProperties(object):
 		self.charges = {'D':-1,  'E':-1,  'H':1,  'C':-1,  'Y':-1,   'K':1,    'R':1,  'N-term':1, 'C-term':-1}
 		#self.charges = {'D':-1, 'E':-1, 'H':1, 'K':1, 'R':1, 'N-term':1, 'C-term':-1}
 		self.hydrophobicity_scales = {}
-		inf = open(os.path.expanduser("~/research/base/data/hydrophobicity-scales.txt"),'r')
+		inf = open(os.path.expanduser("../data/hydrophobicity-scales.txt"),'r')
 		tab = util.readTable(inf)
 		scales = tab.header[1:]
 		for scale in scales:
@@ -23,6 +23,7 @@ class ProteinProperties(object):
 			'I': 131.18, 'H': 155.16, 'K': 146.19, 'M': 149.21, 'L': 131.18, 'N': 132.12, 'Q': 146.15, 
 			'P': 115.13, 'S': 105.09, 'R': 174.20, 'T': 119.12, 'W': 204.23, 'V': 117.15, 'Y': 181.19,
 			'B': 132.61, 'Z': 146.64}
+		inf.close()
 
 	def _aminoAcidCharge(self, amino_acid, pH):
 		proportion = 1 / (1 + 10**(pH - self.pKa[amino_acid]))
