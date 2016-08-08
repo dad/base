@@ -95,7 +95,7 @@ if __name__=='__main__':
 
 	# Start up output
 	if not options.out_fname is None:
-		outf = file(options.out_fname,'w')
+		outf = open(options.out_fname,'w')
 		data_outs.addStream(outf)
 	else:
 		# By default, write to stdout
@@ -109,7 +109,7 @@ if __name__=='__main__':
 			if hasExtension(full_fname, 'res'):
 				out_fname = replaceExtension(full_fname, 'txt')
 				#print full_fname, out_fname
-				data_outs = util.OutStreams(file(out_fname,'w'))
+				data_outs = util.OutStreams(open(out_fname,'w'))
 				processFile(full_fname, out_fname, options, data_outs, info_outs)
 	else: # Not a directory
 		processFile(options.in_fname, options.out_fname, options, data_outs, info_outs)
