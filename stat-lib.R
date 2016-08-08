@@ -127,8 +127,8 @@ scale_y_log10nice <- function(name=NULL,omag=seq(-10,20),...) {
     scale_y_log10(name,breaks=breaks10,labels=scientific_10(breaks10),...)
 }
 
-scale_loglog <- function(...) {
-    list(scale_x_log10nice(...),scale_y_log10nice(...))
+scale_loglog <- function(xname=NULL, yname=NULL, ...) {
+    list(scale_x_log10nice(xname, ...),scale_y_log10nice(yname,...))
 }
 
 # by Edward W.J. Wallace
