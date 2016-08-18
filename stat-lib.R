@@ -16,6 +16,11 @@ tol.col <- function(n) {
 	colorRampPalette(tol.color.values, space='rgb')(n)
 }
 
+# No legend for plots
+# Usage: ggplot(d, aes(...)) + no.legend
+no.legend <- theme(legend.position="none")
+
+
 # colorblind-friendly palette
 # From http://www.cookbook-r.com/Graphs/Colors_(ggplot2)/#a-colorblind-friendly-palette
 # The palette with grey:
