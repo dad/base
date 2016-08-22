@@ -13,7 +13,9 @@ class ProteinProperties(object):
 		self.charges = {'D':-1,  'E':-1,  'H':1,  'C':-1,  'Y':-1,   'K':1,    'R':1,  'N-term':1, 'C-term':-1}
 		#self.charges = {'D':-1, 'E':-1, 'H':1, 'K':1, 'R':1, 'N-term':1, 'C-term':-1}
 		self.hydrophobicity_scales = {}
-		inf = open(os.path.expanduser("../data/hydrophobicity-scales.txt"),'r')
+		# Hack so that we can store scale information in a file -- need better way to store.
+		dir_path = os.path.dirname(os.path.realpath(__file__))
+		inf = open(os.path.expanduser(dir_path+"/../data/hydrophobicity-scales.txt"),'r')
 		tab = util.readTable(inf)
 		scales = tab.header[1:]
 		for scale in scales:
@@ -241,7 +243,7 @@ if __name__=='__main__':
 		headers = ['Input']
 		seqs = [options.sequence]
 	else:
-		(headers,seqs) = biofile.readFASTA(open(options.in_fname, 'r'))
+		(headers,seqs) = biofile.readFASTA(open(os.path.expanduser(options.in_fname), 'r'))
 	
 	'''
 	if options.report: # Write a long report per protein
