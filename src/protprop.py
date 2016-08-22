@@ -243,7 +243,11 @@ if __name__=='__main__':
 		headers = ['Input']
 		seqs = [options.sequence]
 	else:
-		(headers,seqs) = biofile.readFASTA(open(os.path.expanduser(options.in_fname), 'r'))
+		fname = os.path.expanduser(options.in_fname)
+		print(fname)
+		(headers,seqs) = biofile.readFASTA(open(fname, 'r'))
+		#print("# Found", len(seqs), "sequences")
+		#print("# Found", len(headers), "headers")
 	
 	'''
 	if options.report: # Write a long report per protein
@@ -279,7 +283,7 @@ if __name__=='__main__':
 	gap = '-'
 	for (h,seq) in zip(headers,seqs):
 		if options.query:
-			if not h.strip().startswith(options.query):
+			if not options.query in h:
 				continue
 		if options.translate:
 			seq = translate.translateRaw(seq)
@@ -303,6 +307,7 @@ if __name__=='__main__':
 			freqs.normalize()
 			line += '\t' + '\t'.join(["{:1.4f}".format(freqs[aa]) for aa in aas]) + '\t' + '\t'.join(["{:d}".format(counts[aa]) for aa in aas])
 		outs.write(line + '\n')
+		#print("# Wrote line\n")
 	if not options.out_fname is None:
 		outf.close()
 
