@@ -1,0 +1,3 @@
+id	species	filename
+1	Pseudozyma antarctica T-34	Pseudozyma-antarctica-1.txt
+2	Ceriporiopsis subvermispora B	Ceriporiopsis-subvermispora-2.txt

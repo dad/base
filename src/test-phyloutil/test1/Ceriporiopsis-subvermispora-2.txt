@@ -1,0 +1,15 @@
+name	rank	id
+cellular organisms	no rank	131567
+Eukaryota	superkingdom	2759
+Opisthokonta	no rank	33154
+Fungi	kingdom	4751
+Dikarya	subkingdom	451864
+Basidiomycota	phylum	5204
+Agaricomycotina	subphylum	5302
+Agaricomycetes	class	155619
+Agaricomycetes incertae sedis	no rank	355688
+Polyporales	order	5303
+Coriolaceae	family	83233
+Gelatoporia	genus	98757
+Gelatoporia subvermispora	species	42742
+Gelatoporia subvermispora B	no rank	914234
