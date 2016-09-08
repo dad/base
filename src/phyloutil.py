@@ -2,7 +2,7 @@ from Bio import Phylo
 from Bio.Phylo import Newick
 
 
-def findRootByName(name, node):
+def findNodeByName(name, node):
 	"""Find node or child whose node.name matches name."""
 	res = None
 	match = Phylo.BaseTree._string_matcher(target=name)
@@ -13,5 +13,5 @@ def findRootByName(name, node):
 	return res
 
 def parseClassificationTable(root, table):
-	node = findRoot(name, root)
+	node = findNodeByName(name, root)
 	print(table)

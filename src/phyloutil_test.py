@@ -22,7 +22,9 @@ class test001(unittest.TestCase):
 		buildTree(3,2,root,'root')
 		for n in BaseTree._level_traverse(root, lambda x: x.clades):
 			print(n)
-		#self.assertTrue(geneutil.longestRun('AAAAA','A')==5)
+		target_name
+		target = phyloutil.findRootByName(target_name)
+		self.assertTrue(target.name == target_name)
 
 
 if __name__=="__main__":
