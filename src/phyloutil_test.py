@@ -1,4 +1,5 @@
 import time, os, random, string, sys, math, traceback, unittest
+import util
 from Bio.Phylo import Newick, BaseTree
 from Bio import Phylo
 import phyloutil
@@ -9,7 +10,7 @@ def buildTree(depth, breadth, parent, id):
 			node = Newick.Clade()
 			node.name = "{}.{}".format(id,i+1)
 			parent.clades.append(node)
-			print("Added node level {}".format(depth))
+			#print("Added node level {}".format(depth))
 			buildTree(depth-1, breadth, node, node.name)
 
 
@@ -33,11 +34,15 @@ class test001(unittest.TestCase):
 		#root.parent = None
 		root.name = 'root'
 		buildTree(3,2,root,'root')
-		Phylo.draw_ascii(root)
+		#Phylo.draw_ascii(root)
 
 	def test_reading_from_class_table(self):
+		"""Read table"""
 		root = Newick.Clade()
-		inf = open("./test-phyloutil/test1/guide.txt", 'r')
-		phyloutil.parseClassificationTable(root, inf)
+		inf = open("./test-phyloutil/test1/Pseudozyma-antarctica-1.txt", 'r')
+		table = util.readTable(inf, header=True)
+		#print(table)
+		phyloutil.parseClassificationTable(root, table)
+		inf.close()
 if __name__=="__main__":
 	unittest.main(verbosity=2)
