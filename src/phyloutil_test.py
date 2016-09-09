@@ -35,10 +35,10 @@ class test001(unittest.TestCase):
 		inf = open("./test-phyloutil/test1/Pseudozyma-antarctica-1.txt", 'r')
 		table = util.readTable(inf, header=True)
 		#print(table)
-		phyloutil.parseClassificationTable(root, table)
+		tree = phyloutil.parseClassificationTable(table)
 		inf.close()
 		#phyloutil.printTree(root, sys.stdout)
-		termlist = list(root.get_terminals())
+		termlist = list(tree.get_terminals())
 		self.assertTrue(termlist[0].name=='Moesziomyces antarcticus T-34')
 
 	def test_reading_from_guide_table(self):
@@ -49,9 +49,9 @@ class test001(unittest.TestCase):
 		inf = open("./test-phyloutil/test1/Pseudozyma-antarctica-1.txt", 'r')
 		table = util.readTable(inf, header=True)
 		#print(table)
-		phyloutil.parseClassificationTable(root, table)
+		tree = phyloutil.parseClassificationTable(table)
 		inf.close()
-		phyloutil.printTree(root, sys.stdout)
+		phyloutil.printTree(tree, sys.stdout)
 		#print(root.depths())
 		#Phylo.draw_ascii(root)
 
