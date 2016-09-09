@@ -10,6 +10,7 @@ class TreeError(Exception):
 		return repr(self.value)
 
 def printTree(root, out=sys.stdout, indent='', perlevel='  ', iterating=False):
+	"""Simple print method for a Phylo tree"""
 	if not iterating:
 		out.write("\n")
 	outstr = ''
@@ -22,78 +23,63 @@ def printTree(root, out=sys.stdout, indent='', perlevel='  ', iterating=False):
 def cladeNamesEqual(clade1, clade2):
 	return clade1.name == clade2.name
 
-
 def findNodeByName(name, tree):
 	"""Find node in tree whose node.name matches name."""
 	res = None
-	match = Phylo.BaseTree._string_matcher(target=name)
-	for n in Phylo.BaseTree._level_traverse(tree, lambda x: x.clades):
-		if match(n):
-			res = n
-			break
-	return res
-
-def findNode(node, tree, clades_equal=cladeNamesEqual):
-	"""Find node in tree whose node.name matches name."""
-	res = None
-	for n in Phylo.BaseTree._level_traverse(tree, lambda x: x.clades):
-		if clades_equal(node, n):
-			res = n
-			break
+	found = tree.find_clades({"name":name})
+	try:
+		res = next(found)
+	except:
+		pass
 	return res
 
 
-def mergeTrees(master, twig, clades_equal=cladeNamesEqual):
+def mergeTrees(master, twig, add_to_leaf):
 	"""Merge twig into master"""
-	master_node = None
-	if not clades_equal(master, twig):
-		# Root is not shared
-		# Find twig's root in master
-		master_node = findNode(twig, master, clades_equal)
-	else:
-		master_node = master
-	if master_node is None:
-		# Bail: 
-		raise TreeError("Can't find twig root '{}' in master tree".format(twig.name))
-	# Now step down twig and master in tandem
-	# until twig has information not in master
-	cur_master = master_node
-	cur_twig = twig
-	while clades_equal(cur_master, cur_twig):
-		pass #cur_twig = cur_twig.clades[]
+	twig_clades = []
+	cur = twig
+	while len(cur.clades)>0:
+		twig_clades.append(cur)
+		cur = cur.clades[0]
+	twig_clades.append(cur)
+	#twig_clades = list(Phylo.BaseTree._level_traverse(twig, lambda x: x.clades))
+	twig_clades.reverse()
+	#for t in twig_clades:
+	#	print("\t{}".format(t.name))
+	last_twig_clade = None
+	added = False
+	for clade in twig_clades:
+		#print(clade.name)
+		# Look up 
+		master_nodes = [x for x in master.find_clades({"name": clade.name})]
+		if len(master_nodes)>0:
+			# Assert that this is an actual match -- just checking!
+			master_node = master_nodes[0]
+			assert master_node.name == clade.name
+			# Assert that we've not already added this clade before
+			assert not clade.name in [x.name for x in master_node.clades]
+			#print("found node {}, last twig clade {}".format(master_node.name, last_twig_clade.name))
+			if not last_twig_clade is None:
+				if len(master_node.clades)==0:
+					if add_to_leaf:
+						master_node.clades.append(last_twig_clade)
+						added = True
+				else:
+					master_node.clades.append(last_twig_clade)
+					added = True
+				break
+		last_twig_clade = clade
+	return added
 
 def parseClassificationTable(table):
-	#node = findNodeByName(name, root)
 	names = table['name']
-	#print(names)
 	names.reverse()
 	cur_child = None
+	node = None
 	for name in names:
-		#print(name)
 		node = Newick.Clade()
 		node.name = name
-		#node_found_in_tree = findNodeByName(node.name, root)
-		# DAD: actually need to start from the root.
 		if not cur_child is None:
 			node.clades.append(cur_child)
 		cur_child = node
 	return node
-'''
-	# Now we have constructed a linear twig.
-	# Merge this twig into the root tree
-	mergeTrees
-			#Phylo.draw_ascii(root)
-			if not node_found_in_tree is None:
-				# Insert the children into the tree, and exit
-				node_found_in_tree.clades.append(cur_child)
-				#print("Node {} found\n".format(node.name))
-				break
-			else:
-				node.clades.append(cur_child)
-		else:
-			# This is the leaf node
-			#node.
-			pass
-		cur_child = node
-	#Phylo.write(cur_child, sys.stdout, 'newick')
-'''
