@@ -13,7 +13,9 @@ class ProteinProperties(object):
 		self.charges = {'D':-1,  'E':-1,  'H':1,  'C':-1,  'Y':-1,   'K':1,    'R':1,  'N-term':1, 'C-term':-1}
 		#self.charges = {'D':-1, 'E':-1, 'H':1, 'K':1, 'R':1, 'N-term':1, 'C-term':-1}
 		self.hydrophobicity_scales = {}
-		inf = open(os.path.expanduser("~/research/base/data/hydrophobicity-scales.txt"),'r')
+		# Hack so that we can store scale information in a file -- need better way to store.
+		dir_path = os.path.dirname(os.path.realpath(__file__))
+		inf = open(os.path.expanduser(dir_path+"/../data/hydrophobicity-scales.txt"),'r')
 		tab = util.readTable(inf)
 		scales = tab.header[1:]
 		for scale in scales:
@@ -23,6 +25,7 @@ class ProteinProperties(object):
 			'I': 131.18, 'H': 155.16, 'K': 146.19, 'M': 149.21, 'L': 131.18, 'N': 132.12, 'Q': 146.15, 
 			'P': 115.13, 'S': 105.09, 'R': 174.20, 'T': 119.12, 'W': 204.23, 'V': 117.15, 'Y': 181.19,
 			'B': 132.61, 'Z': 146.64}
+		inf.close()
 
 	def _aminoAcidCharge(self, amino_acid, pH):
 		proportion = 1 / (1 + 10**(pH - self.pKa[amino_acid]))
@@ -240,7 +243,11 @@ if __name__=='__main__':
 		headers = ['Input']
 		seqs = [options.sequence]
 	else:
-		(headers,seqs) = biofile.readFASTA(open(options.in_fname, 'r'))
+		fname = os.path.expanduser(options.in_fname)
+		print(fname)
+		(headers,seqs) = biofile.readFASTA(open(fname, 'r'))
+		#print("# Found", len(seqs), "sequences")
+		#print("# Found", len(headers), "headers")
 	
 	'''
 	if options.report: # Write a long report per protein
@@ -276,7 +283,7 @@ if __name__=='__main__':
 	gap = '-'
 	for (h,seq) in zip(headers,seqs):
 		if options.query:
-			if not h.strip().startswith(options.query):
+			if not options.query in h:
 				continue
 		if options.translate:
 			seq = translate.translateRaw(seq)
@@ -300,6 +307,7 @@ if __name__=='__main__':
 			freqs.normalize()
 			line += '\t' + '\t'.join(["{:1.4f}".format(freqs[aa]) for aa in aas]) + '\t' + '\t'.join(["{:d}".format(counts[aa]) for aa in aas])
 		outs.write(line + '\n')
+		#print("# Wrote line\n")
 	if not options.out_fname is None:
 		outf.close()
 
