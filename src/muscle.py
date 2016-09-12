@@ -7,7 +7,7 @@ class MuscleError(Exception):
 	"""MUSCLE alignment error"""
 
 const_default_muscle_exepath ="f:/develop/bin/muscle"
-const_default_muscle_exepath ="/usr/local/bin/muscle"
+#const_default_muscle_exepath ="/usr/local/bin/muscle"
 
 def alignSequences(seq_list, max_iters=16, exepath=const_default_muscle_exepath):
 	tmp_fasta_file = "tmp-muscle-in-{}.txt".format(''.join(random.sample(string.ascii_letters, 20)))
