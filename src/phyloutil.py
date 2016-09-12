@@ -1,6 +1,8 @@
 import sys
 from Bio import Phylo
 from Bio.Phylo import Newick
+from Bio.Phylo import NewickIO
+from io import StringIO
 
 class TreeError(Exception):
 	def __init__(self, value):
@@ -20,6 +22,11 @@ def printTree(root, out=sys.stdout, indent='', perlevel='  ', iterating=False):
 	for clade in root.clades:
 		printTree(clade, out, indent+perlevel, iterating=True)
 
+def extractSpeciesName(text):
+	"""Extract species name from NCBI-style header"""
+	res = text.split('[')[1].split(']')[0]
+	return res
+
 def cladeNamesEqual(clade1, clade2):
 	return clade1.name == clade2.name
 
@@ -33,6 +40,25 @@ def findNodeByName(name, tree):
 		pass
 	return res
 
+def readOneTree(stream):
+	"""Reads a Newick-formatted tree, permitting lines with comments denoted by leading '#'."""
+	tree_string = ""
+	lines = stream.readlines()
+	for line in lines:
+		if not line.strip()[0] == '#':
+			tree_string += line.strip()
+	trees = NewickIO.parse(StringIO(tree_string))
+	tree = next(trees)
+	return tree
+
+def buildNodeLookupFromTree(tree, allow_collisions=False):
+	    names = {}
+	    for clade in tree.find_clades():
+	        if clade.name:
+	            if not allow_collisions and (clade.name in names):
+	                raise ValueError("Duplicate clade name in tree: '{}'".format(clade.name))
+	            names[clade.name] = clade
+	    return names
 
 def mergeTrees(master, twig, add_to_leaf):
 	"""Merge twig into master"""
