@@ -69,6 +69,9 @@ class ProteinProperties(object):
 				done = True
 			n_iterations += 1
 		return mid_pH
+
+	def getHydrophobicityScale(self, scale):
+		return self.hydrophobicity_scales[scale]
 	
 	def getHydrophobicity(self, sequence, scale='Kyte-Doolittle'):
 		hyd_scale = self.hydrophobicity_scales[scale]

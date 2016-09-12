@@ -133,7 +133,7 @@ scale_y_log10nice <- function(name=NULL,omag=seq(-10,20),...) {
 }
 
 scale_loglog <- function(xname=NULL, yname=NULL, ...) {
-    list(scale_x_log10nice(xname, ...),scale_y_log10nice(yname,...))
+    list(scale_x_log10nice(name=xname, ...),scale_y_log10nice(name=yname, ...))
 }
 
 # by Edward W.J. Wallace
