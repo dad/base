@@ -247,7 +247,7 @@ if __name__=='__main__':
 		seqs = [options.sequence]
 	else:
 		fname = os.path.expanduser(options.in_fname)
-		print(fname)
+		#print(fname)
 		(headers,seqs) = biofile.readFASTA(open(fname, 'r'))
 		#print("# Found", len(seqs), "sequences")
 		#print("# Found", len(headers), "headers")
