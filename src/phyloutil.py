@@ -97,7 +97,7 @@ def mergeTrees(master, twig, add_to_leaf):
 		last_twig_clade = clade
 	return added
 
-def parseClassificationTable(table):
+def treeFromClassificationTable(table):
 	names = table['name']
 	names.reverse()
 	cur_child = None
@@ -109,3 +109,10 @@ def parseClassificationTable(table):
 			node.clades.append(cur_child)
 		cur_child = node
 	return node
+
+def getClassificationEntryByRank(table, rank):
+	res = None
+	for row in table.dictrows:
+		if row['rank'] == rank:
+			res = row
+	return res
