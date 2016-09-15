@@ -95,7 +95,10 @@ class ProteinProperties(object):
 		res = aa_counts
 		if normalize:
 			tot = float(sum([c for (aa,c) in aa_counts]))
-			res = [(aa,c/tot) for (aa,c) in aa_counts]
+			if tot>0.0:
+				res = [(aa,c/tot) for (aa,c) in aa_counts]
+			else:
+				res = [(aa,c) for (aa,c) in aa_counts]
 		return res
 	
 	def getLength(self, sequence, stopchr="*", gapchr="-"):
@@ -169,20 +172,38 @@ class ProteinProperties(object):
 
 class Composition(object):
 	def __init__(self):
-		aas = translate.AAs()
-		self._comp_dict = dict([(aa,0) for aa in aas]) # list of (aa, frequency) tuples
+		self._aas = translate.AAs()
+		self._comp_dict = dict([(aa,0) for aa in self._aas]) # list of (aa, frequency) tuples
 	
 	def initFromList(self, tuple_list):
 		self._comp_dict = dict(tuple_list)
 	
-	def initFromSequence(self, seq):
-		pp = ProteinProperties()
-		comp = pp.getComposition(seq, aas=translate.AAs())
+	def initFromSequence(self, seq, normalize=False):
+		aas = self._aas
+		if aas is None:
+			aas = ''
+		#seq_aas = aas + ''.join(sorted(list(set([aa for aa in sequence if not aa in aas]))))
+		aa_counts = [(aa,seq.count(aa)) for aa in aas]
+		comp = aa_counts
+		if normalize:
+			tot = float(sum([c for (aa,c) in aa_counts]))
+			if tot>0.0:
+				comp = [(aa,c/tot) for (aa,c) in aa_counts]
 		self._comp_dict = dict(comp)
+
+	@staticmethod
+	def getComposition(seq, normalize=False):
+		comp = Composition()
+		comp.initFromSequence(seq, normalize)
+		return comp
+
+	def items(self):
+		return self._comp_dict.items()
 	
 	def normalize(self):
 		tot = float(sum([c for (aa,c) in self._comp_dict.items()]))
-		self._comp_dict = dict([(aa,c/tot) for (aa,c) in self._comp_dict.items()])
+		if tot>0.0:
+			self._comp_dict = dict([(aa,c/tot) for (aa,c) in self._comp_dict.items()])
 	
 	def write(self, stream, header=True):
 		if header:
