@@ -171,8 +171,8 @@ class ProteinProperties(object):
 		return mot
 
 class Composition(object):
-	def __init__(self):
-		self._aas = translate.AAs()
+	def __init__(self, aas=translate.AAs()):
+		self._aas = aas
 		self._comp_dict = dict([(aa,0) for aa in self._aas]) # list of (aa, frequency) tuples
 	
 	def initFromList(self, tuple_list):
@@ -192,8 +192,8 @@ class Composition(object):
 		self._comp_dict = dict(comp)
 
 	@staticmethod
-	def getComposition(seq, normalize=False):
-		comp = Composition()
+	def getComposition(seq, aas=translate.AAs(), normalize=False):
+		comp = Composition(aas)
 		comp.initFromSequence(seq, normalize)
 		return comp
 
@@ -218,6 +218,12 @@ class Composition(object):
 	
 	def __getitem__(self, aa):
 		return self._comp_dict[aa]
+
+	def __str__(self):
+		s = ""
+		for aa in self._aas:
+			s += "{:s}: {:1.2f}\n".format(aa, self._comp_dict[aa])
+		return s
 			
 
 

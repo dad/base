@@ -72,8 +72,9 @@ class OutStreams:
 			stream_list = [stream_list]
 		self.streams = stream_list[:]
 
-	def write(self, line):
+	def write(self, line, flush=False):
 		for outs in self.streams:
+			#print(line, file=outs, flush=flush)
 			outs.write(line)
 
 	def addStream(self, stream):
