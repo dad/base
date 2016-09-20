@@ -47,5 +47,20 @@ class test003(unittest.TestCase):
 		self.assertTrue(geneutil.getGappedIndex(seq1, 3)==7)
 		self.assertTrue(geneutil.getGappedIndex(seq2, 2)==5)
 
+class test004(unittest.TestCase):
+	def test_entropy(self):
+		"""Entropy of a homopolymer"""
+		seq1 = 'AAAA'
+		res = geneutil.sequenceEntropy(seq1)
+		self.assertAlmostEqual(res.entropy,0.0)
+		self.assertTrue(res.counts['A']==4)
+	def test_max_entropy(self):
+		"""Maximum possible entropy"""
+		seq1 = 'ACDEFGHIKLMNPQRSTVWY'
+		res = geneutil.sequenceEntropy(seq1,base=20)
+		self.assertAlmostEqual(res.entropy,1.0)
+		for aa in seq1:
+			self.assertTrue(res.counts[aa]==1)
+
 if __name__=="__main__":
 	unittest.main(verbosity=2)
