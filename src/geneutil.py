@@ -1,7 +1,8 @@
 #! python
 
-import sys, os, math, string, random, pickle
+import sys, os, math, string, random
 import translate, muscle, biofile, util
+import scipy as sp
 import re
 
 def primerMinMelting(seq):
@@ -127,6 +128,28 @@ def longestRun(seq, character_list, max_interruptions=0):
 			if run_length+last_irun_length>longest_run:
 				longest_run = run_length+last_irun_length
 	return longest_run
+
+class EntropyResult:
+	def __init__(self):
+		self.counts = None
+		self.entropy = None
+
+def sequenceEntropy(seq, base=20, aas=translate.AAs()):
+	counts = dict([(aa,0) for aa in aas])
+	n = 0.0 # length of the counted amino acids
+	for aa in seq:
+		try:
+			counts[aa] += 1
+			n += 1
+		except KeyError:
+			pass
+	base_div = sp.log(base) # log_b(f) = log_e(f)/log_e(b)
+	entropy = -sum([(aac/n)*sp.log(aac/n)/base_div for (aa,aac) in counts.items() if aac>0])
+	res = EntropyResult()
+	res.entropy = entropy
+	res.counts = counts
+	return res
+
 
 def maxSlidingCount(seq, character, windowlen=5):
     """Find the maximum numbers of character in sliding window of length windowlen in seq.
