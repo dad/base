@@ -551,6 +551,17 @@ class test027(unittest.TestCase):
 			self.assertTrue(h[1]=='two')
 		os.remove(fname)
 
+class test028(unittest.TestCase):
+	def test_run(self):
+		"""formatLine"""
+		# DAD: todo
+		#self.assertFalse(True)
+		dout = util.DelimitedOutput()
+		dout.addHeader("one","first",'d')
+		dout.addHeader("two","second",'s')
+		entry = {'one':2, 'two':'this'}
+		line = dout.formatLine(entry)
+
 
 
 if __name__=="__main__":

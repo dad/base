@@ -733,6 +733,15 @@ class DelimitedOutput(object):
 			res = self._sep.join(["{{:{fmt:s}}}".format(fmt=formatfxn(h.format)) for h in self._header_list])+'\n'
 		return res
 
+	def formatLine(self, entry):
+		""" Format the entry by headers. """
+		line = ""
+		# If entry is a dictionary...
+		for h in self._header_list:
+			fmt = "{:"+h.format+'}'
+			line += fmt.format(entry[h.name])
+		return line
+
 	@property
 	def headers(self):
 		for h in self._header_list:
