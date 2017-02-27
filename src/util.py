@@ -677,7 +677,6 @@ def readTable(stream, header=True, sep='\t', skip=0, header_name_processor=defau
 	return LightDataFrame(header_flds, [data_dict[h] for h in header_flds])
 
 
-
 class Header(object):
 	format_types = {'f':'float', 'd':'int', 's':'string', 'e':'float'}
 	def __init__(self, name, description, format):
@@ -706,7 +705,7 @@ class DelimitedOutput(object):
 		else:
 			for h in headers:
 				self.addHeader(h)
-	
+
 	def writeHeader(self, stream):
 		line = self._sep.join([h.name for h in self._header_list]) + '\n'
 		stream.write(line)
@@ -736,11 +735,29 @@ class DelimitedOutput(object):
 	def formatLine(self, entry):
 		""" Format the entry by headers. """
 		line = ""
+		tab = '\t'
 		# If entry is a dictionary...
 		for h in self._header_list:
-			fmt = "{:"+h.format+'}'
-			line += fmt.format(entry[h.name])
-		return line
+			try:
+				fmt = "{:"+h.format+'}'
+				if line != '':
+					line += tab
+				line += fmt.format(entry[h.name])
+			except ValueError as ve:
+				if h.format=='s': # string
+					line += fmt.format(naStringParser(entry[h.name]))
+				else:
+					raise ve
+			except TypeError as te:
+				if h.format=='s': # string
+					val = entry[h.name]
+					res = na.formatNA(val)
+					#print(val, res)
+					line += fmt.format(res)
+				else:
+					print(entry[h.name])
+					raise ve
+		return line + '\n'
 
 	@property
 	def headers(self):
