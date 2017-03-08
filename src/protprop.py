@@ -240,7 +240,7 @@ if __name__=='__main__':
 	parser.add_argument("-g", "--degap", dest="degap", action="store_true", default=False, help="remove gaps before applying begin/end coordinates?")
 	parser.add_argument("-q", "--query", dest="query", default=None, help="specific sequence identifier to query")
 	parser.add_argument("-m", "--merge", dest="merge", action="store_true", default=False, help="merge all sequences together?")
-	parser.add_argument("--hydrophobicity-scale", dest="hydrophobicity_scale", type=str, default='Kyte-Doolittle', help="which hydrophobicity scale to use (Kyte-Doolittle, Hopp-Wood, Cornette, Eisenberg, Rose, Janin, Engelman-GES)")
+	parser.add_argument("--hydrophobicity-scale", dest="hydrophobicity_scale", type=str, default='Hopp-Woods', help="which hydrophobicity scale to use (Kyte-Doolittle, Hopp-Woods, Cornette, Eisenberg, Rose, Janin, Engelman-GES)")
 	parser.add_argument("--pH", dest="pH", type=float, default=7.2, help="pH for charge determination")
 	#parser.add_argument("-r", "--report", dest="report", action="store_true", default=False, help="write long report per protein?")
 	options = parser.parse_args()
