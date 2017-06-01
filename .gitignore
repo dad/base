@@ -1,3 +1,4 @@
 *.o
 *.dll
 *.pyc
+.DS_Store
