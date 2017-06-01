@@ -1,7 +1,7 @@
 source("fplc.R")
 
-#directory <- "../data/fplc/PAB1-plus-chaperones"
-directory <- "c:/Dropbox (Drummond Lab)/heat-agg/data/fplc/PAB1 plus chaperones"
+directory <- "../../../Dropbox (Drummond Lab)/pab1-chaperones/data/Fig1"
+#directory <- "c:/Dropbox (Drummond Lab)/heat-agg/data/fplc/PAB1 plus chaperones"
 
 files <- list.files(path=directory, pattern='*.asc$')
 #print(files)
