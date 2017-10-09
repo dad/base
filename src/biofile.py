@@ -2,7 +2,7 @@ import sys, os, math, string
 # DAD: right now, translate is only for CodingSequence's call to reverseTranslate.
 import translate, util
 
-class BioFileError:
+class BioFileError(BaseException):
 	"""Class for packaging errors reading biological data from files"""
 	def __init__(self, s):
 		return
