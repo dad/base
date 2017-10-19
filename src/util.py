@@ -61,7 +61,7 @@ def printTiming(func):
 		res = func(*arg)
 		# Store the current time again, in microseconds
 		t2 = time.time()
-		print('{0} took {1:0.3f} ms'.format(func.__name__, (t2-t1)*1000.0), file=sys.stdout)
+		print('{0} took {1:0.3f} ms'.format(func.__name__, (t2-t1)*1000.0)) #, file=sys.stdout)
 		return res
 	# Return the wrapper function
 	return wrapper
@@ -88,7 +88,7 @@ class OutStreams:
 			outs.flush()
 
 def isNA(x):
-	print("util.isNA() should be updated to na.isNA()", file=sys.stderr)
+	sys.stderr.write("util.isNA() should be updated to na.isNA()")
 	return na.isNA(x)
 
 """ Class for applying formatting automatically.
@@ -749,15 +749,17 @@ class DelimitedOutput(object):
 				else:
 					raise ve
 			except TypeError as te:
-				if h.format=='s': # string
-					val = entry[h.name]
-					res = na.formatNA(val)
-					#print(val, res)
-					line += fmt.format(res)
-				else:
-					print(entry[h.name])
-					raise ve
+				# This will occur if entry[h.name] is None. Format as NA.
+				val = entry[h.name]
+				res = na.formatNA(val)
+				fmt = "{:s}"
+				line += fmt.format(res)
 		return line + '\n'
+
+	def createResult(self, default=None):
+		""" Generate a new result dictionary with default values populated. """
+		entry = dict([(h.name, default) for h in self._header_list])
+		return entry
 
 	@property
 	def headers(self):
