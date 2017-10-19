@@ -51,6 +51,9 @@ def readOneTree(stream):
 	tree = next(trees)
 	return tree
 
+def treeFromString(tree_string):
+	return readOneTree(StringIO(tree_string))
+
 def buildNodeLookupFromTree(tree, allow_collisions=False):
 	    names = {}
 	    for clade in tree.find_clades():
