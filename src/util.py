@@ -125,9 +125,7 @@ def isBlank(s):
 	return s.strip() == ''
 
 def isComment(s, comment_char='#'):
-	st = s.strip()
-	res = st.startswith(comment_char)
-	return res
+	return s.strip().startswith(comment_char)
 
 def looseIntParser(x):
 	v = None
@@ -225,7 +223,7 @@ class LineCache:
 				eof = True
 				break
 			else:
-				if not line.strip().startswith(self.comment_str):
+				if not isComment(line, self.comment_str): #line.strip().startswith(self.comment_str):
 					if  not line.strip()=='':
 						self.add(line)
 				else:
@@ -336,7 +334,7 @@ class DelimitedLineReader:
 						try:
 							self.handlers.append(custom_handler_dict[h])
 						except KeyError as ke:
-							raise ReaderError("No custom handler provided for field-type %s" % h)
+							raise ReaderError("No custom handler provided for field-type {:s}".format(h))
 
 	def next(self, process=True, apply_handlers=True):
 		if not self.atEnd():
