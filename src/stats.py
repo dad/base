@@ -3,7 +3,7 @@
 """Module for statistics.
 
 Originally written by Jesse Bloom, 2004.
-Expanded and maintained by D. Allan Drummond, 2004-2013."""
+Expanded and maintained by D. Allan Drummond, 2004-2018."""
 #
 import re, math, os, string, random
 import listrank, na
@@ -40,7 +40,30 @@ def weighted_choice_index(weights):
 			return i
 		upto += w
 	assert False, "Shouldn't get here"
-  
+
+def weighted_choice_index_n(weights, n_choices):
+	# Choose n_choices without replacement
+	wts = [w for w in weights] # We will change the weights during the algorithm.
+	assert n_choices <= len(wts)
+	choices = []
+	while len(choices) < n_choices:
+		i = weighted_choice_index(wts)
+		wts[i] = 0.0 # "Remove" this choice.
+		choices.append(i)
+	return choices
+
+def weighted_choice_index_pair(weights):
+	# Choose two without replacement
+	#wts = [w for w in weights] # We will change the weights during the algorithm.
+	found = False
+	assert len(weights) >= 2
+	while not found:
+		i = weighted_choice_index(weights)
+		j = weighted_choice_index(weights)
+		if i != j:
+			found = True
+	return (i,j)
+
 class HistogramBin(object):
 	def __init__(self, mid, width, count, total=None, cumcount=None):
 		self._mid = mid

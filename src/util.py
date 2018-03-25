@@ -154,6 +154,15 @@ def naFloatParser(x):
 			raise ve
 	return v
 
+def naSciParser(x):
+	v = None
+	try:
+		v = float(x)
+	except ValueError as ve:
+		if not na.isNA(x):
+			raise ve
+	return v
+
 def naStringParser(x):
 	"""A parser that respects NA's."""
 	v = None
@@ -294,7 +303,7 @@ class DelimitedLineReader:
 	for fields in dlr.dictentries:
 		print fields['foo'] + fields['bar']
 	"""
-	handler_dict = {"s":str, "f":naFloatParser, "d":naIntParser}
+	handler_dict = {"s":str, "f":naFloatParser, "d":naIntParser, "e":naSciParser}
 
 	def __init__(self, in_file, header=True, field_defs=None, sep="\t", skip=0, strip=False, comment_str="#", save_comments=False, custom_handler_dict=None, header_name_processor=basicHeaderFixer):
 		self.infile = in_file
@@ -477,7 +486,7 @@ class DelimitedLineReader:
 	def inferHandlerKey(self, fld):
 		# int -> float -> string
 		found_key = None
-		for handler_key in "dfs":  # DAD: should include custom handlers up front
+		for handler_key in "dfse":  # DAD: should include custom handlers up front
 			handler = self.handler_dict[handler_key]
 			try:
 				res = handler(fld)
