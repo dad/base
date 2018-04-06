@@ -21,7 +21,7 @@ def chiSquaredHistogramDistance(h1, h2):
 	return 0.5 * sum(chisq_terms)
 
 # From http://stackoverflow.com/questions/3679694/a-weighted-version-of-random-choice
-def weighted_choice(choices):
+def weighted_choice_old(choices):
 	total = sum(w for c, w in choices)
 	r = random.uniform(0, total)
 	upto = 0
@@ -41,28 +41,18 @@ def weighted_choice_index(weights):
 		upto += w
 	assert False, "Shouldn't get here"
 
-def weighted_choice_index_n(weights, n_choices):
-	# Choose n_choices without replacement
-	wts = [w for w in weights] # We will change the weights during the algorithm.
-	assert n_choices <= len(wts)
-	choices = []
-	while len(choices) < n_choices:
-		i = weighted_choice_index(wts)
-		wts[i] = 0.0 # "Remove" this choice.
-		choices.append(i)
-	return choices
-
-def weighted_choice_index_pair(weights):
-	# Choose two without replacement
-	#wts = [w for w in weights] # We will change the weights during the algorithm.
+def weighted_choice_index_pair_n(weights, n):
+	# Choose n pairs without replacement
 	found = False
-	assert len(weights) >= 2
+	sum_w = sum(weights)
+	pweights = [w/sum_w for w in weights]
+	values = range(len(weights))
+	res = []
 	while not found:
-		i = weighted_choice_index(weights)
-		j = weighted_choice_index(weights)
-		if i != j:
-			found = True
-	return (i,j)
+		pairs = sp.random.choice(values, (int(n*1.1),2), p=pweights, replace=True)
+		res += [(i,j) for (i,j) in pairs if i != j]
+		found = (len(res) >= n)
+	return res[:n]
 
 class HistogramBin(object):
 	def __init__(self, mid, width, count, total=None, cumcount=None):
