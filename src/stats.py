@@ -21,7 +21,7 @@ def chiSquaredHistogramDistance(h1, h2):
 	return 0.5 * sum(chisq_terms)
 
 # From http://stackoverflow.com/questions/3679694/a-weighted-version-of-random-choice
-def weighted_choice_old(choices):
+def weighted_choice(choices):
 	total = sum(w for c, w in choices)
 	r = random.uniform(0, total)
 	upto = 0
@@ -49,7 +49,7 @@ def weighted_choice_index_pair_n(weights, n):
 	values = range(len(weights))
 	res = []
 	while not found:
-		pairs = sp.random.choice(values, (int(n*1.1),2), p=pweights, replace=True)
+		pairs = sp.random.choice(values, size=(int(n*1.1),2), p=pweights, replace=True)
 		res += [(i,j) for (i,j) in pairs if i != j]
 		found = (len(res) >= n)
 	return res[:n]
