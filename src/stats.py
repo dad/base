@@ -41,15 +41,25 @@ def weighted_choice_index(weights):
 		upto += w
 	assert False, "Shouldn't get here"
 
-def weighted_choice_index_pair_n(weights, n):
+def choose_index_pair_weighted(n, indices, weights):
 	# Choose n pairs without replacement
 	found = False
 	sum_w = sum(weights)
 	pweights = [w/sum_w for w in weights]
-	values = range(len(weights))
+	assert len(indices) == len(weights)
 	res = []
 	while not found:
-		pairs = sp.random.choice(values, size=(int(n*1.1),2), p=pweights, replace=True)
+		pairs = sp.random.choice(indices, size=(int(n*1.1),2), p=pweights, replace=True)
+		res += [(i,j) for (i,j) in pairs if i != j]
+		found = (len(res) >= n)
+	return res[:n]
+
+def choose_index_pair(n, indices):
+	# Choose n distinct pairs of indices (no pairs with i=j) without replacement
+	found = False
+	res = []
+	while not found:
+		pairs = sp.random.choice(indices, size=(int(n*1.1),2), replace=True)
 		res += [(i,j) for (i,j) in pairs if i != j]
 		found = (len(res) >= n)
 	return res[:n]
