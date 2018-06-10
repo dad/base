@@ -42,7 +42,7 @@ def weighted_choice_index(weights):
 	assert False, "Shouldn't get here"
 
 def choose_index_pair_weighted(n, indices, weights):
-	# Choose n pairs without replacement
+	# Choose n pairs with replacement
 	found = False
 	sum_w = sum(weights)
 	pweights = [w/sum_w for w in weights]
@@ -55,7 +55,7 @@ def choose_index_pair_weighted(n, indices, weights):
 	return res[:n]
 
 def choose_index_pair(n, indices):
-	# Choose n distinct pairs of indices (no pairs with i=j) without replacement
+	# Choose n distinct pairs of indices (no pairs with i=j) with replacement
 	found = False
 	res = []
 	while not found:
