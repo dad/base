@@ -245,20 +245,25 @@ if __name__=='__main__':
 	#parser.add_argument("-r", "--report", dest="report", action="store_true", default=False, help="write long report per protein?")
 	options = parser.parse_args()
 	
-	outs = util.OutStreams()
-	if not options.out_fname is None:
-		outf = open(os.path.expanduser(options.out_fname),'w')
-		outs.addStream(outf)
-	else:
-		outs.addStream(sys.stdout)
+	info_outs = util.OutStreams(sys.stdout)
+	data_outs = util.OutStreams()
 
-	# Write parameters	
-	outs.write("# Run {}\n".format(datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')))
-	outs.write("# Parameters:\n")
+	# Start up output
+	if not options.out_fname is None:
+		outf = open(options.out_fname,'w')
+		data_outs.addStream(outf)
+	else:
+		# By default, write to stdout
+		data_outs.addStream(sys.stdout)
+
+
+	# Write out parameters
+	data_outs.write("# Run started {}\n".format(util.timestamp()))
+	data_outs.write("# Command: {}\n".format(' '.join(sys.argv)))
+	data_outs.write("# Parameters:\n")
 	optdict = vars(options)
 	for (k,v) in optdict.items():
-		outs.write("#\t{k}: {v}\n".format(k=k, v=v))
-
+		data_outs.write("#\t{k}: {v}\n".format(k=k, v=v))
 	
 	pp = ProteinProperties()
 	aas = None
@@ -273,9 +278,13 @@ if __name__=='__main__':
 		headers = ['Input']
 		seqs = [options.sequence]
 	else:
-		fname = os.path.expanduser(options.in_fname)
-		#print(fname)
-		(headers,seqs) = biofile.readFASTA(open(fname, 'r'))
+		if not options.in_fname is None:
+			fname = os.path.expanduser(options.in_fname)
+			#print(fname)
+			(headers,seqs) = biofile.readFASTA(open(fname, 'r'))
+		else:
+			info_outs.write("# No sequence or file provided; exiting\n")
+			sys.exit()
 		#print("# Found", len(seqs), "sequences")
 		#print("# Found", len(headers), "headers")
 	
@@ -301,13 +310,13 @@ if __name__=='__main__':
 	else: # Write compact
 	'''
 	
-	outs.write("orf\tlength\tcharge\tpI\thydrophobicity")
+	data_outs.write("orf\tlength\tcharge\tpI\thydrophobicity")
 	if not aas is None:
-		outs.write("\t"+"\t".join(["f.{}".format(aa) for aa in aas])) # fractions
-		outs.write("\t"+"\t".join(["n.{}".format(aa) for aa in aas])) # numbers
-	outs.write("\n")
+		data_outs.write("\t"+"\t".join(["f.{}".format(aa) for aa in aas])) # fractions
+		data_outs.write("\t"+"\t".join(["n.{}".format(aa) for aa in aas])) # numbers
+	data_outs.write("\n")
 	if options.merge:
-		outs.write("# Merging {:d} sequences into one\n".format(len(seqs)))
+		data_outs.write("# Merging {:d} sequences into one\n".format(len(seqs)))
 		seqs = [''.join(seqs)]
 		headers = ["merged"]
 	gap = '-'
@@ -336,7 +345,7 @@ if __name__=='__main__':
 			freqs.initFromSequence(degapped_seq)
 			freqs.normalize()
 			line += '\t' + '\t'.join(["{:1.4f}".format(freqs[aa]) for aa in aas]) + '\t' + '\t'.join(["{:d}".format(counts[aa]) for aa in aas])
-		outs.write(line + '\n')
+		data_outs.write(line + '\n')
 		#print("# Wrote line\n")
 	if not options.out_fname is None:
 		outf.close()
