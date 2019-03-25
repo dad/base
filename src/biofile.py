@@ -193,6 +193,9 @@ class CodingSequence:
 			res += ';'.join(["{0}={1}".format(k,d[k]) for k in ks if not k in exclude_keys])
 		return res
 
+	def numExons(self):
+		return len(self.exons)
+
 '''
 http://song.sourceforge.net/gff3.shtml
 
