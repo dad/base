@@ -35,7 +35,6 @@ def translateHeader(header_string):
 	# >10224:0029f1 "pub_gene_id":"Sakowv30031477m", "pub_og_id":"EOG091G08IZ", "og_name":"guanine nucleotide binding protein-like 3 (nucleolar) ","level":33208
 	# first number is an NCBI taxon id
 	# second number is a unique hexadecimal id
-	# y = re.compile('(\"(.+)\":\"?(.+)\"?)?,')
 	def unquote(x):
 		x = x.replace('"','')
 		x = x.replace("'","")
@@ -65,18 +64,15 @@ def translateHeader(header_string):
 	if brace_begin>0:
 		rest = rest[(brace_begin+1):]
 		rest = rest.replace("}",'')
-	#print(rest)
+	# This pattern means:
+	# Find either things that look like "stuff":"stuff" or like "stuff":number
 	y = re.compile('("([^":]*)":"([^"]|"")*")|("([^"]*)":(\d+))')
 	def pickcolon(x):
 		y = [e for e in x if e.find(":")>0]
 		return y[0]
 	flds = [pickcolon(x).split(":") for x in y.findall(rest)]
-	#flds = [get_key_colon_value(x) for x in rest.split(',')]
-	#print(header_string[id_end:])
-	#print(flds)
-	#print(flds)
 	res_dict = dict([(unquote(x[0]),unquote(x[1])) for x in flds])
 	res_dict["taxon"] = taxon_name
-	#print(res_dict)
-	#print(res_dict)
 	return res_dict
+
+
