@@ -122,7 +122,7 @@ invlogodds <- function(x) {
 # Assumes input data x has columns "gene" and "prot": common gene name, and protein level in molecules/cell
 # 
 # Typical call: 
-# x <- read_tsv("scer-mrna-protein-absolute-estimate.txt",comment="#") # From Csardi et al. 2015
+# x <- read_tsv("scer-mrna-protein-absolute-estimate.txt",comment="#") %>% dplyr::rename(ORF=orf) # From Csardi et al. 2015
 # genes <- c('SSA1','SSA2','SSA3','SSA4','HSP26','GBP2','NUG1','LSG1','PAB1','HSP104','SSE1','SSE2','YDJ1','SIS1')
 # stoichiometry <- c('HSP104'=6,'SIS1'=2, 'YDJ1'=2)
 # localization <- c("GBP2"="nucleus", "NUG1"="nucleolus", "LSG1"="cytosol","PAB1"="cytosol")
@@ -174,11 +174,12 @@ intracellular.concentration <- function(x, genes, stoichiometry=NULL, localizati
     subcellular.complex.conc.uM=conc.uM(prot,subcellular.volume)/stoich,
     )
   res <- res %>% select(gene, prot, stoich, subcellular.localization, cell.monomer.conc.uM, cell.complex.conc.uM, subcellular.complex.conc.uM)
-  if (is.null(localization)) {
+  if (is.null(stoichiometry) & is.null(localization)) {
+    res <- res %>% select(-stoich, -subcellular.localization, -cell.complex.conc.uM, -subcellular.complex.conc.uM)
+  } else if (is.null(stoichiometry)) {
+    res <- res %>% select(-stoich, -cell.complex.conc.uM) %>% rename(subcellular.monomer.conc.uM=subcellular.complex.conc.uM)
+  } else if (is.null(localization)) {
     res <- res %>% select(-subcellular.localization, -subcellular.complex.conc.uM)
-  }
-  if (is.null(stoichiometry)) {
-    res <- res %>% select(-stoich, -cell.complex.conc.uM)
   }
   # Arrange in alphabetical order by gene name
   res %>% arrange(-desc(gene))
