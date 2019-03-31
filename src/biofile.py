@@ -862,6 +862,19 @@ def readFASTA(infile):
 	'''
 	return (headers, sequences)
 
+def degapAlignment(seqs, gap='-'):
+	ungapped_columns = []
+	N = len(seqs)
+	L = len(seqs[0])
+	for i in range(L):
+		col = [s[i] for s in seqs]
+		if col.count(gap) < N:
+			ungapped_columns.append(i)
+
+	new_seqs = []
+	for j in range(N):
+		new_seqs.append(''.join([seqs[j][i] for i in ungapped_columns]))
+	return new_seqs
 
 def getPeptideID(header):
 	try:
