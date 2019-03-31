@@ -1,6 +1,7 @@
 import sys, os, math, string
 # DAD: right now, translate is only for CodingSequence's call to reverseTranslate.
 import translate, util
+from Bio import SeqIO
 
 class BioFileError(BaseException):
 	"""Class for packaging errors reading biological data from files"""
@@ -813,6 +814,14 @@ def readFASTA(infile):
 	sequences[i].
 	Removes the '>' from the headers.
 	Returns None if there is a problem processing the file."""
+
+	headers = []
+	sequences = []
+	for record in SeqIO.parse(infile, "fasta"):
+		headers.append("{:s} {:s}".format(record.id, record.description))
+		sequences.append(str(record.seq))
+
+	'''
 	if isinstance(infile,str):
 		infile_name = os.path.expanduser(infile)
 		if not os.path.isfile(infile_name):
@@ -842,13 +851,15 @@ def readFASTA(infile):
 				#print line
 			else:
 				frag = line.strip()
-				seq.append(frag)
+				if seq:
+					seq.append(frag)
 		frag = ''.join(seq)
 		if frag[-1] == '*': # Remove trailing stop
 			frag = frag[:-1]
 		sequences.append(frag.upper())
 	infile.close()
 	assert len(headers) == len(sequences), "Error, headers and sequences have different lengths, {} != {}.".format(len(headers), len(sequences))
+	'''
 	return (headers, sequences)
 
 
@@ -934,7 +945,8 @@ class GFFReader(object):
 		gff_addl_fields = ['attributes','comments']
 		for flds in self._dlr.entries:
 			n = len(flds)
-			names = gff_req_fields + gff_addl_fields[:(n-n_req_fields)] # Only take additional fields if provided
-			rec = GFFRecord(self._attr_parser)
-			rec.readFromFields(flds)
-			yield rec
+			if n >= n_req_fields:
+				names = gff_req_fields + gff_addl_fields[:(n-n_req_fields)] # Only take additional fields if provided
+				rec = GFFRecord(self._attr_parser)
+				rec.readFromFields(flds)
+				yield rec
