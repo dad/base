@@ -1,4 +1,7 @@
-import os, random, string, sys
+import os, random, string, sys, re
+import ete3
+
+MISSING_TAXON = "<unknown>"
 
 def headerDict(header_string):
 	"""Return dictionary from header string"""
@@ -27,3 +30,49 @@ def headerDict(header_string):
 			d[sp[0]] = degarble(sp[1])
 	
 	return d
+
+def translateHeader(header_string):
+	# >10224:0029f1 "pub_gene_id":"Sakowv30031477m", "pub_og_id":"EOG091G08IZ", "og_name":"guanine nucleotide binding protein-like 3 (nucleolar) ","level":33208
+	# first number is an NCBI taxon id
+	# second number is a unique hexadecimal id
+	def unquote(x):
+		x = x.replace('"','')
+		x = x.replace("'","")
+		return x
+	def get_key_colon_value(x):
+		y = x.strip().split(":")
+		if not len(y)==2:
+			print(x,y)
+		return (y[0],y[1])
+	# Find first space, indicating end of IDs
+	entry_start = header_string.find('>')
+	if entry_start<0:
+		entry_start=0
+	else:
+		entry_start = entry_start+1
+	id_end = header_string.find(' ')
+	id_flds = header_string[entry_start:id_end].split(":")
+	ncbi_taxon_id = int(id_flds[0])
+	taxon_dict = ete3.NCBITaxa().get_taxid_translator([ncbi_taxon_id])
+	if ncbi_taxon_id in taxon_dict:
+		taxon_name = taxon_dict[ncbi_taxon_id]
+	else:
+		#print(id_flds)
+		taxon_name = MISSING_TAXON
+	rest = header_string[id_end:]
+	brace_begin = rest.find('{')
+	if brace_begin>0:
+		rest = rest[(brace_begin+1):]
+		rest = rest.replace("}",'')
+	# This pattern means:
+	# Find either things that look like "stuff":"stuff" or like "stuff":number
+	y = re.compile('("([^":]*)":"([^"]|"")*")|("([^"]*)":(\d+))')
+	def pickcolon(x):
+		y = [e for e in x if e.find(":")>0]
+		return y[0]
+	flds = [pickcolon(x).split(":") for x in y.findall(rest)]
+	res_dict = dict([(unquote(x[0]),unquote(x[1])) for x in flds])
+	res_dict["taxon"] = taxon_name
+	return res_dict
+
+

@@ -333,8 +333,8 @@ class ConsensusSequence(object):
 		return self._seq
 
 #---------------------------------------------------------------------------------
-_dna_complement = {'A':'T','T':'A','U':'A','G':'C','C':'G','a':'t','t':'a','u':'a','g':'c','c':'g'}
-_rna_complement = {'A':'U','U':'A','G':'C','C':'G','a':'u','u':'a','g':'c','c':'g'}
+_dna_complement = {'A':'T','T':'A','U':'A','G':'C','C':'G','a':'t','t':'a','u':'a','g':'c','c':'g','n':'n','N':'N'}
+_rna_complement = {'A':'U','U':'A','G':'C','C':'G','a':'u','u':'a','g':'c','c':'g','n':'n','N':'N'}
 def complement(a, rna=True):
 	if rna:
 		return _rna_complement[a]

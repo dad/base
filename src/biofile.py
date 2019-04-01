@@ -1,6 +1,7 @@
 import sys, os, math, string
 # DAD: right now, translate is only for CodingSequence's call to reverseTranslate.
 import translate, util
+from Bio import SeqIO
 
 class BioFileError(BaseException):
 	"""Class for packaging errors reading biological data from files"""
@@ -24,8 +25,7 @@ class CodingExonRecord:
 	def getKey( self ):
 		return "{0}-{1}".format(self.peptide_ID, self.coding_start)
 
-	def addDescriptors(self, desc_string):
-		desc_dict = dict([(x.split('=')[0].lower(), x.split('=')[1]) for x in desc_string.split(";")])
+	def addDescriptors(self, desc_dict):
 		if self.descriptors is None:
 			self.descriptors = desc_dict
 		else:
@@ -193,6 +193,9 @@ class CodingSequence:
 			ks.sort()
 			res += ';'.join(["{0}={1}".format(k,d[k]) for k in ks if not k in exclude_keys])
 		return res
+
+	def numExons(self):
+		return len(self.exons)
 
 '''
 http://song.sourceforge.net/gff3.shtml
@@ -367,8 +370,23 @@ import HTMLParser
 html_parser = HTMLParser.HTMLParser()
 unescaped = html_parser.unescape(my_string)
 '''
+
+def unquote(x):
+	return x.replace('"','')
+
+def parseAttributes(attr_string, value_sep):
+	return dict([(x.strip().split(value_sep)[0], unquote(x.strip().split(value_sep)[1])) for x in attr_string.split(';')])
+
+def parseAttributesDefault(attr_string, value_sep='='):
+	return dict([(x.split(value_sep)[0], unquote(x.split(value_sep)[1])) for x in attr_string.split(';')])
+
+def parseAttributesJGI1(attr_string):
+	# name "e_gw1.1.1434.1"; proteinId 30297; exonNumber 2; product_name ""
+	return parseAttributes(attr_string, value_sep=None)
+
+
 class GFFRecord:
-	def __init__( self ):
+	def __init__( self, attribute_parser=parseAttributesDefault):
 		self.seqname = ''
 		self.source = ''
 		self.feature = ''
@@ -378,6 +396,7 @@ class GFFRecord:
 		self.strand = '+'
 		self.phase = '.'
 		self._attributes_str = ''
+		self._attr_parser = attribute_parser
 		self.attributes = None
 
 	def read(self, line):
@@ -395,7 +414,7 @@ class GFFRecord:
 		self.phase = flds[7]
 		if len(flds)>8:
 			self._attributes_str = flds[8]
-			self.attributes = dict([(x.split('=')[0], x.split('=')[1]) for x in self._attributes_str.split(';')])
+			self.attributes = self._attr_parser(self._attributes_str)
 
 	def readFrom(self, flds):
 		self.seqname = flds[0]
@@ -407,7 +426,7 @@ class GFFRecord:
 		self.strand = flds[6]
 		self.phase = flds[7]
 		self._attributes_str = flds[8]
-		self.attributes = dict([(x.split('=')[0], x.split('=')[1]) for x in self._attributes_str.split(';')])
+		self.attributes = self._attr_parser(self._attributes_str)
 
 	def copy(self):
 		n = GFFRecord()
@@ -419,6 +438,7 @@ class GFFRecord:
 		n.score = self.score
 		n.strand = self.strand
 		n.phase = self.phase
+		n._attr_parser = self._attr_parser
 		n._attributes_str = self._attributes_str
 		n.attributes = dict(self.attributes.items())
 		return n
@@ -435,7 +455,7 @@ class GFFRecord:
 		cer.coding_start = self.start
 		cer.coding_end = self.end
 		cer.chromosome = self.seqname
-		cer.addDescriptors(self._attributes_str)
+		cer.addDescriptors(self.attributes)
 		cer.gene_ID = cer.descriptors.get("name",'')
 		return cer
 
@@ -794,6 +814,14 @@ def readFASTA(infile):
 	sequences[i].
 	Removes the '>' from the headers.
 	Returns None if there is a problem processing the file."""
+
+	headers = []
+	sequences = []
+	for record in SeqIO.parse(infile, "fasta"):
+		headers.append("{:s} {:s}".format(record.id, record.description))
+		sequences.append(str(record.seq))
+
+	'''
 	if isinstance(infile,str):
 		infile_name = os.path.expanduser(infile)
 		if not os.path.isfile(infile_name):
@@ -823,15 +851,30 @@ def readFASTA(infile):
 				#print line
 			else:
 				frag = line.strip()
-				seq.append(frag)
+				if seq:
+					seq.append(frag)
 		frag = ''.join(seq)
 		if frag[-1] == '*': # Remove trailing stop
 			frag = frag[:-1]
 		sequences.append(frag.upper())
 	infile.close()
 	assert len(headers) == len(sequences), "Error, headers and sequences have different lengths, {} != {}.".format(len(headers), len(sequences))
+	'''
 	return (headers, sequences)
 
+def degapAlignment(seqs, gap='-'):
+	ungapped_columns = []
+	N = len(seqs)
+	L = len(seqs[0])
+	for i in range(L):
+		col = [s[i] for s in seqs]
+		if col.count(gap) < N:
+			ungapped_columns.append(i)
+
+	new_seqs = []
+	for j in range(N):
+		new_seqs.append(''.join([seqs[j][i] for i in ungapped_columns]))
+	return new_seqs
 
 def getPeptideID(header):
 	try:
@@ -892,8 +935,9 @@ def readFASTADict(infile_name, key_fxn = firstField):
 	return fdict
 
 class GFFReader(object):
-	def __init__(self, infile):
+	def __init__(self, infile, attribute_parser=parseAttributesDefault):
 		self._infile = infile
+		self._attr_parser = attribute_parser
 		if isinstance(infile, str):
 			infile_name = os.path.expanduser(infile)
 			if not os.path.isfile(infile_name):
@@ -914,7 +958,8 @@ class GFFReader(object):
 		gff_addl_fields = ['attributes','comments']
 		for flds in self._dlr.entries:
 			n = len(flds)
-			names = gff_req_fields + gff_addl_fields[:(n-n_req_fields)] # Only take additional fields if provided
-			rec = GFFRecord()
-			rec.readFromFields(flds)
-			yield rec
+			if n >= n_req_fields:
+				names = gff_req_fields + gff_addl_fields[:(n-n_req_fields)] # Only take additional fields if provided
+				rec = GFFRecord(self._attr_parser)
+				rec.readFromFields(flds)
+				yield rec

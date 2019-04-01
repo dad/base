@@ -16,5 +16,32 @@ class test001(unittest.TestCase):
 		d = orthodbutil.headerDict(header)
 		self.assertTrue(d['organism_name'] == 'Claviceps purpurea 20.1')
 
+	def test_taxa(self):
+		"""Handle taxon name translation and updated OrthoDB format"""
+		header = '>10224:0029f1 "pub_gene_id":"Sakowv30031477m", "pub_og_id":"EOG091G08IZ", "og_name":"guanine nucleotide binding protein-like 3 (nucleolar) ","level":33208'
+		d = orthodbutil.translateHeader(header)
+		self.assertTrue(d['taxon'] == 'Saccoglossus kowalevskii')
+
+	def test_taxa_brace(self):
+		"""Handle taxon name translation and updated OrthoDB format with braces"""
+		header = '>9531:00482e {"pub_gene_id":"105598636", "pub_og_id":"EOG091G08IZ", "og_name":"guanine nucleotide binding protein-like 3 (nucleolar) ","level":33208, "description":"guanine nucleotide binding protein-like 3 (nucleolar)-like"}'
+		d = orthodbutil.translateHeader(header)
+		#print(d)
+		self.assertTrue(d['taxon'] == 'Cercocebus atys')
+		self.assertTrue(d['pub_gene_id'] == '105598636')
+
+	def test_missing_taxon(self):
+		"""Handle taxon name translation, missing taxon."""
+		header = '>18109684:00232b "pub_gene_id":"104693022", "pub_og_id":"EOG091G08IZ", "og_name":"guanine nucleotide binding protein-like 3 (nucleolar) ","level":33208'
+		d = orthodbutil.translateHeader(header)
+		self.assertTrue(d['taxon'] == orthodbutil.MISSING_TAXON)
+		self.assertTrue(d['pub_gene_id'] == '104693022')
+
+	def test_comma_in_desc(self):
+		"""Handle comma inside key/value pair"""
+		header = '>717646:000bba/1-328 {"pub_gene_id":"M2NQI2", "pub_og_id":"EOG092C5HXV", "og_name":"GTP binding domain","level":4751, "description":"GTP-binding protein, orthogonal bundle domain"}'
+		d = orthodbutil.translateHeader(header)
+		self.assertTrue(d['description']=='GTP-binding protein, orthogonal bundle domain')
+
 if __name__=="__main__":
 	unittest.main(verbosity=2)
