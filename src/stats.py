@@ -248,6 +248,10 @@ class Accumulator(object):
 			self._sum += x
 			self._sum_sq += x*x
 			self._n += 1
+			if self._min > x:
+				self._min = x
+			if self._max < x:
+				self._max = x
 			if self._store:
 				self._data.append(x)
 		else:
@@ -263,6 +267,14 @@ class Accumulator(object):
 		if self._n > 0:
 			mean = self._sum/self._n
 		return mean
+
+	@property
+	def min(self):
+		return self._min
+
+	@property
+	def max(self):
+		return self._max
 
 	@property
 	def median(self):
