@@ -34,6 +34,11 @@ class listdict(collections.MutableMapping):
 		for it in self._dict:
 			yield it
 
+def shuffle_string(seq):
+	rs = [x for x in seq]
+	random.shuffle(rs)
+	return ''.join(rs)
+
 # Float equality.  On my system (WinXP, Python 2.6), smallest distinguishable float difference is 7.45e-9.
 def feq(f1,f2,eps=1e-8):
 	return abs(f1-f2)<eps
