@@ -35,6 +35,8 @@ _genetic_code = {
 		'CGC':'R', 'CGA':'R', 'CGG':'R', 'AGU':'S', 'AGC':'S', 'AGA':'R',
 		'AGG':'R', 'GGU':'G', 'GGC':'G', 'GGA':'G', 'GGG':'G'}
 
+# The yeast mitochondrial genetic code https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi#SG3
+
 _rna_codons = [x for x in _genetic_code.keys() if not 'T' in x]
 _dna_codons = [x for x in _genetic_code.keys() if not 'U' in x]
 _aa_dna_codons = [x for x in _dna_codons if not _genetic_code[x] == '*']
