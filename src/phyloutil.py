@@ -52,7 +52,9 @@ def readOneTree(stream):
 	return tree
 
 def treeFromString(tree_string):
-	return readOneTree(StringIO(tree_string))
+	#return readOneTree(StringIO(tree_string))
+	tree = Phylo.read(StringIO(tree_string), "newick")
+	return tree
 
 def buildNodeLookupFromTree(tree, allow_collisions=False):
 	    names = {}
