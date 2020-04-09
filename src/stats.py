@@ -248,6 +248,8 @@ class Accumulator(object):
 		self._n = 0
 		self._store = store
 		self._na = 0
+		self._min = 1e100
+		self._max = -self._min
 		if self._store:
 			self._data = []
 		if not x is None:

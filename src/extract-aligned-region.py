@@ -47,6 +47,11 @@ if __name__=='__main__':
 	for (k,v) in optdict.items():
 		data_outs.write("#\t{k}: {v}\n".format(k=k, v=v))
 
+	# Check constraints
+	# If user provides start/end sequences, then must provide a query sequence
+	if not options.start_sequence is None or not options.end_sequence is None:
+		assert not options.query is None, "Must provide a query sequence identifier (--query) to use --start-sequence or --end-sequence."
+
 	# Read input
 	if not os.path.isfile(options.in_fname):
 		raise IOError("# Error: file {} does not exist".format(options.in_fname))
@@ -75,8 +80,8 @@ if __name__=='__main__':
 		assert not options.end_sequence is None
 		start_index = geneutil.gappedFind(seqs[query_id], options.start_sequence, gapless=False, gap=gap)
 		end_index = geneutil.gappedFind(seqs[query_id], options.end_sequence, start=False, gapless=False, gap=gap)
-		#print(start_index, end_index)
-		#print(seqs[query_id][start_index:end_index])
+		print(start_index, end_index)
+		print(seqs[query_id][start_index:end_index])
 	elif not options.start_position is None:
 		assert not options.end_position is None
 		start_index = geneutil.gappedIndex(seqs[query_id], options.start_position, gap=gap)

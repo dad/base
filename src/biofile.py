@@ -863,6 +863,9 @@ def readFASTA(infile):
 	return (headers, sequences)
 
 def degapAlignment(seqs, gap='-'):
+	"""
+	Remove any column that contains a gap.
+	"""
 	ungapped_columns = []
 	N = len(seqs)
 	L = len(seqs[0])
@@ -875,6 +878,10 @@ def degapAlignment(seqs, gap='-'):
 	for j in range(N):
 		new_seqs.append(''.join([seqs[j][i] for i in ungapped_columns]))
 	return new_seqs
+
+def unalignAlignment(seqs, gap='-'):
+	"""Remove gap characters in an existing alignment."""
+	return [s.replace(gap,'') for s in seqs]
 
 def getPeptideID(header):
 	try:
