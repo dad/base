@@ -624,6 +624,10 @@ def secondField(x):
 	h = x.split()[1].strip()
 	return h
 
+def lastField(x):
+	h = x.strip().split()[-1]
+	return h
+
 def secondOrFirstField(x):
 	try:
 		h = secondField(x)
