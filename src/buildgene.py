@@ -1,5 +1,6 @@
 import sys, os, math, gzip, collections
 import util, biofile, translate
+from urllib.parse import unquote
 import scipy as sp
 import numpy as np
 
@@ -72,6 +73,7 @@ def noop(x):
 	"""This does exactly nothing."""
 	return x
 
+
 ###
 #
 #  Main object model:
@@ -86,9 +88,41 @@ def noop(x):
 class Gene(object):
 	def __init__(self, gene_name, chromosome):
 		self.name = gene_name
+		self.type = None
 		self.chromosome = chromosome
 		self.regions = []
 		self.strand = None
+		self._commonNames = []
+
+	def addAttributes(self, attribute_dict):
+		self._attr_dict = attribute_dict
+
+	@property
+	def systematicName(self):
+		return self.name
+
+	@property
+	def commonName(self):
+		if len(self._commonNames)>0:
+			return self._commonNames[0]
+		else:
+			return self.name
+
+	def getAttributes(self):
+		return self._attr_dict
+
+	@property
+	def attributes(self):
+		return self._attr_dict
+	
+
+	def attr(self, attr_name):
+		res = None
+		try:
+			res = self._attr_dict[attr_name]
+		except KeyError:
+			pass
+		return res
 
 	def addRegion(self, feature, strand, start, end):
 		region = Region(self.chromosome)
@@ -202,6 +236,9 @@ class Gene(object):
 		for cds in cds_list:
 			seq += cds.nucleotides
 		return seq
+
+	def getNumberOfExons(self):
+		return len(self.regions)
 
 	def getSplicedTranscript(self):
 		"""
@@ -330,7 +367,7 @@ class Chromosome(object):
 		self.gene_dict[gene_name] = gene
 		return gene
 
-	def addRegion(self, gene_name, region_type, strand, start_coord_1i, end_coord_1i):
+	def addRegion(self, gene_name, region_type, strand, start_coord_1i, end_coord_1i, record=None):
 		"""
 		Add a new region to the named gene. If the gene does not have a corresponding
 		object, create a new one.
@@ -342,12 +379,16 @@ class Chromosome(object):
 		except:
 			# Make a new gene if this one hasn't been seen before
 			gene = self.addGene(gene_name)
+			gene.type = region_type
+			if not record is None: # Additional information in the record
+				# Parse attributes and add them
+				gene.addAttributes(record.attributes)
 			gene.strand = strand
 		# We've got the gene. Add the region.
 		gene.addRegion(region_type, strand, start_coord_1i, end_coord_1i)
 
 	def addRegionFromGFF(self, gene_name, gff_record):
-		self.addRegion(gene_name, gff_record.feature, gff_record.strand, gff_record.start, gff_record.end)
+		self.addRegion(gene_name, gff_record.feature, gff_record.strand, gff_record.start, gff_record.end, record=gff_record)
 
 	def getGene(self, gene_name):
 		"""Retrieve gene by name."""
@@ -391,9 +432,9 @@ class ChromosomeCollection(object):
 		"""
 		Returns a dictionary keyed by orf whose entires are lists of record objects.
 		"""
-		features_of_interest = ['CDS','intron',
-			'external_transcribed_spacer_region',
-			'internal_transcribed_spacer_region',
+		features_of_interest = ['gene','CDS','intron', 'ncRNA_gene','tRNA_gene','transposable_element_gene','snRNA_gene','rRNA_gene','snoRNA_gene','telomerase_RNA_gene',
+			'external_transcribed_spacer_region', 'internal_transcribed_spacer_region',
+			'blocked_reading_frame',
 			'noncoding_exon']
 		#orf_record_dict = collections.defaultdict(list)
 		#orf_list = []
