@@ -1110,7 +1110,7 @@ def MantelHaenszelZ(a1,b1,c1,d1):
 	z = __ZStat(a,v,ea)
 	p = Prob_Z(z)
 	if not (0.0 <= p <= 1.0):
-		raise StatsError("Invalid P-value of %r." % z)
+		raise StatsError("Invalid P-value of {:f} for z={:f}.".format(p,z))
 	return z, p
 
 def __ZStat(a,v,ea):
