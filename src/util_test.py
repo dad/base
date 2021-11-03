@@ -562,6 +562,22 @@ class test028(unittest.TestCase):
 		entry = {'one':2, 'two':'this'}
 		line = dout.formatLine(entry)
 
+class test029(unittest.TestCase):
+	def test_run(self):
+		"""encoding"""
+		fname = "tmp_lightdataframe.txt"
+		inf = open(fname, 'w')
+		inf.write("one\ttwo\tthree\n")
+		inf.write("a\tb\t3\n")
+		inf.write("a\tb\t“extra%20TFIIIC%29”\n")
+		inf.close()
+		with open(fname,'r') as inf:
+			ldf = util.DelimitedLineReader(inf, header=True)
+			#h = ldf.header
+			for line in ldf.entries:
+				print(line)
+			#self.assertTrue(h[1]=='two')
+		os.remove(fname)
 
 
 if __name__=="__main__":

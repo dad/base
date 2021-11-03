@@ -53,7 +53,10 @@ def alignGeneFromProtein(gene, prot_align):
 	return ''.join(gene_align)
 
 def alignProteinFromProtein(prot, prot_align):
-	j = 0
+	"""Align a sequence to match gaps in an existing sequence.
+	Will work on arbitrary indexable sequences.
+	"""
+	j = 0 # index in prot (target sequence)
 	out_align = ""
 	for i in range(len(prot_align)):
 		if prot_align[i] == '-':

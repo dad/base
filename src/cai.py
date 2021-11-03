@@ -33,12 +33,12 @@ def _accumulateCodonFrequencies(seq, codon_freq, nucleotide_freq):
 	for codon in codons:
 		try:
 			codon_freq[codon]+=1.0
-		except KeyError,ke:
+		except KeyError:
 			pass
 	for nt in seq:
 		try:
 			nucleotide_freq[nt] += 1.0
-		except KeyError,ke:
+		except KeyError:
 			pass
 
 def getCodonProbabilitiesForMultipleSequences(seqs, pseudocount):
@@ -278,7 +278,7 @@ def test_estimateSelectionCoefficients():
 		(fwd_sc, fwd_n) = fwd_sc_dict[codon]
 		(rev_sc, rev_n) = rev_sc_dict[codon]
 		assert fwd_sc == -rev_sc
-	print "# test_estimateSelectionCoefficients passed"
+	print("# test_estimateSelectionCoefficients passed")
 
 def randomizeConservationCategoryForAA(aa, cons_cf, var_cf):
 	cons_pseudo = cons_cf.getPseudocount()
@@ -360,12 +360,12 @@ def test_randomizeConservationCategory():
 		(rsc, nc) = r_sc[target_codon]
 		rscs.append(rsc)
 	rscs.sort()
-	#print rscs[0], sc, rscs[-1]
+	#print(rscs[0], sc, rscs[-1]
 	assert rscs[0] <= sc
 	assert rscs[-1] >= sc
 	#(n, m, sd, se) = stats.statsSummary(rscs)
-	#print (sc - m)/sd
-	print "# test_randomizeConservationCategory passed"
+	#print((sc - m)/sd
+	print("# test_randomizeConservationCategory passed")
 
 # Goal: compute p_I and p_i for i=A
 def getEmpiricalFrequencies(cdna, pseudocount=0):
@@ -386,7 +386,7 @@ def test_getEmpiricalFrequencies():
 	assert cf.getNucleotideProportion('A') == 6.0/16
 	assert cf.getCodonProportion('TAC') == 2.0/3
 	assert cf.getCodonProportion('GGG') == 0.0
-	print "# test_getEmpiricalFrequencies passed"
+	print("# test_getEmpiricalFrequencies passed")
 
 # Conservation functions...
 def conservedAAconservedCodon(site, master_prot, other_prots, master_codon, other_codons):
@@ -516,7 +516,7 @@ def test_splitByConservation():
 	(cons_cdna, var_cdna) = splitByConservation(conservedAA, gene, prot, other_genes, other_prots, 0)
 	assert cons_cdna == 'GATTATTAC'
 	assert var_cdna == 'ACC'
-	print "# test_splitByConservation passed"
+	print("# test_splitByConservation passed")
 
 
 # The functions getCodonCounts() and getAkashi2x2TablesForORF() are for inverse-Akashi analyses.
@@ -656,7 +656,7 @@ def getCAI(gene, ln_rel_adapt):
 
 	Reference: Sharp and Li, Nucleic Acids Res, 15:1281-1295, 1987."""
 	if gene == []:
-		raise BioUtilsError, "Empty gene."
+		raise BioUtilsError
 	try:
 		log_sum = n = 0
 		codons = splitByFrame(gene,0)
@@ -676,9 +676,9 @@ def getCAI(gene, ln_rel_adapt):
 		CAI = math.exp(log_sum / float(n))
 		return CAI
 	except ZeroDivisionError:
-		raise BioUtilsError, "Empty gene."
+		raise BioUtilsError("Empty gene.")
 	except IndexError:
-		raise BioUtilsError, "Gene is of invalid length."
+		raise BioUtilsError("Gene is of invalid length.")
 
 
 def getFop(gene, optimal_list, pseudocount=0.0):
@@ -721,12 +721,12 @@ def test_splitByFrame():
 	# Tests the split_by_frame function
 	gene1 = 'ATGGATTAGAC'
 	gene2 = 'GATACCCAG'
-	print split_by_frame(gene1, 0)
-	print split_by_frame(gene1, 1)
-	print split_by_frame(gene1, 2)
-	print split_by_frame(gene2, 0)
-	print split_by_frame(gene2, 1)
-	print split_by_frame(gene2, 2)
+	print(split_by_frame(gene1, 0))
+	print(split_by_frame(gene1, 1))
+	print(split_by_frame(gene1, 2))
+	print(split_by_frame(gene2, 0))
+	print(split_by_frame(gene2, 1))
+	print(split_by_frame(gene2, 2))
 
 def getGC(gene, pseudocount = 0.0):
 	gene = gene.upper()
@@ -755,16 +755,16 @@ def getContent(gene, nts, pseudocount=0.0):
 def test_getGC3():
 	gene1 = 'ATGGATTAGAC'
 	gene2 = 'GATACCCAG'
-	print getGC3(gene2) == 2.0/3.0
-	print getGC(gene2) == 5.0/9
+	print(getGC3(gene2) == 2.0/3.0)
+	print(getGC(gene2) == 5.0/9)
 
 def test_getGCi():
 	gene1 = 'ATGGATTAGAC'
 	gene2 = 'GATACCCAG'
-	print getGCi(gene2,[3]) == getGC3(gene2)
-	print getGCi(gene2,[1,2,3]) == getGC(gene2)
-	print getGCi(gene1,[1,2]) == 1.0/8
-	print getGCi(gene2,[1,2]) == 3.0/6
+	print(getGCi(gene2,[3]) == getGC3(gene2))
+	print(getGCi(gene2,[1,2,3]) == getGC(gene2))
+	print(getGCi(gene1,[1,2]) == 1.0/8)
+	print(getGCi(gene2,[1,2]) == 3.0/6)
 
 def getFopGCEndingOld(gene, optimal_list):
 	codons = split_by_frame(gene.upper(), 0)
@@ -849,7 +849,7 @@ def getMHOptimalityTables(left, right, nopFxn):
 	# Left side of table
 	if left != '':
 		prot = translate.Translate(left)
-		#print noncons, prot
+		#print(noncons, prot
 		for i in range(len(prot)):
 			codon = left[3*i:3*i+3]
 			if not codon in ignore:
@@ -864,7 +864,7 @@ def getMHOptimalityTables(left, right, nopFxn):
 	# Right side of table
 	if right != '':
 		prot = translate.Translate(right)
-		#print cons, prot
+		#print(cons, prot
 		for i in range(len(prot)):
 			codon = right[3*i:3*i+3]
 			if not codon in ignore:
@@ -894,9 +894,9 @@ genetic_code = {'TTT':'F', 'TTC':'F', 'TTA':'L', 'TTG':'L', 'CTT':'L', 'CTC':'L'
 		'AGG':'R', 'GGT':'G', 'GGC':'G', 'GGA':'G', 'GGG':'G'}
 '''
 # DAD: should use translate content here
-_aa_codons = [k for k in genetic_code.keys() if genetic_code[k] != "*"]
-_syn_codons = dict([(v,k) for (k,v) in genetic_code.items() if v != "*"]).values() + ['TGA','TAG','TAA']
-_degeneracy = dict([(c, genetic_code.values().count(genetic_code[c])) for c in genetic_code.keys()])
+_aa_codons = [k for k in genetic_code if genetic_code[k] != "*"]
+_syn_codons = list(dict([(genetic_code[k],k) for k in genetic_code if genetic_code[k] != "*"]).values()) + ['TGA','TAG','TAA']
+_degeneracy = dict([(c, list(genetic_code.values()).count(genetic_code[c])) for c in genetic_code])
 _aas = 'ACDEFGHIKLMNPQRSTVWY'
 _deg_aas = 'ACDEFGHIKLNPQRSTVY'
 
@@ -1406,7 +1406,7 @@ def getCAIFunction(master_species):
 	elif master_species == 'bsubtilis':
 		fxn = B_subtilis_CAI
 	else:
-		raise KeyError, "Relative adaptivness values for species %s not found" % master_species
+		raise KeyError("Relative adaptivness values for species %s not found" % master_species)
 	return fxn
 
 def getRelativeAdaptivenessValues(master_species):
@@ -1451,7 +1451,7 @@ def getOptimalCodons(master_species):
 	elif master_species == 'bsubtilis':
 		opt_codons = _b_subtilis_optimal_codons
 	else:
-		raise KeyError, "Optimal codons for species %s not found" % master_species
+		raise KeyError("Optimal codons for species %s not found" % master_species)
 	opt_codons.sort()
 	return opt_codons
 
