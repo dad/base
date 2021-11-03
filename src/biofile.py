@@ -822,7 +822,8 @@ def readFASTA(infile):
 	headers = []
 	sequences = []
 	for record in SeqIO.parse(infile, "fasta"):
-		headers.append("{:s} {:s}".format(record.id, record.description))
+		#headers.append("{:s} {:s}".format(record.id, record.description))
+		headers.append("{:s}".format(record.description))
 		sequences.append(str(record.seq))
 
 	'''
