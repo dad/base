@@ -8,6 +8,7 @@ Expanded and maintained by D. Allan Drummond, 2004-2018."""
 import re, math, os, string, random
 import listrank, na
 import scipy as sp
+import numpy as np
 import scipy.special
 
 #---------------------------------------------------------------------------------
@@ -47,10 +48,16 @@ def choose_index_pair_weighted(n, indices, weights):
 	sum_w = sum(weights)
 	pweights = [w/sum_w for w in weights]
 	assert len(indices) == len(weights)
+	#print(len(indices), len(weights))
 	res = []
+	# There's a potential failure mode here where only one choice has weight > 0...
 	while not found:
-		pairs = sp.random.choice(indices, size=(int(n*1.1),2), p=pweights, replace=True)
-		res += [(i,j) for (i,j) in pairs if i != j]
+		pairs = np.random.choice(indices, size=(n,2), p=pweights, replace=True)
+		for (i,j) in pairs:
+			if i !=j:
+				res.append((i,j))
+		#res.append([(i,j) for (i,j) in pairs if i != j])
+		#print(len(res))
 		found = (len(res) >= n)
 	return res[:n]
 

@@ -119,5 +119,14 @@ class test006(unittest.TestCase):
 		for (bi, b) in enumerate(hist.bins):
 			self.assertAlmostEqual(float(bi), b.mid)
 
+class test007(unittest.TestCase):
+	def test(self):
+		a = [1,3,5,2,4,0,7,7.01]
+		n = 20
+		r = stats.choose_index_pair_weighted(n, a, [x/sum(a) for x in a])
+		self.assertTrue(len(r)==n)
+
+
+
 if __name__=='__main__':
 	unittest.main(verbosity=2)
