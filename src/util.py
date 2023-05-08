@@ -3,7 +3,7 @@ import time, datetime, collections
 #import pytz
 import na
 
-class listdict(collections.MutableMapping):
+class listdict(collections.abc.MutableMapping):
 	def __init__(self, thedict=None):
 		self._dict = {}
 		if not thedict is None:
