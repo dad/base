@@ -1,9 +1,10 @@
 import os, random, string, sys, math, traceback, unittest
 import time, datetime, collections
+from collections.abc import MutableMapping
 #import pytz
 import na
 
-class listdict(collections.MutableMapping):
+class listdict(MutableMapping):
 	def __init__(self, thedict=None):
 		self._dict = {}
 		if not thedict is None:

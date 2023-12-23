@@ -9,6 +9,7 @@ import re, math, os, string, random
 import listrank, na
 import scipy as sp
 import numpy as np
+from numpy.random import default_rng
 import scipy.special
 
 #---------------------------------------------------------------------------------
@@ -47,7 +48,7 @@ def choose_index_pair_weighted(n, indices, weights):
 	found = False
 	sum_w = sum(weights)
 	pweights = [w/sum_w for w in weights]
-	assert len(indices) == len(weights)
+	assert len(indices) == len(pweights)
 	#print(len(indices), len(weights))
 	res = []
 	# There's a potential failure mode here where only one choice has weight > 0...

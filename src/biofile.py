@@ -955,7 +955,7 @@ class GFFReader(object):
 			if not os.path.isfile(infile_name):
 				raise BioFileError("Cannot find the FASTA file {}.".format(infile_name))
 			else:
-				self._infile = open(infile_name, 'r')
+				self._infile = open(infile_name, 'r', encoding='utf-8')
 		self._dlr = util.DelimitedLineReader(self._infile, header=False, sep='\t')
 
 	def reader(self):
